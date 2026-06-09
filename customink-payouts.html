@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CustomInk — Global Payouts · Connect</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --stripe: #635BFF; --stripe-light: #7A73FF; --stripe-bg: #F6F5FF;
+  --green: #00875A; --green-bg: #ECFDF5; --green-light: #A7F3D0;
+  --orange: #FA3C00; --amber: #D97706; --amber-bg: #FFFBEB;
+  --red: #DC2626; --red-bg: #FEF2F2;
+  --fund: #0891B2; --fund-bg: #ECFEFF;
+  --dark: #0a0a1a; --text: #1a1a2e; --muted: #6B7280;
+  --border: #E5E7EB; --bg: #F9FAFB; --white: #fff;
+  --r: 12px; --shadow: 0 2px 12px rgba(0,0,0,.07);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: #0a0a1a; line-height: 1.5; }
+
+/* ── HUD ── */
+.hud {
+  background: #0a0a1a; padding: 10px 20px;
+  display: flex; align-items: center; gap: 12px;
+  position: sticky; top: 0; z-index: 900;
+  border-bottom: 2px solid var(--stripe);
+}
+.hud-logo { font-size: 13px; font-weight: 800; color: #fff; letter-spacing: -.02em; }
+.hud-logo span { color: var(--stripe-light); }
+.hud-badge { font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.4); border: 1px solid rgba(255,255,255,.14); padding: 3px 8px; border-radius: 4px; }
+.hud-live { background: #00C896; color: #fff; font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 100px; letter-spacing: .1em; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.7} }
+.hud-nav { display: flex; gap: 4px; margin-left: 12px; }
+.hud-link { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.35); padding: 5px 12px; border-radius: 6px; border: 1px solid transparent; text-decoration: none; transition: all .2s; }
+.hud-link:hover { color: rgba(255,255,255,.7); }
+.hud-link.active { color: #fff; border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.08); }
+.hud-spacer { flex: 1; }
+.hud-api-note { font-size: 10px; color: rgba(255,255,255,.25); font-family: monospace; }
+
+/* ── LAYOUT ── */
+.shell { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 45px); }
+
+/* ── SIDEBAR ── */
+.sidebar { background: #0f1120; border-right: 1px solid rgba(255,255,255,.07); padding: 24px 0; overflow-y: auto; }
+.sb-section { padding: 0 16px; margin-bottom: 28px; }
+.sb-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 10px; padding: 0 8px; }
+
+/* Balance card */
+.balance-card { background: linear-gradient(135deg, #1a1060, #0f2040); border: 1px solid rgba(99,91,255,.3); border-radius: var(--r); padding: 16px; margin-bottom: 8px; }
+.bc-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 4px; }
+.bc-amount { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: -.03em; margin-bottom: 2px; }
+.bc-sub { font-size: 11px; color: rgba(255,255,255,.35); }
+.bc-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-top: 1px solid rgba(255,255,255,.06); margin-top: 8px; }
+.bc-row-label { font-size: 11px; color: rgba(255,255,255,.4); }
+.bc-row-val { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.7); }
+
+/* Action buttons */
+.sb-action { display: flex; flex-direction: column; gap: 6px; padding: 0 8px; }
+.sb-btn {
+  padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 700;
+  cursor: pointer; border: none; transition: all .18s; text-align: left;
+  display: flex; align-items: center; gap: 8px;
+}
+.sb-btn-primary { background: var(--stripe); color: #fff; }
+.sb-btn-primary:hover { background: var(--stripe-light); }
+.sb-btn-green { background: rgba(0,135,90,.2); color: #6ee7b7; border: 1px solid rgba(0,135,90,.3); }
+.sb-btn-green:hover { background: rgba(0,135,90,.35); }
+.sb-btn-amber { background: rgba(217,119,6,.15); color: #fcd34d; border: 1px solid rgba(217,119,6,.25); }
+.sb-btn-amber:hover { background: rgba(217,119,6,.3); }
+.sb-btn-ghost { background: rgba(255,255,255,.05); color: rgba(255,255,255,.6); border: 1px solid rgba(255,255,255,.1); }
+.sb-btn-ghost:hover { background: rgba(255,255,255,.1); }
+.sb-btn-icon { font-size: 16px; flex-shrink: 0; }
+
+/* Org list in sidebar */
+.org-list { display: flex; flex-direction: column; gap: 4px; padding: 0 8px; }
+.org-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  border-radius: 8px; cursor: pointer; transition: background .15s;
+  border: 1px solid transparent;
+}
+.org-item:hover { background: rgba(255,255,255,.05); }
+.org-item.selected { background: rgba(99,91,255,.15); border-color: rgba(99,91,255,.3); }
+.org-avatar { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+.org-name { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.8); line-height: 1.2; }
+.org-meta { font-size: 10px; color: rgba(255,255,255,.35); }
+.org-status { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.status-active { background: #00C896; }
+.status-pending { background: var(--amber); }
+.status-restricted { background: var(--red); }
+
+/* ── MAIN PANEL ── */
+.main { background: #f4f5f8; overflow-y: auto; }
+
+/* Tab bar */
+.tab-bar { background: #fff; border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; gap: 2px; }
+.tab-btn { padding: 14px 16px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; border-top: none; border-left: none; border-right: none; background: none; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--stripe); border-bottom-color: var(--stripe); }
+
+/* Tab panels */
+.tab-panel { display: none; padding: 24px; }
+.tab-panel.active { display: block; }
+
+/* Stats row */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.stat-card { background: var(--white); border-radius: var(--r); border: 1px solid var(--border); padding: 18px 20px; }
+.stat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 6px; }
+.stat-val { font-size: 26px; font-weight: 900; letter-spacing: -.03em; margin-bottom: 2px; }
+.stat-sub { font-size: 11px; color: var(--muted); }
+
+/* Card */
+.card { background: var(--white); border-radius: var(--r); border: 1px solid var(--border); margin-bottom: 16px; overflow: hidden; }
+.card-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 14px; font-weight: 800; }
+.card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.card-body { padding: 20px; }
+
+/* Table */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); padding: 0 12px 10px; }
+.data-table td { padding: 12px; border-top: 1px solid var(--border); vertical-align: middle; }
+.data-table tr:hover td { background: var(--bg); }
+.mono { font-family: monospace; font-size: 11px; color: var(--muted); }
+
+/* Badge */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-amber { background: var(--amber-bg); color: var(--amber); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-stripe { background: var(--stripe-bg); color: var(--stripe); }
+.badge-gray { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+
+/* Form */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-full { grid-column: 1/-1; }
+.field-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 5px; }
+.field-input {
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 14px; font-family: inherit; color: var(--text); background: var(--white);
+  transition: border-color .15s;
+}
+.field-input:focus { outline: none; border-color: var(--stripe); }
+.field-select { cursor: pointer; }
+.form-btn {
+  margin-top: 4px; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 700;
+  cursor: pointer; border: none; background: var(--stripe); color: #fff; transition: all .18s;
+  display: flex; align-items: center; gap: 8px;
+}
+.form-btn:hover { background: var(--stripe-light); }
+.form-btn:disabled { opacity: .5; cursor: not-allowed; }
+.form-btn-green { background: var(--green); }
+.form-btn-green:hover { background: #006644; }
+.form-btn-amber { background: var(--amber); }
+
+/* Response box */
+.response-box {
+  margin-top: 14px; padding: 14px; background: #0f1120; border-radius: 10px;
+  font-family: monospace; font-size: 11.5px; color: #a8ff78; line-height: 1.6;
+  max-height: 280px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;
+  display: none;
+}
+.response-box.visible { display: block; }
+.response-box.error { color: #ff6b6b; }
+
+/* Activity feed */
+.feed { display: flex; flex-direction: column; gap: 0; }
+.feed-item {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px 20px;
+  border-bottom: 1px solid var(--border); transition: background .12s;
+}
+.feed-item:hover { background: var(--bg); }
+.feed-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.feed-body { flex: 1; min-width: 0; }
+.feed-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.feed-meta { font-size: 11px; color: var(--muted); }
+.feed-amount { font-size: 14px; font-weight: 800; margin-left: auto; flex-shrink: 0; padding-top: 2px; }
+.feed-id { font-family: monospace; font-size: 10px; color: var(--muted); }
+
+/* Loading spinner */
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+.empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+
+/* Org detail panel */
+.org-detail { background: #fff; border-radius: var(--r); border: 1px solid var(--border); }
+.od-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+.od-avatar { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; }
+.od-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+.od-cell { background: var(--white); padding: 14px 20px; }
+.od-cell-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 4px; }
+.od-cell-val { font-size: 14px; font-weight: 600; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  background: #1a1a2e; color: #fff; padding: 14px 20px; border-radius: 10px;
+  font-size: 13px; font-weight: 600; border-left: 3px solid var(--stripe);
+  box-shadow: 0 8px 32px rgba(0,0,0,.3); transform: translateY(80px); opacity: 0;
+  transition: all .3s cubic-bezier(.34,1.56,.64,1); max-width: 360px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-left-color: var(--green); }
+.toast.error { border-left-color: var(--red); }
+
+/* Charge flow visual */
+.charge-flow { display: flex; align-items: center; gap: 0; margin: 20px 0; }
+.cf-node { flex: 1; text-align: center; padding: 12px; background: var(--bg); border-radius: 10px; border: 1px solid var(--border); }
+.cf-node-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 4px; }
+.cf-node-val { font-size: 15px; font-weight: 800; }
+.cf-arrow { padding: 0 8px; color: var(--muted); font-size: 18px; flex-shrink: 0; }
+
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HUD ── -->
+<nav class="hud">
+  <div class="hud-logo">Custom<span>Ink</span> × Stripe</div>
+  <div class="hud-badge">Connect Demo</div>
+  <div class="hud-live">LIVE API</div>
+  <nav class="hud-nav">
+    <a href="/" class="hud-link">Checkout</a>
+    <a href="/refunds" class="hud-link">Refunds</a>
+    <a href="/connect" class="hud-link">Connect</a>
+    <a href="/payouts" class="hud-link active">Payouts</a>
+    <a href="/architecture" class="hud-link">Architecture</a>
+  </nav>
+  <div class="hud-spacer"></div>
+  <div class="hud-api-note" id="hud-api-note">Loading balance…</div>
+</nav>
+
+<div class="shell">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    <div class="sb-section">
+      <div class="sb-label">Platform Balance</div>
+      <div class="balance-card" id="balance-card">
+        <div class="bc-label">Available</div>
+        <div class="bc-amount" id="bal-available">—</div>
+        <div class="bc-sub">Ready to transfer out</div>
+        <div class="bc-row">
+          <span class="bc-row-label">Pending</span>
+          <span class="bc-row-val" id="bal-pending">—</span>
+        </div>
+        <div class="bc-row">
+          <span class="bc-row-label">Instant available</span>
+          <span class="bc-row-val" id="bal-instant">—</span>
+        </div>
+        <div class="bc-row">
+          <span class="bc-row-label">Connected accounts</span>
+          <span class="bc-row-val" id="bal-accounts">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Actions</div>
+      <div class="sb-action">
+        <button class="sb-btn sb-btn-primary" onclick="switchTab('onboard')">
+          <span class="sb-btn-icon">⚡</span> Onboard New Org
+        </button>
+        <button class="sb-btn sb-btn-green" onclick="switchTab('charge')">
+          <span class="sb-btn-icon">💳</span> Simulate Purchase
+        </button>
+        <button class="sb-btn sb-btn-amber" onclick="switchTab('transfer')">
+          <span class="sb-btn-icon">🏦</span> Disburse Funds
+        </button>
+        <button class="sb-btn sb-btn-ghost" onclick="switchTab('activity')">
+          <span class="sb-btn-icon">📋</span> Transfer Activity
+        </button>
+        <button class="sb-btn sb-btn-ghost" onclick="refreshAll()">
+          <span class="sb-btn-icon">↻</span> Refresh All
+        </button>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Connected Orgs <span id="org-count" style="color:rgba(255,255,255,.5)"></span></div>
+      <div class="org-list" id="org-list">
+        <div style="padding:10px 8px;font-size:12px;color:rgba(255,255,255,.3)">Loading…</div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+      <button class="tab-btn" data-tab="onboard" onclick="switchTab('onboard')">Onboard Org</button>
+      <button class="tab-btn" data-tab="charge" onclick="switchTab('charge')">Destination Charge</button>
+      <button class="tab-btn" data-tab="transfer" onclick="switchTab('transfer')">Disburse Funds</button>
+      <button class="tab-btn" data-tab="activity" onclick="switchTab('activity')">Activity</button>
+    </div>
+
+    <!-- ══ OVERVIEW TAB ══ -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Platform Available</div>
+          <div class="stat-val" id="ov-available" style="color:#00875A">—</div>
+          <div class="stat-sub">USD · Stripe balance</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Connected Orgs</div>
+          <div class="stat-val" id="ov-orgs" style="color:#635BFF">—</div>
+          <div class="stat-sub">Express accounts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Transfers Sent</div>
+          <div class="stat-val" id="ov-transfers" style="color:#0891B2">—</div>
+          <div class="stat-sub">All-time (test mode)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending Balance</div>
+          <div class="stat-val" id="ov-pending" style="color:#D97706">—</div>
+          <div class="stat-sub">Settling T+2</div>
+        </div>
+      </div>
+
+      <!-- charge flow diagram -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Destination Charges — How the Money Moves</div>
+            <div class="card-sub">Buyer charges hit Custom Ink's platform. Custom Ink keeps the application fee; remainder transfers to the org's connected account at campaign close.</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="charge-flow">
+            <div class="cf-node">
+              <div class="cf-node-label">Buyer</div>
+              <div class="cf-node-val" style="color:#1a1a2e">💳 $50.00</div>
+              <div style="font-size:11px;color:#6B7280;margin-top:4px">Cards · Link · APMs</div>
+            </div>
+            <div class="cf-arrow">→</div>
+            <div class="cf-node" style="border-color:#635BFF;background:#F6F5FF">
+              <div class="cf-node-label" style="color:#635BFF">Stripe Platform</div>
+              <div class="cf-node-val" style="color:#635BFF">Custom Ink</div>
+              <div style="font-size:11px;color:#635BFF;margin-top:4px">application_fee: $5.00</div>
+            </div>
+            <div class="cf-arrow">→</div>
+            <div class="cf-node" style="border-color:#0891B2;background:#ECFEFF">
+              <div class="cf-node-label" style="color:#0891B2">Connected Account</div>
+              <div class="cf-node-val" style="color:#0891B2">Org receives</div>
+              <div style="font-size:11px;color:#0891B2;margin-top:4px">$45.00 → bank T+2</div>
+            </div>
+          </div>
+          <div style="background:#F6F5FF;border-radius:8px;padding:12px 16px;font-family:monospace;font-size:12px;color:#635BFF;line-height:1.7">
+            stripe.paymentIntents.create({<br>
+            &nbsp;&nbsp;amount: 5000, currency: 'usd',<br>
+            &nbsp;&nbsp;application_fee_amount: 500, &nbsp;&nbsp;// Custom Ink keeps $5<br>
+            &nbsp;&nbsp;transfer_data: { destination: 'acct_...' } &nbsp;// org gets $45<br>
+            })
+          </div>
+        </div>
+      </div>
+
+      <!-- connected accounts table -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Connected Accounts</div>
+            <div class="card-sub">Express accounts onboarded to the Custom Ink platform</div>
+          </div>
+          <button class="form-btn" style="padding:8px 14px;font-size:12px" onclick="switchTab('onboard')">+ Onboard Org</button>
+        </div>
+        <div id="accounts-table-wrap">
+          <div style="padding:32px;text-align:center;color:var(--muted)">Loading accounts…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ONBOARD TAB ══ -->
+    <div class="tab-panel" id="tab-onboard">
+      <div style="max-width:640px">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">⚡ Onboard a New Org</div>
+              <div class="card-sub">Creates a Stripe Express connected account. In production, send the org to the hosted onboarding URL to complete KYC.</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div>
+                <div class="field-label">Organization Name</div>
+                <input class="field-input" id="ob-org-name" type="text" placeholder="Riverside Elementary PTO" value="Riverside Elementary PTO">
+              </div>
+              <div>
+                <div class="field-label">Contact Email</div>
+                <input class="field-input" id="ob-email" type="email" placeholder="treasurer at org.edu">
+              </div>
+              <div>
+                <div class="field-label">Org Type</div>
+                <select class="field-input field-select" id="ob-org-type">
+                  <option value="non_profit">Non-Profit / 501(c)(3)</option>
+                  <option value="company">School / Booster Club</option>
+                  <option value="individual">Individual Organizer</option>
+                </select>
+              </div>
+              <div>
+                <div class="field-label">Country</div>
+                <select class="field-input field-select" id="ob-country">
+                  <option value="US">United States</option>
+                  <option value="CA">Canada</option>
+                  <option value="GB">United Kingdom</option>
+                  <option value="AU">Australia</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding:12px 14px;background:var(--stripe-bg);border-radius:8px;font-size:12px;color:var(--stripe)">
+              🔒 Stripe creates the Express account. Custom Ink sends the onboarding URL — Stripe handles all KYC, EIN/SSN verification, and bank account validation.
+            </div>
+            <div style="margin-top:14px;display:flex;gap:10px">
+              <button class="form-btn" id="ob-btn" onclick="createAccount()">
+                <span id="ob-btn-text">Create Express Account</span>
+                <span id="ob-spinner" style="display:none"><div class="spinner"></div></span>
+              </button>
+              <button class="form-btn" id="ob-link-btn" style="background:var(--fund);display:none" onclick="getOnboardingLink()">
+                Get Onboarding URL →
+              </button>
+            </div>
+            <div class="response-box" id="ob-response"></div>
+          </div>
+        </div>
+
+        <div class="card" id="ob-result-card" style="display:none">
+          <div class="card-head">
+            <div class="card-title">✓ Account Created</div>
+          </div>
+          <div class="card-body">
+            <div class="od-grid" style="border-radius:8px;overflow:hidden;border:1px solid var(--border)">
+              <div class="od-cell"><div class="od-cell-label">Account ID</div><div class="od-cell-val mono" id="created-acct-id">—</div></div>
+              <div class="od-cell"><div class="od-cell-label">Status</div><div class="od-cell-val" id="created-status">—</div></div>
+              <div class="od-cell"><div class="od-cell-label">Org Name</div><div class="od-cell-val" id="created-org">—</div></div>
+              <div class="od-cell"><div class="od-cell-label">Capabilities</div><div class="od-cell-val" id="created-caps">—</div></div>
+            </div>
+            <div style="margin-top:12px;padding:12px 14px;background:var(--amber-bg);border-radius:8px;font-size:12px;color:var(--amber)">
+              ⚡ In production, redirect the org to the Stripe Express onboarding URL to complete KYC before payouts are enabled.
+            </div>
+            <div class="response-box visible" id="ob-acct-json" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CHARGE TAB ══ -->
+    <div class="tab-panel" id="tab-charge">
+      <div style="max-width:680px">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">💳 Destination Charge</div>
+              <div class="card-sub">Buyer pays on Custom Ink's platform. Funds split between platform fee and org transfer at campaign close.</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div>
+                <div class="field-label">Total Charge Amount (¢)</div>
+                <input class="field-input" id="ch-amount" type="number" value="5000" placeholder="5000">
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">In cents — 5000 = $50.00</div>
+              </div>
+              <div>
+                <div class="field-label">Application Fee (¢)</div>
+                <input class="field-input" id="ch-fee" type="number" value="0" placeholder="0">
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">0 for nonprofits · Custom Ink keeps this</div>
+              </div>
+              <div class="form-full">
+                <div class="field-label">Destination Account (org)</div>
+                <select class="field-input field-select" id="ch-destination">
+                  <option value="">— select connected account —</option>
+                </select>
+              </div>
+              <div class="form-full">
+                <div class="field-label">Description</div>
+                <input class="field-input" id="ch-desc" type="text" value="CustomInk Fundraiser — Spirit Wear 2025">
+              </div>
+            </div>
+
+            <!-- live charge flow preview -->
+            <div class="charge-flow" id="charge-preview" style="margin:20px 0">
+              <div class="cf-node">
+                <div class="cf-node-label">Buyer Pays</div>
+                <div class="cf-node-val" id="preview-total">$50.00</div>
+              </div>
+              <div class="cf-arrow">→</div>
+              <div class="cf-node" style="border-color:#635BFF;background:#F6F5FF">
+                <div class="cf-node-label" style="color:#635BFF">CIX Platform Fee</div>
+                <div class="cf-node-val" id="preview-fee" style="color:#635BFF">$0.00</div>
+              </div>
+              <div class="cf-arrow">→</div>
+              <div class="cf-node" style="border-color:#0891B2;background:#ECFEFF">
+                <div class="cf-node-label" style="color:#0891B2">Org Receives</div>
+                <div class="cf-node-val" id="preview-net" style="color:#0891B2">$50.00</div>
+              </div>
+            </div>
+
+            <button class="form-btn form-btn-green" id="ch-btn" onclick="createCharge()">
+              <span id="ch-btn-text">Create Payment Intent</span>
+              <span id="ch-spinner" style="display:none"><div class="spinner" style="border-top-color:#fff"></div></span>
+            </button>
+            <div class="response-box" id="ch-response"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TRANSFER TAB ══ -->
+    <div class="tab-panel" id="tab-transfer">
+      <div style="max-width:640px">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">🏦 Disburse Funds to Org</div>
+              <div class="card-sub">Transfers from Custom Ink's Stripe balance to a connected org account. In production, triggered automatically on campaign close webhook.</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div>
+                <div class="field-label">Transfer Amount (¢)</div>
+                <input class="field-input" id="tr-amount" type="number" value="4500" placeholder="4500">
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">In cents — 4500 = $45.00</div>
+              </div>
+              <div>
+                <div class="field-label">Destination Account</div>
+                <select class="field-input field-select" id="tr-destination">
+                  <option value="">— select connected account —</option>
+                </select>
+              </div>
+              <div class="form-full">
+                <div class="field-label">Description</div>
+                <input class="field-input" id="tr-desc" type="text" value="Spirit Wear 2025 — campaign close payout">
+              </div>
+            </div>
+
+            <div style="margin:14px 0;padding:12px 14px;background:var(--green-bg);border-radius:8px;font-size:12px;color:var(--green)">
+              ✓ In production: <code>stripe.transfers.create</code> fires automatically when <code>campaign.closed</code> webhook is received — no manual steps.
+            </div>
+
+            <div style="font-family:monospace;font-size:11.5px;background:#0f1120;color:#a8ff78;padding:12px 14px;border-radius:8px;line-height:1.65;margin-bottom:14px">
+              // campaign.closed webhook handler<br>
+              stripe.transfers.create({<br>
+              &nbsp;&nbsp;amount: netAmountCents,<br>
+              &nbsp;&nbsp;currency: 'usd',<br>
+              &nbsp;&nbsp;destination: connectedAccountId,<br>
+              &nbsp;&nbsp;description: `${campaign.name} payout`<br>
+              })
+            </div>
+
+            <button class="form-btn form-btn-amber" id="tr-btn" onclick="createTransfer()">
+              <span id="tr-btn-text">Send Transfer</span>
+              <span id="tr-spinner" style="display:none"><div class="spinner" style="border-top-color:#fff"></div></span>
+            </button>
+            <div class="response-box" id="tr-response"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ACTIVITY TAB ══ -->
+    <div class="tab-panel" id="tab-activity">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Transfer Activity</div>
+            <div class="card-sub">All transfers from Custom Ink platform to connected accounts — live from Stripe API</div>
+          </div>
+          <button class="form-btn" style="padding:8px 14px;font-size:12px" onclick="loadTransfers()">↻ Refresh</button>
+        </div>
+        <div class="feed" id="transfers-feed">
+          <div style="padding:32px;text-align:center;color:var(--muted)">Loading transfers…</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const fmtCents = c => '$' + (c/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const fmtDate  = ts => new Date(ts*1000).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+let accounts = [];
+let createdAccountId = null;
+
+// ── Tab switching ────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${name}`));
+  if (name === 'activity') loadTransfers();
+}
+
+// ── Toast ────────────────────────────────────────────────────────
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast show ${type}`;
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ── Load balance ─────────────────────────────────────────────────
+async function loadBalance() {
+  try {
+    const r = await fetch('/api/connect/balance');
+    const { balance, error } = await r.json();
+    if (error) throw new Error(error);
+    const avail = balance.available.find(b => b.currency === 'usd');
+    const pend  = balance.pending.find(b => b.currency === 'usd');
+    const inst  = balance.instant_available?.find(b => b.currency === 'usd');
+    const fmt   = x => x ? fmtCents(x.amount) : '$0.00';
+    document.getElementById('bal-available').textContent = fmt(avail);
+    document.getElementById('bal-pending').textContent   = fmt(pend);
+    document.getElementById('bal-instant').textContent   = fmt(inst) + ' (instant)';
+    document.getElementById('ov-available').textContent  = fmt(avail);
+    document.getElementById('ov-pending').textContent    = fmt(pend);
+    document.getElementById('hud-api-note').textContent  = `Balance: ${fmt(avail)} available`;
+  } catch(e) {
+    document.getElementById('hud-api-note').textContent = 'Balance error';
+  }
+}
+
+// ── Load connected accounts ──────────────────────────────────────
+async function loadAccounts() {
+  try {
+    const r = await fetch('/api/connect/accounts');
+    const { accounts: accts, error } = await r.json();
+    if (error) throw new Error(error);
+    accounts = accts || [];
+    document.getElementById('org-count').textContent = `(${accounts.length})`;
+    document.getElementById('ov-orgs').textContent = accounts.length;
+    document.getElementById('bal-accounts').textContent = accounts.length;
+    renderOrgList();
+    renderAccountsTable();
+    populateAccountSelects();
+  } catch(e) {
+    document.getElementById('org-list').innerHTML = `<div style="padding:10px 8px;font-size:12px;color:#ff6b6b">Error loading accounts</div>`;
+  }
+}
+
+function renderOrgList() {
+  const el = document.getElementById('org-list');
+  if (!accounts.length) {
+    el.innerHTML = `<div style="padding:10px 8px;font-size:12px;color:rgba(255,255,255,.3)">No connected accounts yet. Onboard an org →</div>`;
+    return;
+  }
+  el.innerHTML = accounts.map(a => {
+    const name = a.metadata?.org_name || a.business_profile?.name || a.email || a.id;
+    const initials = name.split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    const capStatus = a.charges_enabled && a.payouts_enabled ? 'active'
+      : a.details_submitted ? 'pending' : 'restricted';
+    const colors = {active:'#0891B2,#ECFEFF', pending:'#D97706,#FFFBEB', restricted:'#DC2626,#FEF2F2'};
+    const [fg,bg] = colors[capStatus].split(',');
+    return `<div class="org-item" onclick="showOrgDetail('${a.id}')">
+      <div class="org-avatar" style="background:${bg};color:${fg}">${initials}</div>
+      <div>
+        <div class="org-name">${name.length>24?name.slice(0,22)+'…':name}</div>
+        <div class="org-meta">${a.id.slice(0,18)}…</div>
+      </div>
+      <div class="org-status status-${capStatus}"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderAccountsTable() {
+  const wrap = document.getElementById('accounts-table-wrap');
+  if (!accounts.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🏢</div><div class="empty-state-title">No connected accounts</div><div>Onboard your first org to get started.</div></div>`;
+    return;
+  }
+  wrap.innerHTML = `<table class="data-table">
+    <thead><tr>
+      <th>Organization</th><th>Account ID</th><th>Charges</th><th>Payouts</th><th>KYC</th><th>Created</th>
+    </tr></thead>
+    <tbody>${accounts.map(a => {
+      const name = a.metadata?.org_name || a.business_profile?.name || a.email || '—';
+      const charges = a.charges_enabled ? '<span class="badge badge-green">✓ Enabled</span>' : '<span class="badge badge-amber">Pending</span>';
+      const payouts = a.payouts_enabled ? '<span class="badge badge-green">✓ Enabled</span>' : '<span class="badge badge-amber">Pending</span>';
+      const kyc = a.details_submitted ? '<span class="badge badge-green">Complete</span>' : '<span class="badge badge-red">Required</span>';
+      return `<tr>
+        <td><div style="font-weight:700;font-size:13px">${name}</div></td>
+        <td><span class="mono">${a.id}</span></td>
+        <td>${charges}</td>
+        <td>${payouts}</td>
+        <td>${kyc}</td>
+        <td style="font-size:12px;color:var(--muted)">${fmtDate(a.created)}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+function populateAccountSelects() {
+  const opts = accounts.map(a => {
+    const name = a.metadata?.org_name || a.business_profile?.name || a.id;
+    return `<option value="${a.id}">${name} (${a.id.slice(0,14)}…)</option>`;
+  }).join('');
+  ['ch-destination','tr-destination'].forEach(id => {
+    const el = document.getElementById(id);
+    el.innerHTML = `<option value="">— select connected account —</option>${opts}`;
+  });
+}
+
+// ── Load transfers ────────────────────────────────────────────────
+async function loadTransfers() {
+  const feed = document.getElementById('transfers-feed');
+  feed.innerHTML = `<div style="padding:32px;text-align:center;color:var(--muted)">Loading…</div>`;
+  try {
+    const r = await fetch('/api/connect/transfers');
+    const { transfers, error } = await r.json();
+    if (error) throw new Error(error);
+    document.getElementById('ov-transfers').textContent = transfers.length;
+    if (!transfers.length) {
+      feed.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">No transfers yet</div><div>Transfers appear here after you disburse funds to connected accounts.</div></div>`;
+      return;
+    }
+    feed.innerHTML = transfers.map(t => {
+      const dest = accounts.find(a => a.id === t.destination);
+      const name = dest?.metadata?.org_name || dest?.email || t.destination;
+      return `<div class="feed-item">
+        <div class="feed-icon" style="background:#ECFEFF;font-size:18px">🏦</div>
+        <div class="feed-body">
+          <div class="feed-title">Transfer to ${name}</div>
+          <div class="feed-meta">${t.description || 'No description'}</div>
+          <div class="feed-id">${t.id} · ${fmtDate(t.created)}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="feed-amount" style="color:var(--green)">${fmtCents(t.amount)}</div>
+          <span class="badge badge-${t.reversed?'red':'green'}" style="font-size:10px">${t.reversed?'Reversed':'Transferred'}</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    feed.innerHTML = `<div style="padding:24px;color:var(--red);text-align:center">${e.message}</div>`;
+  }
+}
+
+// ── Create Express account ────────────────────────────────────────
+async function createAccount() {
+  const btn = document.getElementById('ob-btn');
+  const txt = document.getElementById('ob-btn-text');
+  const spin = document.getElementById('ob-spinner');
+  const resp = document.getElementById('ob-response');
+  txt.style.display = 'none'; spin.style.display = 'flex'; btn.disabled = true;
+  resp.classList.remove('visible','error');
+
+  try {
+    const r = await fetch('/api/connect/create-account', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        org_name: document.getElementById('ob-org-name').value,
+        email: document.getElementById('ob-email').value,
+        org_type: document.getElementById('ob-org-type').value,
+      })
+    });
+    const { account, error } = await r.json();
+    if (error) throw new Error(error);
+
+    createdAccountId = account.id;
+    document.getElementById('ob-result-card').style.display = 'block';
+    document.getElementById('created-acct-id').textContent = account.id;
+    document.getElementById('created-status').innerHTML = `<span class="badge badge-amber">Onboarding required</span>`;
+    document.getElementById('created-org').textContent = account.metadata?.org_name || '—';
+    document.getElementById('created-caps').textContent = 'transfers, card_payments';
+    document.getElementById('ob-acct-json').textContent = JSON.stringify(account, null, 2);
+    document.getElementById('ob-link-btn').style.display = 'flex';
+
+    resp.textContent = `✓ account.id: ${account.id}\n✓ type: express\n✓ country: ${account.country}\n✓ charges_enabled: ${account.charges_enabled}\n✓ payouts_enabled: ${account.payouts_enabled}`;
+    resp.classList.add('visible');
+    toast(`✓ Express account created: ${account.id}`, 'success');
+    loadAccounts();
+  } catch(e) {
+    resp.textContent = `✗ Error: ${e.message}`;
+    resp.classList.add('visible','error');
+    toast(`Error: ${e.message}`, 'error');
+  } finally {
+    txt.style.display = ''; spin.style.display = 'none'; btn.disabled = false;
+  }
+}
+
+// ── Get onboarding link ───────────────────────────────────────────
+async function getOnboardingLink() {
+  if (!createdAccountId) return;
+  try {
+    const r = await fetch('/api/connect/account-link', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ account_id: createdAccountId })
+    });
+    const { url, error } = await r.json();
+    if (error) throw new Error(error);
+    window.open(url, '_blank');
+    toast('Onboarding URL opened in new tab', 'success');
+  } catch(e) {
+    toast(`Error: ${e.message}`, 'error');
+  }
+}
+
+// ── Create destination charge ─────────────────────────────────────
+async function createCharge() {
+  const btn = document.getElementById('ch-btn');
+  const txt = document.getElementById('ch-btn-text');
+  const spin = document.getElementById('ch-spinner');
+  const resp = document.getElementById('ch-response');
+  const dest = document.getElementById('ch-destination').value;
+  if (!dest) { toast('Select a destination account first', 'error'); return; }
+
+  txt.style.display = 'none'; spin.style.display = 'flex'; btn.disabled = true;
+  resp.classList.remove('visible','error');
+
+  try {
+    const amount = parseInt(document.getElementById('ch-amount').value) || 5000;
+    const fee    = parseInt(document.getElementById('ch-fee').value) || 0;
+    const desc   = document.getElementById('ch-desc').value;
+    const r = await fetch('/api/connect/charge', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ amount, application_fee_amount: fee, destination: dest, description: desc })
+    });
+    const { clientSecret, pi_id, error } = await r.json();
+    if (error) throw new Error(error);
+    resp.textContent = `✓ PaymentIntent created\n✓ id: ${pi_id}\n✓ amount: ${fmtCents(amount)}\n✓ application_fee_amount: ${fmtCents(fee)}\n✓ transfer_data.destination: ${dest}\n✓ status: requires_payment_method\n\nclientSecret: ${clientSecret}`;
+    resp.classList.add('visible');
+    toast(`✓ PaymentIntent ${pi_id} created`, 'success');
+  } catch(e) {
+    resp.textContent = `✗ Error: ${e.message}`;
+    resp.classList.add('visible','error');
+    toast(`Error: ${e.message}`, 'error');
+  } finally {
+    txt.style.display = ''; spin.style.display = 'none'; btn.disabled = false;
+  }
+}
+
+// ── Create transfer ───────────────────────────────────────────────
+async function createTransfer() {
+  const btn = document.getElementById('tr-btn');
+  const txt = document.getElementById('tr-btn-text');
+  const spin = document.getElementById('tr-spinner');
+  const resp = document.getElementById('tr-response');
+  const dest = document.getElementById('tr-destination').value;
+  if (!dest) { toast('Select a destination account first', 'error'); return; }
+
+  txt.style.display = 'none'; spin.style.display = 'flex'; btn.disabled = true;
+  resp.classList.remove('visible','error');
+
+  try {
+    const amount = parseInt(document.getElementById('tr-amount').value) || 4500;
+    const description = document.getElementById('tr-desc').value;
+    const r = await fetch('/api/connect/transfer', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ amount, destination: dest, description })
+    });
+    const { transfer, error } = await r.json();
+    if (error) throw new Error(error);
+    resp.textContent = `✓ Transfer created\n✓ id: ${transfer.id}\n✓ amount: ${fmtCents(transfer.amount)}\n✓ destination: ${transfer.destination}\n✓ created: ${fmtDate(transfer.created)}\n\n${JSON.stringify(transfer, null, 2)}`;
+    resp.classList.add('visible');
+    toast(`✓ ${fmtCents(transfer.amount)} transferred to org`, 'success');
+    loadBalance();
+    if (document.getElementById('tab-activity').classList.contains('active')) loadTransfers();
+  } catch(e) {
+    resp.textContent = `✗ Error: ${e.message}`;
+    resp.classList.add('visible','error');
+    toast(`Error: ${e.message}`, 'error');
+  } finally {
+    txt.style.display = ''; spin.style.display = 'none'; btn.disabled = false;
+  }
+}
+
+// ── Charge flow preview ───────────────────────────────────────────
+function updateChargePreview() {
+  const amount = parseInt(document.getElementById('ch-amount').value) || 0;
+  const fee    = parseInt(document.getElementById('ch-fee').value) || 0;
+  document.getElementById('preview-total').textContent = fmtCents(amount);
+  document.getElementById('preview-fee').textContent   = fmtCents(fee);
+  document.getElementById('preview-net').textContent   = fmtCents(Math.max(0, amount - fee));
+}
+
+async function showOrgDetail(id) {
+  switchTab('overview');
+  document.querySelectorAll('.org-item').forEach(el => el.classList.remove('selected'));
+  event?.target?.closest('.org-item')?.classList.add('selected');
+}
+
+function refreshAll() {
+  loadBalance();
+  loadAccounts();
+  toast('Refreshed from Stripe API', 'success');
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadBalance();
+  loadAccounts();
+
+  document.getElementById('ch-amount').addEventListener('input', updateChargePreview);
+  document.getElementById('ch-fee').addEventListener('input', updateChargePreview);
+
+  // If returning from onboarding
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('onboarded')) {
+    toast(`✓ Org onboarding complete: ${params.get('onboarded')}`, 'success');
+    history.replaceState({}, '', '/payouts');
+  }
+});
+</script>
+</body>
+</html>

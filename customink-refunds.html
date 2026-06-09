@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en" data-state="current">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CustomInk — Refunds & Chargebacks Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #FA3C00; --orange-d: #c73100;
+  --dark: #1a1a1a; --text: #333; --muted: #717171;
+  --border: #e5e5e5; --bg: #f5f5f5; --white: #fff;
+  --stripe: #635BFF; --stripe-d: #0A2540; --stripe-bg: #F6F5FF;
+  --green: #00875A; --green-bg: #f0fdf4;
+  --red: #DC2626; --red-bg: #fef2f2;
+  --amber: #D97706; --amber-bg: #fffbeb;
+  --blue: #0070F3; --blue-bg: #EFF6FF;
+  --shadow: 0 2px 12px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,.12);
+  --r: 12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: #fafafa; line-height: 1.5; overflow-x: hidden; }
+button, input, select { font-family: inherit; }
+
+/* state classes */
+html[data-state="current"] .sc { display: none !important; }
+html[data-state="future"]  .sf { display: none !important; }
+
+/* ── DEMO HUD ── */
+.demo-hud {
+  background: #0a0a1a; padding: 10px 20px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  position: sticky; top: 0; z-index: 900;
+  border-bottom: 2px solid transparent; transition: border-color .3s;
+}
+html[data-state="current"] .demo-hud { border-bottom-color: var(--orange); }
+html[data-state="future"]  .demo-hud { border-bottom-color: var(--stripe); }
+.demo-mode-chip {
+  font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  color: rgba(255,255,255,.4); border: 1px solid rgba(255,255,255,.14);
+  padding: 3px 9px; border-radius: 4px; flex-shrink: 0;
+}
+.demo-toggle-track {
+  display: flex; align-items: center;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 100px; padding: 3px; gap: 2px;
+}
+.demo-state-btn {
+  padding: 7px 16px; border-radius: 100px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: all .28s; border: none; background: none;
+  color: rgba(255,255,255,.28); white-space: nowrap;
+}
+.demo-state-btn:hover { color: rgba(255,255,255,.5); }
+html[data-state="current"] .demo-state-btn.cur-btn {
+  background: var(--orange); color: #fff;
+}
+html[data-state="future"] .demo-state-btn.fut-btn {
+  background: var(--stripe); color: #fff;
+}
+.demo-page-nav {
+  display: flex; align-items: center; gap: 8px; margin-left: 16px;
+}
+.demo-page-link {
+  font-size: 11px; font-weight: 600; color: rgba(255,255,255,.35);
+  padding: 5px 12px; border-radius: 6px; border: 1px solid transparent;
+  text-decoration: none; transition: all .2s; white-space: nowrap;
+}
+.demo-page-link:hover { color: rgba(255,255,255,.7); }
+.demo-page-link.active { color: #fff; border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.08); }
+.demo-hud-hint { font-size: 10px; color: rgba(255,255,255,.18); flex-shrink: 0; }
+
+/* ── PAGE SHELL ── */
+.page-header {
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a1040 60%, #0a0a1a 100%);
+  padding: 48px 32px 56px; text-align: center; position: relative; overflow: hidden;
+}
+.page-header::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(99,91,255,.2) 0%, transparent 70%);
+}
+.page-header-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: rgba(255,255,255,.5); margin-bottom: 16px; position: relative;
+}
+html[data-state="current"] .page-header-eyebrow .state-dot { background: var(--orange); }
+html[data-state="future"]  .page-header-eyebrow .state-dot { background: #00C896; }
+.state-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.page-header h1 {
+  font-size: clamp(28px, 4vw, 48px); font-weight: 800; color: #fff;
+  line-height: 1.15; margin-bottom: 12px; position: relative;
+}
+.page-header h1 em { color: #7A73FF; font-style: normal; }
+html[data-state="current"] .page-header h1 em { color: #FA3C00; }
+.page-header p { font-size: 16px; color: rgba(255,255,255,.55); max-width: 560px; margin: 0 auto; position: relative; }
+
+.main-wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+/* ── PAIN POINTS BANNER ── */
+.pain-banner {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--r);
+  padding: 24px 28px; margin-bottom: 32px; box-shadow: var(--shadow);
+  border-left: 4px solid var(--red);
+}
+.pain-banner h3 { font-size: 14px; font-weight: 800; color: var(--red); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .06em; }
+.pain-quotes { display: flex; flex-direction: column; gap: 10px; }
+.pain-quote {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 12px 16px; background: var(--red-bg); border-radius: 8px;
+}
+.pain-quote-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0; font-weight: 800;
+}
+.pain-quote-body { flex: 1; }
+.pain-quote-text { font-size: 13px; color: var(--text); font-style: italic; line-height: 1.6; margin-bottom: 4px; }
+.pain-quote-attr { font-size: 11px; font-weight: 700; color: var(--muted); }
+
+/* ── SECTION HEADER ── */
+.section-head { margin-bottom: 24px; }
+.section-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.eyebrow-red { color: var(--red); }
+.eyebrow-stripe { color: var(--stripe); }
+.eyebrow-amber { color: var(--amber); }
+.eyebrow-green { color: var(--green); }
+.section-head h2 { font-size: clamp(20px, 2.5vw, 28px); font-weight: 800; line-height: 1.2; margin-bottom: 6px; }
+.section-head p { font-size: 14px; color: var(--muted); max-width: 540px; }
+
+/* ── TABS ── */
+.tab-row {
+  display: flex; gap: 4px; margin-bottom: 24px;
+  background: var(--bg); border-radius: 10px; padding: 4px;
+  border: 1px solid var(--border);
+}
+.tab-btn {
+  flex: 1; padding: 10px 16px; border: none; border-radius: 7px;
+  background: none; cursor: pointer; font-size: 13px; font-weight: 600;
+  color: var(--muted); transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.tab-btn:hover { color: var(--dark); }
+.tab-btn.active { background: #fff; color: var(--dark); box-shadow: var(--shadow); }
+.tab-btn.active.tab-red { color: var(--red); }
+.tab-btn.active.tab-amber { color: var(--amber); }
+.tab-btn.active.tab-stripe { color: var(--stripe); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── WORKFLOW PANELS ── */
+.workflow {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;
+}
+@media (max-width: 700px) { .workflow { grid-template-columns: 1fr; } }
+.workflow-side {
+  background: #fff; border-radius: var(--r); border: 1px solid var(--border);
+  overflow: hidden; box-shadow: var(--shadow);
+}
+.workflow-header {
+  padding: 16px 20px; font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border);
+}
+.wh-current { background: var(--red-bg); color: var(--red); }
+.wh-future  { background: var(--stripe-bg); color: var(--stripe); }
+.workflow-steps { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.wf-step {
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.wf-step-icon {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.wf-step-icon-bad  { background: var(--red-bg); }
+.wf-step-icon-good { background: var(--green-bg); }
+.wf-step-icon-stripe { background: var(--stripe-bg); }
+.wf-step-body h4 { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.wf-step-body p  { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.wf-step-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 100px;
+  font-size: 10px; font-weight: 700; margin-top: 4px;
+}
+.badge-pain   { background: var(--red-bg); color: var(--red); }
+.badge-win    { background: var(--green-bg); color: var(--green); }
+.badge-stripe { background: var(--stripe-bg); color: var(--stripe); }
+.badge-amber  { background: var(--amber-bg); color: var(--amber); }
+
+/* ── INTERACTIVE REFUND DEMO ── */
+.refund-demo {
+  background: #fff; border-radius: var(--r); border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg); overflow: hidden; margin-bottom: 32px;
+}
+.refund-demo-toolbar {
+  background: var(--bg); padding: 10px 20px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.rd-dot { width: 10px; height: 10px; border-radius: 50%; }
+.rd-url {
+  background: #fff; border-radius: 6px; padding: 4px 12px;
+  font-size: 11px; color: var(--muted); flex: 1; max-width: 320px;
+  border: 1px solid var(--border);
+}
+.rd-body { padding: 24px; }
+
+/* Order card */
+.order-card {
+  border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  margin-bottom: 20px;
+}
+.order-card-header {
+  background: var(--bg); padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.order-id { font-size: 13px; font-weight: 700; }
+.order-status-badge {
+  padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700;
+}
+.status-fulfilled { background: var(--green-bg); color: var(--green); }
+.status-refunded  { background: var(--blue-bg); color: var(--blue); }
+.status-disputed  { background: var(--red-bg); color: var(--red); }
+.order-card-body { padding: 16px 18px; }
+.order-line {
+  display: flex; align-items: center; gap: 12px; padding: 8px 0;
+  border-bottom: 1px solid var(--bg);
+}
+.order-line:last-of-type { border-bottom: none; }
+.order-line-img {
+  width: 40px; height: 40px; background: linear-gradient(135deg, #FA3C00, #FF8A65);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.order-line-name { flex: 1; font-size: 13px; font-weight: 600; }
+.order-line-meta { font-size: 11px; color: var(--muted); }
+.order-line-price { font-size: 14px; font-weight: 700; }
+.order-line-select {
+  width: 20px; height: 20px; cursor: pointer; accent-color: var(--stripe);
+}
+.order-total {
+  display: flex; justify-content: space-between; padding: 12px 0 0;
+  font-size: 14px; font-weight: 700; margin-top: 8px; border-top: 1px solid var(--border);
+}
+
+/* Refund controls */
+.refund-controls { display: flex; flex-direction: column; gap: 16px; }
+.rc-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.refund-type-row { display: flex; gap: 8px; }
+.refund-type-btn {
+  flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 8px;
+  background: #fff; cursor: pointer; font-size: 12px; font-weight: 600;
+  color: var(--muted); transition: all .18s; text-align: center;
+}
+.refund-type-btn:hover { border-color: var(--stripe); color: var(--stripe); }
+.refund-type-btn.selected { border-color: var(--stripe); background: var(--stripe-bg); color: var(--stripe); }
+.partial-amount-row {
+  display: none; align-items: center; gap: 8px;
+}
+.partial-amount-row.visible { display: flex; }
+.partial-input {
+  border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 14px;
+  font-size: 14px; font-weight: 600; width: 140px; outline: none; transition: border-color .18s;
+}
+.partial-input:focus { border-color: var(--stripe); }
+.partial-hint { font-size: 12px; color: var(--muted); }
+.refund-reason-select {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 10px 14px; font-size: 13px; outline: none; transition: border-color .18s; background: #fff;
+}
+.refund-reason-select:focus { border-color: var(--stripe); }
+.refund-summary-box {
+  background: var(--stripe-bg); border: 1px solid #C4B5FD; border-radius: 10px; padding: 16px;
+}
+.rsb-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+.rsb-row:last-child { margin-bottom: 0; font-weight: 700; font-size: 14px; border-top: 1px solid #C4B5FD; padding-top: 8px; margin-top: 4px; }
+.rsb-label { color: var(--muted); }
+.rsb-val { font-weight: 600; }
+.rsb-val-stripe { color: var(--stripe); }
+.refund-submit-btn {
+  width: 100%; padding: 14px; border-radius: 10px; border: none;
+  background: var(--stripe); color: #fff; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: opacity .2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.refund-submit-btn:hover { opacity: .9; }
+.refund-submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Success state */
+.refund-success {
+  display: none; text-align: center; padding: 32px 20px;
+}
+.refund-success.visible { display: block; }
+.success-checkmark {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--green-bg); display: flex; align-items: center; justify-content: center;
+  font-size: 28px; margin: 0 auto 16px;
+  animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.success-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+.success-sub { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+.success-receipt {
+  background: var(--bg); border-radius: 10px; padding: 16px 20px;
+  text-align: left; display: inline-block; width: 100%; max-width: 360px;
+}
+.sr-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+.sr-row:last-child { font-weight: 700; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; }
+.sr-label { color: var(--muted); }
+.reset-btn {
+  margin-top: 16px; padding: 10px 24px; border-radius: 8px; border: 1.5px solid var(--border);
+  background: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .18s;
+}
+.reset-btn:hover { border-color: var(--stripe); color: var(--stripe); }
+
+/* Old way panel (Braintree) */
+.braintree-pain {
+  background: var(--red-bg); border: 1px solid #FECACA; border-radius: 10px;
+  padding: 20px; margin-bottom: 20px;
+}
+.braintree-pain h4 { font-size: 13px; font-weight: 800; color: var(--red); margin-bottom: 10px; }
+.bt-steps { display: flex; flex-direction: column; gap: 8px; }
+.bt-step { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; }
+.bt-num { width: 20px; height: 20px; background: #FECACA; border-radius: 50%; color: var(--red); font-weight: 800; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.bt-check-warning {
+  background: var(--amber-bg); border: 1px solid #FDE68A; border-radius: 8px;
+  padding: 12px 16px; font-size: 13px; color: var(--amber); font-weight: 600; margin-top: 12px;
+  display: flex; gap: 8px; align-items: center;
+}
+
+/* ── CHARGEBACK SIMULATOR ── */
+.cb-sim {
+  background: #fff; border-radius: var(--r); border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg); overflow: hidden; margin-bottom: 32px;
+}
+.cb-sim-header {
+  background: var(--dark); padding: 14px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cb-sim-title { font-size: 14px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+.cb-live-badge {
+  background: #00C896; color: #fff; font-size: 9px; font-weight: 800;
+  padding: 2px 8px; border-radius: 100px; letter-spacing: .1em; text-transform: uppercase;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+.cb-sim-body { padding: 24px; }
+
+/* CB queue */
+.cb-queue { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.cb-item {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  border: 1px solid var(--border); border-radius: 10px; background: #fff;
+  transition: all .3s;
+}
+.cb-item.winning  { border-color: #A7F3D0; background: var(--green-bg); }
+.cb-item.losing   { border-color: #FECACA; background: var(--red-bg); }
+.cb-item.auto-won { border-color: #C4B5FD; background: var(--stripe-bg); }
+.cb-item-icon { font-size: 22px; flex-shrink: 0; }
+.cb-item-body { flex: 1; }
+.cb-item-amount { font-size: 15px; font-weight: 800; }
+.cb-item-reason { font-size: 12px; color: var(--muted); }
+.cb-item-org { font-size: 11px; font-weight: 600; color: var(--muted); }
+.cb-item-status {
+  padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700;
+  white-space: nowrap;
+}
+.cbs-open     { background: var(--amber-bg); color: var(--amber); }
+.cbs-won      { background: var(--green-bg); color: var(--green); }
+.cbs-lost     { background: var(--red-bg); color: var(--red); }
+.cbs-auto     { background: var(--stripe-bg); color: var(--stripe); }
+.cb-item-action {
+  padding: 8px 14px; border-radius: 7px; border: 1.5px solid var(--border);
+  background: #fff; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .18s;
+  white-space: nowrap;
+}
+.cb-item-action:hover { border-color: var(--stripe); color: var(--stripe); }
+
+/* CB stats */
+.cb-stats { display: flex; gap: 12px; margin-bottom: 20px; }
+.cb-stat {
+  flex: 1; padding: 16px; border-radius: 10px; text-align: center;
+  border: 1px solid var(--border);
+}
+.cb-stat-val { font-size: 24px; font-weight: 800; margin-bottom: 2px; }
+.cb-stat-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.stat-red    { background: var(--red-bg); }
+.stat-green  { background: var(--green-bg); }
+.stat-stripe { background: var(--stripe-bg); }
+.stat-amber  { background: var(--amber-bg); }
+
+/* Radar rules panel */
+.radar-rules { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.radar-rule {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  border: 1px solid var(--border); border-radius: 9px; background: #fff;
+  transition: all .2s;
+}
+.radar-rule:hover { border-color: var(--stripe); box-shadow: 0 2px 8px rgba(99,91,255,.1); }
+.rr-icon { font-size: 18px; flex-shrink: 0; }
+.rr-body { flex: 1; }
+.rr-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.rr-desc { font-size: 11px; color: var(--muted); }
+.rr-action { padding: 3px 10px; border-radius: 100px; font-size: 10px; font-weight: 800; }
+.rr-block  { background: var(--red-bg); color: var(--red); }
+.rr-review { background: var(--amber-bg); color: var(--amber); }
+.rr-3ds    { background: var(--blue-bg); color: var(--blue); }
+.rr-allow  { background: var(--green-bg); color: var(--green); }
+.rr-toggle {
+  width: 36px; height: 20px; border-radius: 100px; border: none; cursor: pointer;
+  position: relative; transition: background .2s; flex-shrink: 0;
+}
+.rr-toggle.on  { background: var(--stripe); }
+.rr-toggle.off { background: var(--border); }
+.rr-toggle::after {
+  content: ''; position: absolute; top: 2px; width: 16px; height: 16px;
+  border-radius: 50%; background: #fff; transition: left .2s;
+}
+.rr-toggle.on::after  { left: 18px; }
+.rr-toggle.off::after { left: 2px; }
+
+/* ── CONSOLIDATION PANEL ── */
+.consolidation-vis {
+  background: #fff; border-radius: var(--r); border: 1px solid var(--border);
+  box-shadow: var(--shadow); padding: 28px; margin-bottom: 32px;
+}
+.con-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; }
+.con-flow { display: flex; align-items: flex-start; justify-content: space-between; gap: 0; }
+.con-col { flex: 1; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.con-col-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+.con-node {
+  width: 100%; max-width: 160px; padding: 12px 14px; border-radius: 10px;
+  font-size: 12px; font-weight: 600; text-align: center; line-height: 1.4;
+  border: 2px solid;
+}
+.cn-source { border-color: #BFDBFE; background: var(--blue-bg); color: var(--blue); }
+.cn-pain   { border-color: #FECACA; background: var(--red-bg); color: var(--red); }
+.cn-stripe { border-color: #C4B5FD; background: var(--stripe-bg); color: var(--stripe); }
+.cn-dest   { border-color: #A7F3D0; background: var(--green-bg); color: var(--green); }
+.con-arrow-col {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 0 8px; padding-top: 32px; gap: 8px;
+}
+.con-arrow { font-size: 18px; color: var(--muted); }
+.con-arrow-label { font-size: 9px; color: var(--muted); text-align: center; white-space: nowrap; }
+.con-sep { width: 1px; height: 80px; background: var(--border); margin: 8px auto; }
+
+/* ── METRICS ── */
+.metrics-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px; margin-bottom: 32px;
+}
+.metric-card {
+  background: #fff; border-radius: var(--r); border: 1px solid var(--border);
+  padding: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+}
+.metric-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.mc-red::before    { background: var(--red); }
+.mc-stripe::before { background: var(--stripe); }
+.mc-green::before  { background: var(--green); }
+.mc-amber::before  { background: var(--amber); }
+.metric-icon { font-size: 24px; margin-bottom: 10px; }
+.metric-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.metric-current { font-size: 22px; font-weight: 800; margin-bottom: 2px; }
+.metric-future  { font-size: 14px; color: var(--green); font-weight: 700; }
+.metric-desc { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 6px; }
+.metric-arrow { font-size: 11px; color: var(--green); font-weight: 700; }
+
+/* tech note */
+.tech-note {
+  margin-top: 10px; padding: 10px 14px;
+  background: var(--stripe-bg); border-radius: 8px; border-left: 3px solid var(--stripe);
+  font-size: 11px; color: var(--stripe); font-family: 'SF Mono', 'Fira Code', monospace; line-height: 1.7;
+}
+
+/* cards grid */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 32px; }
+.cg-card {
+  background: #fff; border-radius: var(--r); border: 1px solid var(--border);
+  padding: 20px; box-shadow: var(--shadow); transition: box-shadow .2s, transform .2s;
+}
+.cg-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.cg-card-icon { width: 40px; height: 40px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
+.cg-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.cg-card p  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.stripe-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 10px; padding: 3px 9px; background: var(--stripe-bg); border-radius: 100px;
+  font-size: 10px; font-weight: 700; color: var(--stripe);
+}
+
+@media (max-width: 600px) {
+  .cb-stats { flex-wrap: wrap; }
+  .cb-item-action { display: none; }
+  .con-flow { flex-direction: column; align-items: center; gap: 12px; }
+  .con-arrow-col { padding-top: 0; flex-direction: row; }
+}
+</style>
+</head>
+<body>
+
+<!-- DEMO HUD -->
+<div class="demo-hud">
+  <span class="demo-mode-chip">Demo Mode</span>
+  <div class="demo-toggle-track">
+    <button class="demo-state-btn cur-btn" onclick="setState('current')">⚠️ Today — Braintree + Manual</button>
+    <button class="demo-state-btn fut-btn" onclick="setState('future')">✨ With Stripe</button>
+  </div>
+  <div class="demo-page-nav">
+    <a href="/" class="demo-page-link">🛒 Checkout</a>
+    <a href="/refunds" class="demo-page-link active">↩️ Refunds & Chargebacks</a>
+    <a href="/connect" class="demo-page-link">⚡ Connect</a>
+  </div>
+  <span class="demo-hud-hint">press T to toggle</span>
+</div>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-eyebrow">
+    <span class="state-dot"></span>
+    <span class="sc">With Stripe — Automated, Consolidated, Instant</span>
+    <span class="sf">Today — Manual, Fragmented, Costly</span>
+  </div>
+  <h1 class="sc">Refunds & Chargebacks,<br><em>Finally Automated</em></h1>
+  <h1 class="sf">Refunds & Chargebacks<br><em>Are Broken Today</em></h1>
+  <p class="sc">Partial refunds in one click. Chargeback automation via Stripe Radar. All payout streams consolidated — no more PayPal + Tipalti juggling.</p>
+  <p class="sf">Nicole's team can't process refunds in-system. Scott's team can't automate chargebacks. Checks go out for partial refunds. Multiple platforms, no consolidation.</p>
+</div>
+
+<div class="main-wrap">
+
+  <!-- PAIN POINTS — current state only -->
+  <div class="sc pain-banner">
+    <h3>🔴 Stakeholder Pain Points — Heard Directly</h3>
+    <div class="pain-quotes">
+      <div class="pain-quote">
+        <div class="pain-quote-avatar" style="background:#FEE2E2;color:#DC2626">NL</div>
+        <div class="pain-quote-body">
+          <div class="pain-quote-text">"Refunds are a big issue for my team. We can't process refunds within our current system — we have to go back into Braintree. And we can't do partial refunds, so we end up sending out refund checks. The whole process is very manual."</div>
+          <div class="pain-quote-attr">Nicole Lopez · Finance / Accounting · Custom Ink</div>
+        </div>
+      </div>
+      <div class="pain-quote">
+        <div class="pain-quote-avatar" style="background:#FEE2E2;color:#DC2626">SK</div>
+        <div class="pain-quote-body">
+          <div class="pain-quote-text">"We're actively seeking ways to automate the management of chargebacks and fraud. A chargeback strategy to claw back revenue is a key innovation point — this is where we see future leverage."</div>
+          <div class="pain-quote-attr">Scott Kuchinski · Senior Product Manager · Custom Ink</div>
+        </div>
+      </div>
+      <div class="pain-quote">
+        <div class="pain-quote-avatar" style="background:#FEF3C7;color:#D97706">OPS</div>
+        <div class="pain-quote-body">
+          <div class="pain-quote-text">"Our outgoing payout streams — fundraising, online stores — are manual and spread across multiple platforms: PayPal, Tipalti, and others. We need to automate, limit, and consolidate all of this."</div>
+          <div class="pain-quote-attr">Operations Team · Custom Ink</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPACT METRICS -->
+  <div class="section-head">
+    <div class="section-eyebrow sc eyebrow-stripe">Impact After Migration</div>
+    <div class="section-eyebrow sf eyebrow-red">Current State Costs</div>
+    <h2 class="sc">What Changes with Stripe</h2>
+    <h2 class="sf">The Hidden Cost of Today's Process</h2>
+  </div>
+  <div class="metrics-grid">
+    <div class="metric-card mc-red sc">
+      <div class="metric-icon">↩️</div>
+      <div class="metric-label">Partial Refunds</div>
+      <div class="metric-current" style="color:var(--green)">Native API</div>
+      <div class="metric-future">↑ from zero (impossible in Braintree flow)</div>
+      <div class="metric-desc">One API call. Any amount up to the original charge. Instant in the Stripe Dashboard.</div>
+    </div>
+    <div class="metric-card mc-red sf">
+      <div class="metric-icon">✉️</div>
+      <div class="metric-label">Partial Refunds Today</div>
+      <div class="metric-current" style="color:var(--red)">Checks Only</div>
+      <div class="metric-desc">No partial refund API in current flow. Finance sends physical refund checks — slow, expensive, error-prone.</div>
+    </div>
+    <div class="metric-card mc-stripe sc">
+      <div class="metric-icon">🛡️</div>
+      <div class="metric-label">Chargeback Win Rate</div>
+      <div class="metric-current" style="color:var(--stripe)">+35%</div>
+      <div class="metric-future">↑ via automated evidence submission</div>
+      <div class="metric-desc">Stripe auto-submits fulfillment data, tracking, and order history as dispute evidence.</div>
+    </div>
+    <div class="metric-card mc-stripe sf">
+      <div class="metric-icon">📋</div>
+      <div class="metric-label">Chargeback Response</div>
+      <div class="metric-current" style="color:var(--amber)">100% Manual</div>
+      <div class="metric-desc">Each dispute requires someone to manually gather evidence, format it, and submit — no automation today.</div>
+    </div>
+    <div class="metric-card mc-green sc">
+      <div class="metric-icon">⚡</div>
+      <div class="metric-label">Refund Processing Time</div>
+      <div class="metric-current" style="color:var(--green)">&lt; 30 sec</div>
+      <div class="metric-future">↓ from days (check mailing time)</div>
+      <div class="metric-desc">Refund API call posts instantly. Customer receives funds in 5–10 business days via card network.</div>
+    </div>
+    <div class="metric-card mc-green sf">
+      <div class="metric-icon">🕐</div>
+      <div class="metric-label">Refund Processing Time</div>
+      <div class="metric-current" style="color:var(--red)">Days–Weeks</div>
+      <div class="metric-desc">Check generation, mailing, delivery, and cashing = weeks of float cost and customer frustration.</div>
+    </div>
+    <div class="metric-card mc-amber sc">
+      <div class="metric-icon">🔗</div>
+      <div class="metric-label">Payout Platforms</div>
+      <div class="metric-current" style="color:var(--green)">1 (Stripe)</div>
+      <div class="metric-future">↓ from 3+ (PayPal + Tipalti + others)</div>
+      <div class="metric-desc">All payout streams consolidated into Stripe Connect — fundraising, stores, refunds, and more.</div>
+    </div>
+    <div class="metric-card mc-amber sf">
+      <div class="metric-icon">🧩</div>
+      <div class="metric-label">Payout Platforms</div>
+      <div class="metric-current" style="color:var(--red)">3+ Silos</div>
+      <div class="metric-desc">PayPal, Tipalti, and manual checks — each with separate reconciliation, support, and engineering overhead.</div>
+    </div>
+  </div>
+
+  <!-- ══ TAB AREA ══ -->
+  <div class="tab-row" id="main-tabs">
+    <button class="tab-btn active tab-red"   onclick="switchTab('refunds')"      id="tab-refunds">↩️ Refund Demo</button>
+    <button class="tab-btn tab-amber"          onclick="switchTab('chargebacks')"  id="tab-chargebacks">🛡️ Chargeback Simulator</button>
+    <button class="tab-btn tab-stripe"         onclick="switchTab('consolidation')" id="tab-consolidation">🔗 Payout Consolidation</button>
+  </div>
+
+  <!-- ══════ TAB: REFUNDS ══════ -->
+  <div class="tab-panel active" id="panel-refunds">
+
+    <!-- Current state pain -->
+    <div class="sc braintree-pain">
+      <h4>⚠️ Today's Refund Process (Nicole's Pain)</h4>
+      <div class="bt-steps">
+        <div class="bt-step"><div class="bt-num">1</div><div>Customer requests refund in Custom Ink portal — request logged but <strong>cannot be processed here</strong></div></div>
+        <div class="bt-step"><div class="bt-num">2</div><div>Finance team switches to Braintree dashboard, manually finds the original transaction</div></div>
+        <div class="bt-step"><div class="bt-num">3</div><div>Full refund only — <strong>partial refunds not supported</strong> in current workflow</div></div>
+        <div class="bt-step"><div class="bt-num">4</div><div>If partial refund needed: generate check, mail to customer — process takes 1–3 weeks</div></div>
+        <div class="bt-step"><div class="bt-num">5</div><div>Manually reconcile the refund across accounting and order management systems</div></div>
+      </div>
+      <div class="bt-check-warning">⚠️ Every partial refund = a physical check in the mail. No partial refund API. No automation.</div>
+    </div>
+
+    <div class="workflow sc">
+      <div class="workflow-side">
+        <div class="workflow-header wh-current">⚠️ Before: Braintree + Manual Checks</div>
+        <div class="workflow-steps">
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-bad">🔀</div>
+            <div class="wf-step-body"><h4>Switch to Braintree</h4><p>Finance leaves Custom Ink portal, logs into Braintree separately</p><span class="wf-step-badge badge-pain">Context switch</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-bad">🔍</div>
+            <div class="wf-step-body"><h4>Find transaction manually</h4><p>Search by order ID, amount, or date — no direct link from order system</p><span class="wf-step-badge badge-pain">Manual lookup</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-bad">🚫</div>
+            <div class="wf-step-body"><h4>Full refund only</h4><p>Partial refunds require cutting a physical check — no API support</p><span class="wf-step-badge badge-pain">No partial refunds</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-bad">📬</div>
+            <div class="wf-step-body"><h4>Mail check (if partial)</h4><p>1–3 week delivery. Float cost, lost checks, reconciliation headaches</p><span class="wf-step-badge badge-pain">Weeks of delay</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="workflow-side">
+        <div class="workflow-header wh-future">✨ After: Stripe Refunds API</div>
+        <div class="workflow-steps">
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-stripe">🏠</div>
+            <div class="wf-step-body"><h4>Stay in Custom Ink portal</h4><p>Refund UI embedded directly via Stripe's embedded components — no context switch</p><span class="wf-step-badge badge-stripe">Stripe Embedded Components</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-good">↩️</div>
+            <div class="wf-step-body"><h4>Select refund type</h4><p>Full or partial — any amount up to the original charge, with reason code</p><span class="wf-step-badge badge-win">Native partial refunds</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-stripe">⚡</div>
+            <div class="wf-step-body"><h4>One API call</h4><p>Stripe posts the refund instantly; customer card refunded in 5–10 business days</p><span class="wf-step-badge badge-stripe">stripe.refunds.create()</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-good">📊</div>
+            <div class="wf-step-body"><h4>Auto-reconciled</h4><p>Refund appears in Stripe reporting, syncs to accounting, no manual entry</p><span class="wf-step-badge badge-win">Zero manual reconciliation</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERACTIVE REFUND DEMO -->
+    <div class="section-head">
+      <div class="section-eyebrow sc eyebrow-stripe">Interactive Demo</div>
+      <h2 class="sc">Try It: Stripe Refund Flow</h2>
+      <div class="section-eyebrow sf eyebrow-red">Current Experience</div>
+      <h2 class="sf">Today's Broken Refund Process</h2>
+    </div>
+
+    <div class="refund-demo">
+      <div class="refund-demo-toolbar">
+        <div class="rd-dot" style="background:#FF5F57"></div>
+        <div class="rd-dot" style="background:#FFBD2E"></div>
+        <div class="rd-dot" style="background:#28CA41"></div>
+        <div class="rd-url sc">fundraising.customink.com/orders/INK-20250312-4471/refund</div>
+        <div class="rd-url sf">braintreegateway.com/merchants/… ← separate login required</div>
+      </div>
+      <div class="rd-body" id="refund-form-area">
+
+        <!-- Current state: just shows the pain -->
+        <div class="sf" style="text-align:center;padding:32px 20px;">
+          <div style="font-size:48px;margin-bottom:16px">😓</div>
+          <div style="font-size:18px;font-weight:800;margin-bottom:8px;color:var(--red)">Refund Not Available Here</div>
+          <div style="font-size:14px;color:var(--muted);max-width:400px;margin:0 auto 20px">To process a refund, Nicole's team must leave this portal and log into Braintree separately. Partial refunds require mailing a physical check.</div>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <div style="padding:12px 20px;background:var(--red-bg);border-radius:10px;font-size:13px;font-weight:600;color:var(--red)">🔀 Open Braintree (separate tab)</div>
+            <div style="padding:12px 20px;background:var(--amber-bg);border-radius:10px;font-size:13px;font-weight:600;color:var(--amber)">📬 Request check (partial only)</div>
+          </div>
+          <div style="margin-top:20px;font-size:12px;color:var(--muted)">Average time to complete partial refund: <strong>2–3 weeks</strong></div>
+        </div>
+
+        <!-- Future state: interactive Stripe refund UI -->
+        <div class="sc" id="refund-ui">
+          <!-- Order Summary -->
+          <div class="order-card">
+            <div class="order-card-header">
+              <div>
+                <div class="order-id">Order #INK-20250312-4471</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">Placed Mar 12, 2025 · Riverside PTO Spirit Wear Campaign</div>
+              </div>
+              <span class="order-status-badge status-fulfilled">Fulfilled</span>
+            </div>
+            <div class="order-card-body">
+              <div class="order-line">
+                <div class="order-line-img">👕</div>
+                <div>
+                  <div class="order-line-name">Classic Tee — Red / L</div>
+                  <div class="order-line-meta">Qty: 2 · Custom design "Go Riverside!"</div>
+                </div>
+                <div class="order-line-price">$56.00</div>
+              </div>
+              <div class="order-line">
+                <div class="order-line-img">🧢</div>
+                <div>
+                  <div class="order-line-name">Snapback Hat — Black</div>
+                  <div class="order-line-meta">Qty: 1</div>
+                </div>
+                <div class="order-line-price">$24.00</div>
+              </div>
+              <div class="order-line">
+                <div class="order-line-img">💚</div>
+                <div>
+                  <div class="order-line-name">Donation to Riverside PTO</div>
+                  <div class="order-line-meta">Standalone donation</div>
+                </div>
+                <div class="order-line-price">$10.00</div>
+              </div>
+              <div class="order-total">
+                <span>Order Total</span>
+                <span id="order-total-display">$90.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Refund Controls -->
+          <div class="refund-controls">
+            <div>
+              <div class="rc-label">Refund Type</div>
+              <div class="refund-type-row">
+                <button class="refund-type-btn" id="btn-full" onclick="selectRefundType('full')">↩️ Full Refund<br><small style="font-weight:400">$90.00</small></button>
+                <button class="refund-type-btn selected" id="btn-partial" onclick="selectRefundType('partial')">✂️ Partial Refund<br><small style="font-weight:400">Custom amount</small></button>
+                <button class="refund-type-btn" id="btn-item" onclick="selectRefundType('item')">📦 Item Refund<br><small style="font-weight:400">Select items</small></button>
+              </div>
+            </div>
+
+            <div class="partial-amount-row visible" id="partial-row">
+              <div>
+                <div class="rc-label">Refund Amount</div>
+                <div style="position:relative;display:flex;align-items:center">
+                  <span style="position:absolute;left:12px;font-weight:700;font-size:15px;color:var(--muted)">$</span>
+                  <input type="number" class="partial-input" id="partial-amount" value="56.00" min="0.01" max="90.00" step="0.01" oninput="updateSummary()" style="padding-left:28px">
+                </div>
+              </div>
+              <div class="partial-hint">Max refundable: <strong>$90.00</strong></div>
+            </div>
+
+            <div>
+              <div class="rc-label">Reason</div>
+              <select class="refund-reason-select" id="refund-reason" onchange="updateSummary()">
+                <option value="duplicate">Duplicate charge</option>
+                <option value="fraudulent">Fraudulent transaction</option>
+                <option value="customer_request" selected>Customer request</option>
+                <option value="product_not_received">Product not received</option>
+                <option value="product_unacceptable">Product quality issue</option>
+              </select>
+            </div>
+
+            <div class="refund-summary-box">
+              <div class="rsb-row"><span class="rsb-label">Order total</span><span class="rsb-val">$90.00</span></div>
+              <div class="rsb-row"><span class="rsb-label">Refund amount</span><span class="rsb-val rsb-val-stripe" id="summary-amount">$56.00</span></div>
+              <div class="rsb-row"><span class="rsb-label">Remaining charged</span><span class="rsb-val" id="summary-remaining">$34.00</span></div>
+              <div class="rsb-row"><span class="rsb-label">Stripe fee refunded</span><span class="rsb-val rsb-val-stripe" id="summary-fee">~$1.65</span></div>
+              <div class="rsb-row"><span class="rsb-label">Net to Custom Ink</span><span class="rsb-val" id="summary-net">$32.35</span></div>
+            </div>
+
+            <button class="refund-submit-btn" id="refund-submit-btn" onclick="submitRefund()">
+              <span>↩️</span> Process Refund — <span id="btn-amount-label">$56.00</span>
+            </button>
+            <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:-8px">
+              Refund posts instantly · Customer receives funds in 5–10 business days
+            </div>
+          </div>
+        </div>
+
+        <!-- Success state -->
+        <div class="refund-success sc" id="refund-success">
+          <div class="success-checkmark">✓</div>
+          <div class="success-title">Refund Processed</div>
+          <div class="success-sub" id="success-sub-text">$56.00 refund submitted to Stripe</div>
+          <div class="success-receipt">
+            <div class="sr-row"><span class="sr-label">Refund ID</span><span style="font-family:monospace;font-size:12px">re_3QxDfJK...</span></div>
+            <div class="sr-row"><span class="sr-label">Amount</span><span id="receipt-amount">$56.00</span></div>
+            <div class="sr-row"><span class="sr-label">Reason</span><span id="receipt-reason">Customer request</span></div>
+            <div class="sr-row"><span class="sr-label">Status</span><span style="color:var(--green);font-weight:700">Pending → Card Network</span></div>
+            <div class="sr-row"><span class="sr-label">Est. arrival</span><span>Jun 10–15, 2025</span></div>
+            <div class="sr-row"><span class="sr-label">Auto-reconciled</span><span style="color:var(--green)">✓ Stripe Reporting</span></div>
+          </div>
+          <button class="reset-btn" onclick="resetRefund()">↩ Process Another Refund</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Stripe Refunds API note -->
+    <div class="tech-note sc">
+      stripe.refunds.create({ payment_intent: 'pi_3Qx...', amount: 5600, reason: 'customer_request' })<br>
+      // → Refund object: { id: 're_3Qx...', status: 'pending', amount: 5600, currency: 'usd' }<br>
+      // Partial refunds: set amount to any value ≤ original charge<br>
+      // Connected account refunds: add stripeAccount header → donation portion refunded from org's balance
+    </div>
+  </div>
+
+  <!-- ══════ TAB: CHARGEBACKS ══════ -->
+  <div class="tab-panel" id="panel-chargebacks">
+
+    <div class="workflow">
+      <div class="workflow-side">
+        <div class="workflow-header wh-current">⚠️ Today: 100% Manual Dispute Handling</div>
+        <div class="workflow-steps">
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-bad">📧</div>
+            <div class="wf-step-body"><h4>Chargeback email arrives</h4><p>Notification from Braintree with no context, no order data attached</p><span class="wf-step-badge badge-pain">No automation</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-bad">🔍</div>
+            <div class="wf-step-body"><h4>Manual evidence gathering</h4><p>Team pulls shipping confirmation, order history, and tracking from separate systems</p><span class="wf-step-badge badge-pain">30–60 min per dispute</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-bad">📄</div>
+            <div class="wf-step-body"><h4>Format & submit evidence</h4><p>Upload PDFs manually to Braintree portal before deadline</p><span class="wf-step-badge badge-pain">Missed deadlines = auto-loss</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-bad">💸</div>
+            <div class="wf-step-body"><h4>No "claw back" strategy</h4><p>Scott wants to recover revenue — but no tooling exists for proactive fraud prevention</p><span class="wf-step-badge badge-pain">Revenue leakage</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="workflow-side">
+        <div class="workflow-header wh-future">✨ With Stripe: Automated + Proactive</div>
+        <div class="workflow-steps">
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-stripe">🤖</div>
+            <div class="wf-step-body"><h4>Radar blocks fraud before dispute</h4><p>ML scoring stops high-risk transactions from completing — no chargeback ever filed</p><span class="wf-step-badge badge-stripe">Stripe Radar</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-good">⚡</div>
+            <div class="wf-step-body"><h4>Auto-evidence submission</h4><p>Stripe submits order data, tracking, and shipping confirmation automatically on your behalf</p><span class="wf-step-badge badge-win">0 manual work</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-stripe">🛡️</div>
+            <div class="wf-step-body"><h4>Chargeback Protection option</h4><p>Stripe absorbs the loss on eligible fraudulent disputes — Custom Ink keeps the revenue</p><span class="wf-step-badge badge-stripe">Stripe Chargeback Protection</span></div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-step-icon wf-step-icon-good">📊</div>
+            <div class="wf-step-body"><h4>Dispute analytics dashboard</h4><p>Win rate, reason code breakdown, at-risk campaigns — Scott's "claw back" strategy made real</p><span class="wf-step-badge badge-win">Revenue recovered</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARGEBACK SIMULATOR -->
+    <div class="section-head">
+      <div class="section-eyebrow sc eyebrow-stripe">Live Simulator</div>
+      <h2 class="sc">Chargeback Queue — Stripe Disputes Dashboard</h2>
+      <div class="section-eyebrow sf eyebrow-amber">Current State</div>
+      <h2 class="sf">Manual Chargeback Queue (Today)</h2>
+    </div>
+
+    <div class="cb-sim">
+      <div class="cb-sim-header">
+        <div class="cb-sim-title">
+          🛡️ Dispute Management
+          <span class="cb-live-badge sc">LIVE</span>
+          <span class="cb-live-badge sf" style="background:var(--amber)">MANUAL</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="font-size:12px;color:rgba(255,255,255,.4)" id="cb-auto-label">
+            <span class="sc">Auto-submit: ON</span>
+            <span class="sf">Auto-submit: N/A</span>
+          </div>
+        </div>
+      </div>
+      <div class="cb-sim-body">
+
+        <div class="cb-stats">
+          <div class="cb-stat stat-red">
+            <div class="cb-stat-val" id="stat-open" style="color:var(--red)">4</div>
+            <div class="cb-stat-label">Open Disputes</div>
+          </div>
+          <div class="cb-stat stat-green">
+            <div class="cb-stat-val" id="stat-won" style="color:var(--green)">2</div>
+            <div class="cb-stat-label">Won</div>
+          </div>
+          <div class="cb-stat stat-stripe sc">
+            <div class="cb-stat-val" id="stat-auto" style="color:var(--stripe)">1</div>
+            <div class="cb-stat-label">Auto-Won</div>
+          </div>
+          <div class="cb-stat stat-amber sf">
+            <div class="cb-stat-val" style="color:var(--amber)">3</div>
+            <div class="cb-stat-label">Pending Manual</div>
+          </div>
+          <div class="cb-stat" style="background:var(--bg)">
+            <div class="cb-stat-val sc" style="color:var(--green)" id="stat-winrate">75%</div>
+            <div class="cb-stat-val sf" style="color:var(--amber)">30%</div>
+            <div class="cb-stat-label">Win Rate</div>
+          </div>
+        </div>
+
+        <div class="cb-queue" id="cb-queue">
+          <div class="cb-item" id="cb-1">
+            <div class="cb-item-icon">💳</div>
+            <div class="cb-item-body">
+              <div class="cb-item-amount">$142.00</div>
+              <div class="cb-item-reason">Reason: Product not received · Fundraising campaign order</div>
+              <div class="cb-item-org">Riverside PTO Spirit Wear · Submitted 2 days ago</div>
+            </div>
+            <span class="cb-item-status cbs-open">Open</span>
+            <button class="cb-item-action sc" onclick="resolveDispute('cb-1','auto')">⚡ Auto-Submit Evidence</button>
+            <button class="cb-item-action sf" onclick="resolveDispute('cb-1','manual')" style="color:var(--amber);border-color:var(--amber)">📄 Manual Response</button>
+          </div>
+          <div class="cb-item" id="cb-2">
+            <div class="cb-item-icon">🏪</div>
+            <div class="cb-item-body">
+              <div class="cb-item-amount">$89.50</div>
+              <div class="cb-item-reason">Reason: Fraudulent · Online store purchase</div>
+              <div class="cb-item-org">Custom Ink Online Store · 4 days remaining</div>
+            </div>
+            <span class="cb-item-status cbs-open">Open</span>
+            <button class="cb-item-action sc" onclick="resolveDispute('cb-2','protect')">🛡️ Chargeback Protection</button>
+            <button class="cb-item-action sf" onclick="resolveDispute('cb-2','manual')" style="color:var(--amber);border-color:var(--amber)">📄 Manual Response</button>
+          </div>
+          <div class="cb-item winning" id="cb-3">
+            <div class="cb-item-icon">👕</div>
+            <div class="cb-item-body">
+              <div class="cb-item-amount">$56.00</div>
+              <div class="cb-item-reason">Reason: Unrecognized · Tracking confirmed delivered</div>
+              <div class="cb-item-org">Corporate group order · Evidence submitted 1 day ago</div>
+            </div>
+            <span class="cb-item-status cbs-won">Won ✓</span>
+            <div class="cb-item-action sc" style="cursor:default;border-color:var(--green);color:var(--green)">✓ Auto-submitted</div>
+          </div>
+          <div class="cb-item" id="cb-4">
+            <div class="cb-item-icon">🎽</div>
+            <div class="cb-item-body">
+              <div class="cb-item-amount">$215.00</div>
+              <div class="cb-item-reason">Reason: Duplicate charge · Large team order</div>
+              <div class="cb-item-org">Lincoln High School Track Team · 6 days remaining</div>
+            </div>
+            <span class="cb-item-status cbs-open">Open</span>
+            <button class="cb-item-action sc" onclick="resolveDispute('cb-4','auto')">⚡ Auto-Submit Evidence</button>
+            <button class="cb-item-action sf" onclick="resolveDispute('cb-4','manual')" style="color:var(--amber);border-color:var(--amber)">📄 Manual Response</button>
+          </div>
+          <div class="cb-item auto-won" id="cb-5">
+            <div class="cb-item-icon">🤖</div>
+            <div class="cb-item-body">
+              <div class="cb-item-amount">$34.00</div>
+              <div class="cb-item-reason">Reason: Fraudulent · Radar blocked before dispute filed</div>
+              <div class="cb-item-org">Anonymous · Radar ML score: 98 → blocked at checkout</div>
+            </div>
+            <span class="cb-item-status cbs-auto sc">Radar Blocked ✓</span>
+            <span class="cb-item-status cbs-lost sf">Lost — No Response</span>
+          </div>
+        </div>
+
+        <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px">
+          <span class="sc">Click "Auto-Submit Evidence" or "Chargeback Protection" to see Stripe handle it →</span>
+          <span class="sf">Each dispute requires manual evidence gathering, formatting, and submission</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Radar Rules -->
+    <div class="section-head sc">
+      <div class="section-eyebrow eyebrow-stripe">Stripe Radar — Custom Ink Rule Set</div>
+      <h2>Fraud Prevention Rules (Scott's "Claw Back" Strategy)</h2>
+      <p>Configure once — Stripe enforces on every transaction across all campaigns and stores.</p>
+    </div>
+    <div class="radar-rules sc">
+      <div class="radar-rule">
+        <div class="rr-icon">🌍</div>
+        <div class="rr-body">
+          <div class="rr-name">High-risk country + first donation &gt; $500</div>
+          <div class="rr-desc">Block transactions from sanctioned/high-fraud jurisdictions on large first-time gifts</div>
+        </div>
+        <span class="rr-action rr-block">BLOCK</span>
+        <button class="rr-toggle on" onclick="toggleRule(this)"></button>
+      </div>
+      <div class="radar-rule">
+        <div class="rr-icon">⚡</div>
+        <div class="rr-body">
+          <div class="rr-name">Velocity: &gt;3 donations from same card in 10 min</div>
+          <div class="rr-desc">Common pattern in charity fraud — rapid small donations to test stolen card</div>
+        </div>
+        <span class="rr-action rr-block">BLOCK</span>
+        <button class="rr-toggle on" onclick="toggleRule(this)"></button>
+      </div>
+      <div class="radar-rule">
+        <div class="rr-icon">🔐</div>
+        <div class="rr-body">
+          <div class="rr-name">First-time donor &gt; $200, Radar score &gt; 65</div>
+          <div class="rr-desc">Require 3D Secure authentication — extra step for donor, stops most card-testing fraud</div>
+        </div>
+        <span class="rr-action rr-3ds">3D SECURE</span>
+        <button class="rr-toggle on" onclick="toggleRule(this)"></button>
+      </div>
+      <div class="radar-rule">
+        <div class="rr-icon">🔍</div>
+        <div class="rr-body">
+          <div class="rr-name">Prepaid card + donation-only (no product) &gt; $100</div>
+          <div class="rr-desc">Flag for manual review — prepaid + pure donation is a common money-laundering signal</div>
+        </div>
+        <span class="rr-action rr-review">REVIEW</span>
+        <button class="rr-toggle on" onclick="toggleRule(this)"></button>
+      </div>
+      <div class="radar-rule">
+        <div class="rr-icon">✅</div>
+        <div class="rr-body">
+          <div class="rr-name">Verified Link payment method + prior purchase history</div>
+          <div class="rr-desc">Allow through immediately — returning Stripe Link users are low-risk</div>
+        </div>
+        <span class="rr-action rr-allow">ALLOW</span>
+        <button class="rr-toggle on" onclick="toggleRule(this)"></button>
+      </div>
+    </div>
+    <div class="tech-note sc">
+      // Radar Rule example (no code required — set in Stripe Dashboard):<br>
+      // BLOCK if ::risk_level = 'highest'<br>
+      // 3DS  if ::risk_score &gt; 65 AND :amount_in_cents &gt; 20000 AND :customer_id = null<br>
+      // REVIEW if :card_funding = 'prepaid' AND metadata['has_product'] = 'false'
+    </div>
+  </div>
+
+  <!-- ══════ TAB: CONSOLIDATION ══════ -->
+  <div class="tab-panel" id="panel-consolidation">
+
+    <div class="section-head">
+      <div class="section-eyebrow sc eyebrow-stripe">Payout Consolidation</div>
+      <div class="section-eyebrow sf eyebrow-red">Today: Fragmented Payout Stack</div>
+      <h2 class="sc">From 3+ Platforms to One Stripe Stack</h2>
+      <h2 class="sf">Current Payout Sprawl — Manual Across Every Channel</h2>
+    </div>
+
+    <!-- Consolidation visualization -->
+    <div class="consolidation-vis">
+      <div class="con-title sc">✨ Future State: All Outgoing Flows Through Stripe</div>
+      <div class="con-title sf">⚠️ Today: Every Payout Stream Is Its Own System</div>
+
+      <div class="con-flow">
+        <!-- Sources -->
+        <div class="con-col">
+          <div class="con-col-label">Payout Sources</div>
+          <div class="con-node cn-source">🎽 Fundraising Campaigns</div>
+          <div class="con-node cn-source">🏪 Online Stores</div>
+          <div class="con-node cn-source">↩️ Customer Refunds</div>
+          <div class="con-node cn-source">🛡️ Chargeback Reversals</div>
+          <div class="con-node cn-source">💼 Org Payouts</div>
+        </div>
+
+        <!-- Arrow: current = pain, future = stripe -->
+        <div class="con-arrow-col">
+          <div class="sf">
+            <div class="con-arrow">→</div>
+            <div class="con-arrow-label" style="color:var(--red)">5 manual<br>workflows</div>
+          </div>
+          <div class="sc">
+            <div class="con-arrow">→</div>
+            <div class="con-arrow-label" style="color:var(--stripe)">one API</div>
+          </div>
+        </div>
+
+        <!-- Middle: pain nodes vs stripe -->
+        <div class="con-col sf">
+          <div class="con-col-label" style="color:var(--red)">Today's Platforms</div>
+          <div class="con-node cn-pain">😓 PayPal Mass Payouts</div>
+          <div class="con-node cn-pain">😓 Tipalti</div>
+          <div class="con-node cn-pain">😓 Braintree (refunds)</div>
+          <div class="con-node cn-pain">😓 Manual Checks</div>
+          <div class="con-node cn-pain">😓 Ad-hoc Wires</div>
+        </div>
+        <div class="con-col sc">
+          <div class="con-col-label" style="color:var(--stripe)">Stripe Layer</div>
+          <div class="con-node cn-stripe">⚡ Stripe Connect<br><small>Org payouts</small></div>
+          <div class="con-node cn-stripe">↩️ Refunds API<br><small>Instant partial</small></div>
+          <div class="con-node cn-stripe">🛡️ Dispute API<br><small>Auto evidence</small></div>
+          <div class="con-node cn-stripe">📊 Stripe Sigma<br><small>One report</small></div>
+        </div>
+
+        <div class="con-arrow-col">
+          <div class="sf">
+            <div class="con-arrow">→</div>
+            <div class="con-arrow-label" style="color:var(--red)">siloed<br>reconciliation</div>
+          </div>
+          <div class="sc">
+            <div class="con-arrow">→</div>
+            <div class="con-arrow-label" style="color:var(--stripe)">unified<br>reporting</div>
+          </div>
+        </div>
+
+        <!-- Destinations -->
+        <div class="con-col">
+          <div class="con-col-label">Recipients</div>
+          <div class="con-node cn-dest">🏫 Nonprofit Orgs</div>
+          <div class="con-node cn-dest">👤 Customers (Refunds)</div>
+          <div class="con-node cn-dest">🎽 Custom Ink</div>
+          <div class="con-node cn-dest">🏦 Bank Accounts</div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+          <div class="sf" style="padding:12px 16px;background:var(--red-bg);border-radius:8px;font-size:12px">
+            <strong style="color:var(--red)">Today:</strong> 3+ separate platforms each with separate:<br>• Engineering integrations<br>• Reconciliation workflows<br>• Support contacts<br>• Fee structures
+          </div>
+          <div class="sc" style="padding:12px 16px;background:var(--stripe-bg);border-radius:8px;font-size:12px">
+            <strong style="color:var(--stripe)">With Stripe:</strong> One platform for all:<br>• Outgoing payouts<br>• Refunds (partial &amp; full)<br>• Dispute management<br>• Reporting &amp; reconciliation
+          </div>
+          <div style="padding:12px 16px;background:var(--green-bg);border-radius:8px;font-size:12px">
+            <strong style="color:var(--green)">Estimated savings:</strong><br>• ~40% reduction in finance team time<br>• Eliminate Tipalti license costs<br>• No more refund check printing/mailing<br>• One API contract vs. 3+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="cg-card">
+        <div class="cg-card-icon" style="background:var(--stripe-bg)">📅</div>
+        <h3>Campaign-Close Payout Automation</h3>
+        <p>Webhooks trigger payouts to org accounts automatically when campaign ends + orders ship. No manual PayPal transfer needed. Replaces current manual fundraising payout workflow entirely.</p>
+        <span class="stripe-tag">🔷 Connect Payouts API</span>
+      </div>
+      <div class="cg-card">
+        <div class="cg-card-icon" style="background:var(--green-bg)">↩️</div>
+        <h3>Partial Refunds — Finally Possible</h3>
+        <p>Any amount, any reason, from the Custom Ink portal. No Braintree login. No physical checks. Nicole's team processes refunds in under 30 seconds, fully logged and reconciled automatically.</p>
+        <span class="stripe-tag">🔷 Stripe Refunds API</span>
+      </div>
+      <div class="cg-card">
+        <div class="cg-card-icon" style="background:var(--amber-bg)">📊</div>
+        <h3>Single Reconciliation Layer</h3>
+        <p>All outgoing flows — fundraising payouts, store payouts, refunds, chargeback reversals — appear in one Stripe Sigma report. One export replaces 3+ reconciliation files from PayPal, Tipalti, and Braintree.</p>
+        <span class="stripe-tag">🔷 Stripe Sigma</span>
+      </div>
+      <div class="cg-card">
+        <div class="cg-card-icon" style="background:var(--red-bg)">🛡️</div>
+        <h3>Chargeback Protection</h3>
+        <p>On eligible fraudulent disputes, Stripe covers the disputed amount — Custom Ink doesn't lose revenue or pay the $15 dispute fee. Scott's "claw back revenue" strategy becomes a product feature.</p>
+        <span class="stripe-tag">🔷 Stripe Chargeback Protection</span>
+      </div>
+      <div class="cg-card">
+        <div class="cg-card-icon" style="background:var(--blue-bg)">🔗</div>
+        <h3>Tipalti Replacement</h3>
+        <p>Stripe Connect handles the full accounts-payable workflow for org payouts — KYC, bank account verification, scheduling, 1099s. All capabilities of Tipalti for this use case, without the separate contract.</p>
+        <span class="stripe-tag">🔷 Stripe Connect Express</span>
+      </div>
+      <div class="cg-card">
+        <div class="cg-card-icon" style="background:var(--green-bg)">🤖</div>
+        <h3>Automated Payout Scheduling</h3>
+        <p>Replace manual PayPal transfers with programmatic payout triggers. Set rules: "pay org within 5 business days of campaign close + fulfillment confirmation." Zero human touch required.</p>
+        <span class="stripe-tag">🔷 Stripe Webhooks + Payouts API</span>
+      </div>
+    </div>
+
+    <div class="tech-note sc">
+      // Automated campaign-close payout (replaces manual PayPal transfer):<br>
+      // 1. Listen for webhook: order.fulfilled + campaign.closed<br>
+      // 2. stripe.balance.retrieve({ stripeAccount: orgAccountId })<br>
+      // 3. stripe.payouts.create({ amount: available, method: 'instant' }, { stripeAccount: orgAccountId })<br>
+      // 4. Sigma auto-logs: payout_id, org_id, amount, campaign_id — one row per event, no manual entry
+    </div>
+  </div>
+
+</div><!-- /main-wrap -->
+
+<footer style="text-align:center;padding:32px 24px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);background:#fff">
+  Custom Ink × Stripe — Refunds &amp; Chargebacks Capability Demo · Internal use only
+</footer>
+
+<script>
+  // ── STATE TOGGLE ──
+  function setState(s) {
+    document.documentElement.setAttribute('data-state', s);
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 't' || e.key === 'T') {
+      const cur = document.documentElement.getAttribute('data-state');
+      setState(cur === 'current' ? 'future' : 'current');
+    }
+  });
+
+  // ── TABS ──
+  function switchTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  // ── REFUND DEMO ──
+  let refundType = 'partial';
+
+  function selectRefundType(type) {
+    refundType = type;
+    ['full','partial','item'].forEach(t => {
+      document.getElementById('btn-' + t).classList.toggle('selected', t === type);
+    });
+    const partialRow = document.getElementById('partial-row');
+    partialRow.classList.toggle('visible', type === 'partial');
+    if (type === 'full') {
+      document.getElementById('partial-amount').value = '90.00';
+    } else if (type === 'item') {
+      document.getElementById('partial-amount').value = '56.00';
+    }
+    updateSummary();
+  }
+
+  function updateSummary() {
+    let amount = parseFloat(document.getElementById('partial-amount').value) || 0;
+    if (refundType === 'full') amount = 90.00;
+    amount = Math.min(amount, 90.00);
+
+    const remaining = (90.00 - amount).toFixed(2);
+    const fee = (amount * 0.029 + 0.30).toFixed(2);
+    const net = (remaining - 0).toFixed(2);
+
+    document.getElementById('summary-amount').textContent = '$' + amount.toFixed(2);
+    document.getElementById('summary-remaining').textContent = '$' + remaining;
+    document.getElementById('summary-fee').textContent = '~$' + fee;
+    document.getElementById('summary-net').textContent = '$' + net;
+    document.getElementById('btn-amount-label').textContent = '$' + amount.toFixed(2);
+  }
+
+  function submitRefund() {
+    const btn = document.getElementById('refund-submit-btn');
+    const amount = document.getElementById('summary-amount').textContent;
+    const reason = document.getElementById('refund-reason');
+    const reasonText = reason.options[reason.selectedIndex].text;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span style="animation:spin .7s linear infinite;display:inline-block">⟳</span> Processing...';
+
+    setTimeout(() => {
+      document.getElementById('refund-ui').style.display = 'none';
+      const success = document.getElementById('refund-success');
+      success.classList.add('visible');
+      document.getElementById('success-sub-text').textContent = amount + ' refund submitted successfully';
+      document.getElementById('receipt-amount').textContent = amount;
+      document.getElementById('receipt-reason').textContent = reasonText;
+    }, 1800);
+  }
+
+  function resetRefund() {
+    document.getElementById('refund-ui').style.display = '';
+    document.getElementById('refund-success').classList.remove('visible');
+    document.getElementById('refund-submit-btn').disabled = false;
+    document.getElementById('refund-submit-btn').innerHTML = '<span>↩️</span> Process Refund — <span id="btn-amount-label">$56.00</span>';
+    selectRefundType('partial');
+  }
+
+  // ── CHARGEBACK SIMULATOR ──
+  function resolveDispute(id, mode) {
+    const item = document.getElementById(id);
+    const status = item.querySelector('.cb-item-status');
+    const action = item.querySelector('.cb-item-action');
+
+    if (mode === 'auto') {
+      item.style.opacity = '.5';
+      item.style.transition = 'all .3s';
+      setTimeout(() => {
+        item.className = 'cb-item auto-won';
+        status.className = 'cb-item-status cbs-auto';
+        status.textContent = 'Auto-Won ✓';
+        if (action) { action.style.display = 'none'; }
+        item.style.opacity = '1';
+        updateCbStats(1, 0);
+      }, 1200);
+    } else if (mode === 'protect') {
+      item.style.opacity = '.5';
+      setTimeout(() => {
+        item.className = 'cb-item auto-won';
+        status.className = 'cb-item-status cbs-auto';
+        status.textContent = '🛡️ Protected';
+        if (action) { action.style.display = 'none'; }
+        item.style.opacity = '1';
+        updateCbStats(0, 1);
+      }, 900);
+    } else if (mode === 'manual') {
+      status.textContent = '⏳ In Progress';
+      status.className = 'cb-item-status cbs-open';
+      if (action) { action.textContent = '📨 Submitted'; action.style.color = 'var(--amber)'; action.disabled = true; }
+    }
+  }
+
+  let wonCount = 2, autoCount = 1, openCount = 4;
+  function updateCbStats(wonDelta, autoDelta) {
+    wonCount += wonDelta;
+    autoCount += autoDelta;
+    openCount = Math.max(0, openCount - wonDelta - autoDelta);
+    document.getElementById('stat-won').textContent = wonCount;
+    document.getElementById('stat-auto').textContent = autoCount;
+    document.getElementById('stat-open').textContent = openCount;
+    const wr = Math.round((wonCount + autoCount) / (wonCount + autoCount + openCount) * 100);
+    document.getElementById('stat-winrate').textContent = wr + '%';
+  }
+
+  // ── RADAR TOGGLES ──
+  function toggleRule(btn) {
+    const isOn = btn.classList.contains('on');
+    btn.classList.toggle('on', !isOn);
+    btn.classList.toggle('off', isOn);
+  }
+
+  // ── SPIN ANIMATION ──
+  const style = document.createElement('style');
+  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+  document.head.appendChild(style);
+
+  // init
+  updateSummary();
+</script>
+</body>
+</html>

@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="en" data-state="future">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CustomInk — Connect Consolidation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #FA3C00;
+  --stripe: #635BFF; --stripe-light: #7A73FF; --stripe-bg: #F6F5FF;
+  --dark: #0a0a1a; --text: #1a1a2e; --muted: #6B7280;
+  --border: #E5E7EB; --bg: #F9FAFB; --white: #fff;
+  --green: #00875A; --green-bg: #ECFDF5;
+  --red: #DC2626; --red-bg: #FEF2F2;
+  --amber: #D97706; --amber-bg: #FFFBEB;
+  --blue: #0070F3; --blue-bg: #EFF6FF;
+  --gof: #7C3AED; --gof-bg: #F5F3FF;
+  --fund: #0891B2; --fund-bg: #ECFEFF;
+  --store: #D97706; --store-bg: #FFFBEB;
+  --r: 14px;
+  --shadow: 0 2px 12px rgba(0,0,0,.07);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,.11);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: #fafafa; line-height: 1.5; overflow-x: hidden; }
+button { font-family: inherit; }
+
+html[data-state="current"] .sc { display: none !important; }
+html[data-state="future"]  .sf { display: none !important; }
+
+/* ── HUD ── */
+.demo-hud {
+  background: #0a0a1a; padding: 10px 20px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  position: sticky; top: 0; z-index: 900;
+  border-bottom: 2px solid transparent; transition: border-color .3s;
+}
+html[data-state="current"] .demo-hud { border-bottom-color: var(--orange); }
+html[data-state="future"]  .demo-hud { border-bottom-color: var(--stripe); }
+.demo-mode-chip { font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.4); border: 1px solid rgba(255,255,255,.14); padding: 3px 9px; border-radius: 4px; flex-shrink: 0; }
+.demo-toggle-track { display: flex; align-items: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 100px; padding: 3px; gap: 2px; }
+.demo-state-btn { padding: 7px 16px; border-radius: 100px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .28s; border: none; background: none; color: rgba(255,255,255,.28); white-space: nowrap; }
+.demo-state-btn:hover { color: rgba(255,255,255,.5); }
+html[data-state="current"] .demo-state-btn.cur-btn { background: var(--orange); color: #fff; }
+html[data-state="future"]  .demo-state-btn.fut-btn { background: var(--stripe); color: #fff; }
+.demo-page-nav { display: flex; align-items: center; gap: 8px; margin-left: 16px; }
+.demo-page-link { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.35); padding: 5px 12px; border-radius: 6px; border: 1px solid transparent; text-decoration: none; transition: all .2s; white-space: nowrap; }
+.demo-page-link:hover { color: rgba(255,255,255,.7); }
+.demo-page-link.active { color: #fff; border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.08); }
+.demo-hud-hint { font-size: 10px; color: rgba(255,255,255,.18); flex-shrink: 0; }
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(160deg, #0a0a1a 0%, #1a0a3a 50%, #0a1a2e 100%);
+  padding: 64px 24px 80px; text-align: center; position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,91,255,.3) 0%, transparent 65%);
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: rgba(255,255,255,.45); margin-bottom: 20px; position: relative;
+}
+.hero-dot { width: 6px; height: 6px; border-radius: 50%; }
+html[data-state="current"] .hero-dot { background: var(--orange); }
+html[data-state="future"]  .hero-dot { background: #00C896; }
+.hero h1 { font-size: clamp(32px, 5vw, 58px); font-weight: 900; color: #fff; line-height: 1.08; margin-bottom: 16px; position: relative; letter-spacing: -.02em; }
+.hero h1 em { color: var(--stripe-light); font-style: normal; }
+html[data-state="current"] .hero h1 em { color: #FA8C00; }
+.hero-sub { font-size: 17px; color: rgba(255,255,255,.5); max-width: 520px; margin: 0 auto 36px; position: relative; }
+
+/* three pills */
+.hero-pills { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; position: relative; }
+.hero-pill {
+  padding: 8px 18px; border-radius: 100px; font-size: 13px; font-weight: 700;
+  border: 1.5px solid;
+}
+.pill-gof   { background: rgba(124,58,237,.15); border-color: rgba(124,58,237,.4); color: #C4B5FD; }
+.pill-fund  { background: rgba(8,145,178,.15);  border-color: rgba(8,145,178,.4);  color: #67E8F9; }
+.pill-store { background: rgba(217,119,6,.15);  border-color: rgba(217,119,6,.4);  color: #FDE68A; }
+
+/* ── SILO VISUALIZATION ── */
+.silo-section { max-width: 1100px; margin: 0 auto; padding: 56px 24px 0; }
+
+.silo-title { text-align: center; margin-bottom: 48px; }
+.silo-title h2 { font-size: clamp(22px, 3vw, 34px); font-weight: 800; line-height: 1.2; margin-bottom: 8px; }
+.silo-title p { font-size: 15px; color: var(--muted); max-width: 500px; margin: 0 auto; }
+
+/* BEFORE: three separate silos */
+.silos-before {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  margin-bottom: 20px;
+}
+@media (max-width: 700px) { .silos-before { grid-template-columns: 1fr; } }
+
+.silo-card {
+  border-radius: var(--r); border: 2px solid; overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.silo-card-head {
+  padding: 18px 20px; font-size: 15px; font-weight: 800;
+  display: flex; align-items: center; gap: 10px;
+}
+.silo-card-body { background: #fff; padding: 16px 20px; }
+.silo-card-body ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.silo-card-body li {
+  display: flex; gap: 8px; align-items: flex-start;
+  font-size: 13px; line-height: 1.5;
+}
+.silo-card-body li::before { content: ''; flex-shrink: 0; margin-top: 6px; width: 6px; height: 6px; border-radius: 50%; }
+.silo-gof   { border-color: #C4B5FD; }
+.silo-fund  { border-color: #A5F3FC; }
+.silo-store { border-color: #FDE68A; }
+.silo-gof   .silo-card-head { background: var(--gof-bg);   color: var(--gof);   }
+.silo-fund  .silo-card-head { background: var(--fund-bg);  color: var(--fund);  }
+.silo-store .silo-card-head { background: var(--store-bg); color: var(--store); }
+.silo-gof   li::before { background: var(--gof);   }
+.silo-fund  li::before { background: var(--fund);  }
+.silo-store li::before { background: var(--store); }
+.silo-pain-tag {
+  display: inline-block; margin-top: 6px; padding: 3px 9px;
+  border-radius: 100px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+}
+.tag-bad  { background: var(--red-bg);   color: var(--red);   }
+.tag-warn { background: var(--amber-bg); color: var(--amber); }
+
+/* chaos connectors */
+.chaos-layer {
+  position: relative; height: 80px; margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+.chaos-label {
+  background: var(--red-bg); border: 1.5px solid #FECACA; border-radius: 100px;
+  padding: 8px 20px; font-size: 13px; font-weight: 700; color: var(--red);
+  z-index: 2; position: relative;
+}
+.chaos-line {
+  position: absolute; top: 50%; height: 2px; background: #FECACA;
+  transform-origin: left center;
+}
+
+/* payout platforms row */
+.payout-platforms {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.pp-node {
+  padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700;
+  border: 2px solid; display: flex; align-items: center; gap: 8px;
+}
+.pp-pain   { border-color: #FECACA; background: var(--red-bg);   color: var(--red);   }
+.pp-warn   { border-color: #FDE68A; background: var(--amber-bg); color: var(--amber); }
+.pp-stripe { border-color: #C4B5FD; background: var(--stripe-bg); color: var(--stripe); }
+
+/* ── UNIFICATION DIAGRAM ── */
+.unify-section { max-width: 1100px; margin: 0 auto; padding: 0 24px 56px; }
+
+.unify-diagram {
+  background: #fff; border-radius: 20px; border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg); padding: 36px; overflow: hidden; position: relative;
+}
+.unify-diagram::before {
+  content: ''; position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+  width: 400px; height: 200px;
+  background: radial-gradient(ellipse, rgba(99,91,255,.08) 0%, transparent 70%);
+}
+
+.ud-row { display: flex; align-items: center; gap: 0; justify-content: space-between; position: relative; }
+
+/* source nodes */
+.ud-sources { display: flex; flex-direction: column; gap: 16px; width: 200px; flex-shrink: 0; }
+.ud-source {
+  padding: 14px 16px; border-radius: 12px; border: 2px solid;
+  font-size: 13px; font-weight: 700; line-height: 1.3; position: relative;
+}
+.uds-gof   { border-color: #C4B5FD; background: var(--gof-bg);   color: var(--gof);   }
+.uds-fund  { border-color: #A5F3FC; background: var(--fund-bg);  color: var(--fund);  }
+.uds-store { border-color: #FDE68A; background: var(--store-bg); color: var(--store); }
+.ud-source-sub { font-size: 11px; font-weight: 500; opacity: .7; margin-top: 2px; }
+
+/* arrow beam */
+.ud-beam {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  position: relative; padding: 0 12px;
+}
+.ud-beam-line {
+  height: 2px; width: 100%; position: relative;
+}
+.ud-beam-line::after { content: '▶'; position: absolute; right: -6px; top: -8px; font-size: 11px; }
+.beam-current { background: #FECACA; }
+.beam-current::after { color: #FECACA; }
+.beam-stripe  { background: linear-gradient(90deg, #C4B5FD, var(--stripe)); }
+.beam-stripe::after { color: var(--stripe); }
+.ud-beam-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+
+/* center node */
+.ud-center {
+  width: 180px; flex-shrink: 0; text-align: center;
+}
+.ud-center-box {
+  padding: 20px 16px; border-radius: 16px; border: 2px solid;
+  font-size: 14px; font-weight: 800; line-height: 1.4;
+}
+.ucb-pain   { border-color: #FECACA; background: var(--red-bg); color: var(--red); }
+.ucb-stripe { border-color: #C4B5FD; background: var(--stripe-bg); color: var(--stripe); }
+.ud-center-label { font-size: 10px; color: var(--muted); margin-top: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+
+/* right outputs */
+.ud-outputs { display: flex; flex-direction: column; gap: 12px; width: 200px; flex-shrink: 0; }
+.ud-output {
+  padding: 10px 14px; border-radius: 10px; border: 1.5px solid;
+  font-size: 12px; font-weight: 600; line-height: 1.3;
+}
+.udo-pain   { border-color: #FECACA; background: var(--red-bg); color: var(--red); }
+.udo-stripe { border-color: #A7F3D0; background: var(--green-bg); color: var(--green); }
+
+/* ── STRIPE CAPABILITIES GRID ── */
+.caps-section { background: var(--dark); padding: 64px 24px; }
+.caps-inner { max-width: 1100px; margin: 0 auto; }
+.caps-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: rgba(255,255,255,.4); margin-bottom: 12px; text-align: center;
+}
+.caps-title { font-size: clamp(24px, 3.5vw, 40px); font-weight: 900; color: #fff; text-align: center; margin-bottom: 8px; letter-spacing: -.02em; }
+.caps-title em { color: var(--stripe-light); font-style: normal; }
+.caps-sub { font-size: 15px; color: rgba(255,255,255,.4); text-align: center; max-width: 480px; margin: 0 auto 48px; }
+
+.caps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; border-radius: 16px; overflow: hidden; }
+@media (max-width: 700px) { .caps-grid { grid-template-columns: 1fr; } }
+.cap-tile {
+  background: rgba(255,255,255,.04); padding: 28px 24px;
+  border: 1px solid rgba(255,255,255,.07);
+  transition: background .2s;
+  position: relative; overflow: hidden;
+}
+.cap-tile:hover { background: rgba(99,91,255,.12); }
+.cap-tile::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.ct-gof::before   { background: linear-gradient(90deg, #7C3AED, #A78BFA); }
+.ct-fund::before  { background: linear-gradient(90deg, #0891B2, #67E8F9); }
+.ct-store::before { background: linear-gradient(90deg, #D97706, #FDE68A); }
+.ct-all::before   { background: linear-gradient(90deg, var(--stripe), var(--stripe-light)); }
+.cap-tile-icon { font-size: 28px; margin-bottom: 14px; }
+.cap-tile-flow { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+.ct-gof   .cap-tile-flow { color: #A78BFA; }
+.ct-fund  .cap-tile-flow { color: #67E8F9; }
+.ct-store .cap-tile-flow { color: #FDE68A; }
+.ct-all   .cap-tile-flow { color: var(--stripe-light); }
+.cap-tile h3 { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.cap-tile p  { font-size: 12px; color: rgba(255,255,255,.45); line-height: 1.7; }
+.cap-api { font-size: 11px; font-family: 'SF Mono', 'Fira Code', monospace; color: var(--stripe-light); margin-top: 10px; opacity: .7; }
+
+/* ── BEFORE / AFTER COMPARISON ── */
+.compare-section { max-width: 1100px; margin: 0 auto; padding: 56px 24px; }
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 700px) { .compare-grid { grid-template-columns: 1fr; } }
+
+.compare-col { border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); }
+.compare-col-head {
+  padding: 18px 24px; font-size: 14px; font-weight: 800;
+  display: flex; align-items: center; gap: 8px;
+}
+.cch-before { background: var(--red-bg); color: var(--red); }
+.cch-after  { background: var(--stripe-bg); color: var(--stripe); }
+.compare-col-body { background: #fff; border: 1px solid var(--border); border-top: none; padding: 0; }
+.compare-row {
+  display: flex; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--bg);
+  align-items: flex-start;
+}
+.compare-row:last-child { border-bottom: none; }
+.cr-icon { font-size: 18px; flex-shrink: 0; }
+.cr-body h4 { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.cr-body p  { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* ── MIGRATION TIMELINE ── */
+.timeline-section { background: var(--bg); border-top: 1px solid var(--border); padding: 56px 24px; }
+.timeline-inner { max-width: 860px; margin: 0 auto; }
+.tl-head { text-align: center; margin-bottom: 40px; }
+.tl-head h2 { font-size: clamp(20px, 3vw, 32px); font-weight: 800; margin-bottom: 8px; }
+.tl-head p { font-size: 14px; color: var(--muted); }
+
+.timeline { position: relative; }
+.timeline::before {
+  content: ''; position: absolute; left: 32px; top: 0; bottom: 0;
+  width: 2px; background: linear-gradient(to bottom, var(--stripe), var(--green));
+}
+.tl-item { display: flex; gap: 20px; margin-bottom: 32px; position: relative; }
+.tl-marker {
+  width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 900; border: 3px solid;
+  background: #fff; position: relative; z-index: 1;
+}
+.tm-1 { border-color: var(--stripe);  color: var(--stripe);  }
+.tm-2 { border-color: var(--gof);     color: var(--gof);     }
+.tm-3 { border-color: var(--fund);    color: var(--fund);    }
+.tm-4 { border-color: var(--green);   color: var(--green);   }
+.tl-content { flex: 1; padding-top: 12px; }
+.tl-phase { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px; color: var(--muted); }
+.tl-content h3 { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+.tl-content p  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.tl-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tl-tag { padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+.tt-stripe { background: var(--stripe-bg); color: var(--stripe); }
+.tt-gof    { background: var(--gof-bg);    color: var(--gof);    }
+.tt-fund   { background: var(--fund-bg);   color: var(--fund);   }
+.tt-store  { background: var(--store-bg);  color: var(--store);  }
+.tt-green  { background: var(--green-bg);  color: var(--green);  }
+
+/* ── THE BIG NUMBER ── */
+.big-number-section {
+  background: linear-gradient(135deg, var(--stripe) 0%, #4338CA 100%);
+  padding: 64px 24px; text-align: center;
+}
+.bn-inner { max-width: 800px; margin: 0 auto; }
+.bn-label { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 20px; }
+.bn-grid { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+.bn-item { padding: 28px 36px; background: rgba(255,255,255,.1); border-radius: 12px; text-align: center; }
+.bn-num { font-size: clamp(36px, 6vw, 56px); font-weight: 900; color: #fff; line-height: 1; margin-bottom: 6px; }
+.bn-desc { font-size: 13px; color: rgba(255,255,255,.6); font-weight: 500; max-width: 140px; margin: 0 auto; }
+.bn-cta {
+  font-size: 16px; font-weight: 700; color: rgba(255,255,255,.8); margin-bottom: 8px;
+}
+
+/* ── FOOTER ── */
+footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); background: #fff; }
+
+/* misc */
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+.ey-stripe { color: var(--stripe); }
+.ey-red    { color: var(--red); }
+.section-h2 { font-size: clamp(22px, 3vw, 32px); font-weight: 800; margin-bottom: 8px; }
+.section-p  { font-size: 14px; color: var(--muted); }
+.ey-fund { color: var(--fund); }
+
+/* ── FUNDRAISING DEEP DIVE SECTION ── */
+.fundraising-section { background: #fff; border-top: 1px solid var(--border); padding: 64px 0; }
+.fs-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+.fs-sub-head { margin-bottom: 28px; }
+.fs-sub-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; display: block; margin-bottom: 6px; }
+.fs-sub-head h3 { font-size: clamp(18px, 2.5vw, 26px); font-weight: 800; margin-bottom: 6px; }
+.fs-sub-head p  { font-size: 14px; color: var(--muted); }
+
+/* onboarding stepper */
+.onboard-stepper { display: flex; flex-direction: column; gap: 0; }
+.ob-step { display: flex; gap: 20px; }
+.ob-step-rail { display: flex; flex-direction: column; align-items: center; width: 48px; flex-shrink: 0; }
+.ob-step-dot {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; flex-shrink: 0; z-index: 1;
+  border: 2px solid;
+}
+.dot-active   { background: var(--fund-bg);   color: var(--fund);   border-color: var(--fund);   }
+.dot-complete { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+.ob-step-line { flex: 1; width: 2px; background: var(--border); min-height: 20px; margin: 4px 0; }
+.ob-step-content { flex: 1; padding-bottom: 32px; }
+.ob-step-label { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text); padding-top: 8px; }
+
+/* mock browser frames inside stepper */
+.ob-mock { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+.ob-mock-active { box-shadow: 0 4px 20px rgba(8,145,178,.12); border-color: #A5F3FC; }
+.ob-mock-bar {
+  background: var(--bg); padding: 8px 14px;
+  display: flex; align-items: center; gap: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.ob-dot { width: 8px; height: 8px; border-radius: 50%; }
+.ob-url { font-size: 11px; color: var(--muted); flex: 1; max-width: 400px; }
+.ob-mock-body { padding: 18px 20px; }
+.ob-form-title { font-size: 16px; font-weight: 800; margin-bottom: 14px; }
+.ob-field-row { display: flex; gap: 12px; margin-bottom: 10px; }
+@media (max-width: 600px) { .ob-field-row { flex-direction: column; } }
+.ob-field { flex: 1; }
+.ob-field-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.ob-field-input {
+  padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 13px; font-weight: 500; background: #fff; color: var(--text);
+}
+.ob-field-select { color: var(--text); cursor: pointer; }
+.ob-field-verified { border-color: #A7F3D0; background: var(--green-bg); color: var(--green); font-weight: 700; }
+.ob-progress-bar { height: 6px; background: var(--bg); border-radius: 100px; overflow: hidden; margin-bottom: 6px; }
+.ob-progress-fill { height: 100%; background: linear-gradient(90deg, var(--fund), #67E8F9); border-radius: 100px; }
+.ob-cta-btn { margin-top: 12px; padding: 12px; border-radius: 9px; color: #fff; font-size: 14px; font-weight: 700; text-align: center; cursor: pointer; }
+.ob-bank-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 0; }
+.ob-bank-btn {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border: 2px solid var(--border); border-radius: 10px; cursor: pointer; transition: border-color .18s;
+  background: #fff;
+}
+.ob-bank-selected { border-color: var(--fund); background: var(--fund-bg); }
+.ob-recommended { margin-left: auto; padding: 3px 8px; background: var(--fund); color: #fff; border-radius: 100px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.ob-api-note {
+  margin-top: 10px; padding: 8px 12px;
+  background: var(--stripe-bg); border-radius: 6px; border-left: 3px solid var(--stripe);
+  font-size: 11px; color: var(--stripe); font-family: 'SF Mono', 'Fira Code', monospace; line-height: 1.6;
+}
+
+/* payout dashboard */
+.payout-dashboard { border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
+.pd-titlebar {
+  background: var(--dark); padding: 14px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.pd-body { background: var(--bg); }
+.pd-summary-bar {
+  display: flex; gap: 0; border-bottom: 1px solid var(--border);
+}
+.pd-summary-stat {
+  flex: 1; padding: 18px 20px; background: #fff;
+  border-right: 1px solid var(--border);
+}
+.pd-summary-stat:last-child { border-right: none; }
+.pd-ss-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.pd-ss-val   { font-size: 22px; font-weight: 900; margin-bottom: 2px; }
+.pd-ss-sub   { font-size: 11px; color: var(--muted); }
+@media (max-width: 700px) { .pd-summary-bar { flex-wrap: wrap; } .pd-summary-stat { min-width: 50%; } }
+.pd-table-wrap { background: #fff; margin: 16px; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+.pd-table-header { display: flex; padding: 10px 16px; background: var(--bg); border-bottom: 1px solid var(--border); }
+.pd-th { flex: 1; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+.pd-th:first-child { flex: 2; }
+.pd-row { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--bg); transition: background .15s; }
+.pd-row:last-child { border-bottom: none; }
+.pd-row:hover { background: var(--bg); }
+.pd-row-ready  { border-left: 3px solid var(--green); }
+.pd-row-transit { border-left: 3px solid var(--fund); }
+.pd-cell { flex: 1; font-size: 13px; }
+.pd-cell-org { display: flex; align-items: center; gap: 10px; }
+.pd-org-avatar { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+.pd-org-name { font-size: 13px; font-weight: 700; }
+.pd-org-meta { font-size: 10px; color: var(--muted); font-family: 'SF Mono', monospace; }
+.pd-badge { padding: 3px 8px; border-radius: 100px; font-size: 10px; font-weight: 800; }
+.pd-badge-ready   { background: var(--green-bg); color: var(--green); }
+.pd-badge-transit { background: var(--fund-bg);  color: var(--fund);  }
+.pd-badge-hold    { background: var(--amber-bg); color: var(--amber); }
+.pd-action-btn {
+  padding: 7px 14px; border-radius: 7px; border: none;
+  background: var(--stripe); color: #fff; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: opacity .18s; white-space: nowrap;
+}
+.pd-action-btn:hover { opacity: .85; }
+.pd-action-review { background: var(--amber-bg); color: var(--amber); border: 1.5px solid #FDE68A; }
+.pd-bulk-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-top: 1px solid var(--border); background: #fff; margin: 0 16px 16px; border-radius: 0 0 10px 10px; border: 1px solid var(--border); border-top: none;
+}
+.pd-bulk-btn {
+  padding: 10px 20px; border-radius: 8px; border: none;
+  background: var(--green); color: #fff; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: opacity .18s;
+}
+.pd-bulk-btn:hover { opacity: .88; }
+
+/* modal */
+.pd-modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999;
+  align-items: center; justify-content: center;
+}
+.pd-modal-overlay.visible { display: flex; }
+.pd-modal { background: #fff; border-radius: 14px; width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); overflow: hidden; }
+.pd-modal-head { padding: 16px 20px; font-size: 14px; font-weight: 800; border-bottom: 1px solid var(--border); }
+.pd-modal-body { padding: 20px; }
+
+/* toast */
+.pd-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--dark); color: #fff; padding: 12px 24px; border-radius: 100px;
+  font-size: 13px; font-weight: 600; opacity: 0; transition: all .4s;
+  box-shadow: var(--shadow-lg); z-index: 998; white-space: nowrap;
+}
+.pd-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- HUD -->
+<div class="demo-hud">
+  <span class="demo-mode-chip">Demo Mode</span>
+  <div class="demo-toggle-track">
+    <button class="demo-state-btn cur-btn" onclick="setState('current')">⚠️ Today — 3 Silos</button>
+    <button class="demo-state-btn fut-btn" onclick="setState('future')">✨ With Stripe Connect</button>
+  </div>
+  <div class="demo-page-nav">
+    <a href="/" class="demo-page-link">🛒 Checkout</a>
+    <a href="/refunds" class="demo-page-link">↩️ Refunds</a>
+    <a href="/connect" class="demo-page-link active">⚡ Connect</a>
+  </div>
+  <span class="demo-hud-hint">press T to toggle</span>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow"><span class="hero-dot"></span>
+    <span class="sc">One Platform. Three Flows. Zero Silos.</span>
+    <span class="sf">Three Platforms. Three Teams. Zero Alignment.</span>
+  </div>
+  <h1 class="sc">Custom Ink's Three Flows,<br><em>Finally Unified</em></h1>
+  <h1 class="sf">Three Separate Platforms,<br><em>All Broken Differently</em></h1>
+  <p class="hero-sub sc">Stripe Connect becomes the single layer underneath Group Orders, Fundraising, and Online Stores — shared KYC, shared payouts, shared reporting.</p>
+  <p class="hero-sub sf">GOF, Fundraising, and Online Stores each run on separate infrastructure, with separate payout stacks, separate reconciliation — and no path to consolidation.</p>
+  <div class="hero-pills">
+    <div class="hero-pill pill-gof">🏢 Group Orders (GOF)</div>
+    <div class="hero-pill pill-fund">🎽 Fundraising</div>
+    <div class="hero-pill pill-store">🏪 Online Stores</div>
+  </div>
+</div>
+
+<!-- ══ SILO VISUALIZATION ══ -->
+<div class="silo-section">
+  <div class="silo-title">
+    <div class="eyebrow sc ey-stripe">The Opportunity</div>
+    <div class="eyebrow sf ey-red">The Problem Today</div>
+    <h2 class="sc">Three Flows — One Connect Layer</h2>
+    <h2 class="sf">Three Platforms, Three Sets of Debt</h2>
+    <p class="sc">Each business line has unique needs. Stripe Connect handles all three without requiring Custom Ink to rebuild any of them from scratch.</p>
+    <p class="sf">Each platform has accrued its own technical debt, manual workarounds, and payout complexity — with no shared infrastructure between them.</p>
+  </div>
+
+  <div class="silos-before">
+
+    <!-- GOF -->
+    <div class="silo-card silo-gof">
+      <div class="silo-card-head">
+        <span style="font-size:22px">🏢</span>
+        <div>
+          <div>Group Orders (GOF)</div>
+          <div style="font-size:11px;font-weight:500;opacity:.7">Corporate & team orders</div>
+        </div>
+      </div>
+      <div class="silo-card-body">
+        <ul>
+          <li class="sc">
+            <div>
+              Businesses place large bulk orders for uniforms, merch, branded gear
+              <br><span class="silo-pain-tag tt-stripe" style="background:var(--gof-bg);color:var(--gof)">High AOV · High volume</span>
+            </div>
+          </li>
+          <li class="sc">
+            <div>
+              Connect: platform charges business buyer → funds held → Custom Ink fulfills → release
+              <br><span class="silo-pain-tag tt-stripe" style="background:var(--gof-bg);color:var(--gof)">Destination charges + escrow</span>
+            </div>
+          </li>
+          <li class="sc">
+            <div>
+              Invoice-based with net terms for large accounts — Connect supports ACH debit on invoices
+              <br><span class="silo-pain-tag tt-stripe" style="background:var(--gof-bg);color:var(--gof)">Stripe Invoicing + ACH</span>
+            </div>
+          </li>
+          <li class="sf">
+            <div>
+              "Mega complicated for very little reason" — significant tech debt, minimal investment
+              <br><span class="silo-pain-tag tag-bad">Tech debt burden</span>
+            </div>
+          </li>
+          <li class="sf">
+            <div>
+              GOF lives on its own system, disconnected from fundraising and store payments infrastructure
+              <br><span class="silo-pain-tag tag-bad">Isolated platform</span>
+            </div>
+          </li>
+          <li class="sf">
+            <div>
+              Downstream processes are "particularly challenging" due to complexity without investment
+              <br><span class="silo-pain-tag tag-warn">No roadmap to fix</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Fundraising -->
+    <div class="silo-card silo-fund">
+      <div class="silo-card-head">
+        <span style="font-size:22px">🎽</span>
+        <div>
+          <div>Fundraising</div>
+          <div style="font-size:11px;font-weight:500;opacity:.7">Schools, nonprofits, teams</div>
+        </div>
+      </div>
+      <div class="silo-card-body">
+        <ul>
+          <li class="sc">
+            <div>
+              Orgs create campaigns, set product pricing, donors buy — margin goes to org
+              <br><span class="silo-pain-tag tt-stripe" style="background:var(--fund-bg);color:var(--fund)">Multi-party split payment</span>
+            </div>
+          </li>
+          <li class="sc">
+            <div>
+              Express connected accounts for each org — KYC handled by Stripe, not Custom Ink
+              <br><span class="silo-pain-tag tt-stripe" style="background:var(--fund-bg);color:var(--fund)">Connect Express Onboarding</span>
+            </div>
+          </li>
+          <li class="sc">
+            <div>
+              Payouts triggered programmatically at campaign close — not PayPal manual uploads
+              <br><span class="silo-pain-tag tt-stripe" style="background:var(--fund-bg);color:var(--fund)">Automated payouts API</span>
+            </div>
+          </li>
+          <li class="sf">
+            <div>
+              Weekly manual cycle: Tipalti check run Mondays, PayPal mass-pay CSV uploads Tuesdays, payment run Wednesdays — every week
+              <br><span class="silo-pain-tag tag-bad">Tipalti + PayPal, fully manual</span>
+            </div>
+          </li>
+          <li class="sf">
+            <div>
+              High-dollar campaigns ($5K+) manually reviewed for fraud before each disbursement; returned/stale checks require individual reissue tickets
+              <br><span class="silo-pain-tag tag-warn">Manual fraud review + check reissues</span>
+            </div>
+          </li>
+          <li class="sf">
+            <div>
+              Organizers who haven't onboarded Tipalti hold up payments; PayPal payout reversals locked for 30 days if unclaimed
+              <br><span class="silo-pain-tag tag-bad">Compliance & onboarding friction</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Online Stores -->
+    <div class="silo-card silo-store">
+      <div class="silo-card-head">
+        <span style="font-size:22px">🏪</span>
+        <div>
+          <div>Online Stores</div>
+          <div style="font-size:11px;font-weight:500;opacity:.7">Always-on branded storefronts</div>
+        </div>
+      </div>
+      <div class="silo-card-body">
+        <ul>
+          <li class="sc">
+            <div>
+              Org-branded storefronts — ongoing sales, not time-limited campaigns
+              <br><span class="silo-pain-tag tt-stripe" style="background:var(--store-bg);color:var(--store)">Recurring Connect payouts</span>
+            </div>
+          </li>
+          <li class="sc">
+            <div>
+              Rolling payout schedules (weekly / monthly) configured per store — automated
+              <br><span class="silo-pain-tag tt-stripe" style="background:var(--store-bg);color:var(--store)">Payout schedules API</span>
+            </div>
+          </li>
+          <li class="sc">
+            <div>
+              Pilot POD partner integration: Connect splits revenue between Custom Ink + fulfillment partner
+              <br><span class="silo-pain-tag tt-stripe" style="background:var(--store-bg);color:var(--store)">Separate charges & transfers</span>
+            </div>
+          </li>
+          <li class="sf">
+            <div>
+              4 payout types with different owners: For Profit (buyer-funded markup), Revenue Share &amp; Rebate &amp; Sponsorships (all paid by Custom Ink — impacts CI margin)
+              <br><span class="silo-pain-tag tag-bad">4 payout models, manual reconciliation</span>
+            </div>
+          </li>
+          <li class="sf">
+            <div>
+              Legacy stores: monthly PayPal mass-pay with $60K per-batch limit; Fulfill Engine stores: migrating to Tipalti ACH, Net60 — but 1099/W-9 compliance, escheatment laws, and cross-system tracking not yet finalized
+              <br><span class="silo-pain-tag tag-warn">Compliance blockers unresolved</span>
+            </div>
+          </li>
+          <li class="sf">
+            <div>
+              Voucher-based stores require credit card on file (stored in Stripe under customer profile), auto-charged each 30-day period — but AR trigger process and receipt flow unclear
+              <br><span class="silo-pain-tag tag-bad">Billing process undefined</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payout platforms chaos -->
+  <div style="margin-bottom:12px">
+    <div style="text-align:center;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">
+      <span class="sc">Current payout sprawl → replaced by one</span>
+      <span class="sf">Today: payouts scattered across</span>
+    </div>
+    <div class="payout-platforms">
+      <div class="pp-node sc pp-stripe">⚡ Stripe Connect — all three flows</div>
+
+      <div class="pp-node sf pp-pain">😓 Tipalti Checks + PayPal (Fundraising, weekly)</div>
+      <div class="pp-node sf pp-warn">⚠️ Tipalti ACH / PayPal (Stores, Net60)</div>
+      <div class="pp-node sf pp-pain">😓 Legacy PayPal Mass Pay (Stores, $60K limit/batch)</div>
+      <div class="pp-node sf pp-warn">⚠️ Braintree (GOF Payments)</div>
+      <div class="pp-node sf pp-pain">😓 Manual Checks + Reissues</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ UNIFICATION DIAGRAM ══ -->
+<div class="unify-section">
+  <div style="text-align:center;margin-bottom:32px">
+    <div class="eyebrow sc ey-stripe">Architecture</div>
+    <div class="eyebrow sf ey-red">Current Architecture</div>
+    <h2 class="section-h2 sc">Stripe Connect as the Unifying Layer</h2>
+    <h2 class="section-h2 sf">Three Sources, Five Payout Platforms, No Control</h2>
+  </div>
+
+  <div class="unify-diagram">
+    <div class="ud-row">
+      <!-- sources -->
+      <div class="ud-sources">
+        <div class="ud-source uds-gof">
+          🏢 Group Orders (GOF)
+          <div class="ud-source-sub">Corporate buyers · B2B invoicing</div>
+        </div>
+        <div class="ud-source uds-fund">
+          🎽 Fundraising
+          <div class="ud-source-sub">Campaigns · Org payouts</div>
+        </div>
+        <div class="ud-source uds-store">
+          🏪 Online Stores
+          <div class="ud-source-sub">Always-on · Rolling payouts</div>
+        </div>
+      </div>
+
+      <!-- beam -->
+      <div class="ud-beam">
+        <div class="ud-beam-line sc beam-stripe"></div>
+        <div class="ud-beam-line sf beam-current"></div>
+        <div class="ud-beam-label sc" style="color:var(--stripe)">One API</div>
+        <div class="ud-beam-label sf" style="color:var(--red)">Fragmented</div>
+      </div>
+
+      <!-- center -->
+      <div class="ud-center">
+        <div class="ud-center-box sc ucb-stripe">
+          ⚡ Stripe<br>Connect<br>
+          <span style="font-size:11px;font-weight:500;opacity:.7">Platform layer</span>
+        </div>
+        <div class="ud-center-box sf ucb-pain">
+          😓 5 Separate<br>Platforms<br>
+          <span style="font-size:11px;font-weight:500;opacity:.7">No shared layer</span>
+        </div>
+        <div class="ud-center-label sc">Custom Ink is the platform</div>
+        <div class="ud-center-label sf">No platform control</div>
+      </div>
+
+      <!-- beam right -->
+      <div class="ud-beam">
+        <div class="ud-beam-line sc beam-stripe"></div>
+        <div class="ud-beam-line sf beam-current"></div>
+        <div class="ud-beam-label sc" style="color:var(--green)">Unified output</div>
+        <div class="ud-beam-label sf" style="color:var(--red)">Manual every time</div>
+      </div>
+
+      <!-- outputs -->
+      <div class="ud-outputs">
+        <div class="ud-output sc udo-stripe">✓ Automated org payouts</div>
+        <div class="ud-output sc udo-stripe">✓ Native partial refunds</div>
+        <div class="ud-output sc udo-stripe">✓ One reconciliation report</div>
+        <div class="ud-output sc udo-stripe">✓ Shared KYC for orgs</div>
+        <div class="ud-output sc udo-stripe">✓ Radar across all 3 flows</div>
+
+        <div class="ud-output sf udo-pain">✗ PayPal manual uploads</div>
+        <div class="ud-output sf udo-pain">✗ Tipalti separately</div>
+        <div class="ud-output sf udo-pain">✗ Refund checks mailed</div>
+        <div class="ud-output sf udo-pain">✗ 3 reconciliation files</div>
+        <div class="ud-output sf udo-pain">✗ No fraud consolidation</div>
+      </div>
+    </div>
+
+    <!-- What Connect unlocks -->
+    <div class="sc" style="margin-top:28px;padding-top:24px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;text-align:center">What becomes shared infrastructure across all three flows</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <div style="padding:8px 16px;background:var(--gof-bg);border-radius:100px;font-size:12px;font-weight:700;color:var(--gof)">🏢 GOF: ACH invoicing + escrow release</div>
+        <div style="padding:8px 16px;background:var(--fund-bg);border-radius:100px;font-size:12px;font-weight:700;color:var(--fund)">🎽 Fundraising: Express onboarding + campaign-close payouts</div>
+        <div style="padding:8px 16px;background:var(--store-bg);border-radius:100px;font-size:12px;font-weight:700;color:var(--store)">🏪 Stores: Rolling payout schedules + POD partner splits</div>
+        <div style="padding:8px 16px;background:var(--stripe-bg);border-radius:100px;font-size:12px;font-weight:700;color:var(--stripe)">⚡ All three: Radar fraud · Sigma reporting · 1099-K (replaces manual W-9 collection) · Refunds API</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FUNDRAISING DEEP DIVE ══ -->
+<div class="fundraising-section">
+  <div class="fs-inner">
+
+    <div style="text-align:center;margin-bottom:48px">
+      <div class="eyebrow ey-fund">Fundraising — Deep Dive</div>
+      <h2 class="section-h2">Org Onboarding &amp; Payout Experience</h2>
+      <p class="section-p">What an org goes through to get live, and what the Custom Ink team sees on the other side.</p>
+    </div>
+
+    <!-- ── TODAY: CLUNKY ONBOARDING ── -->
+    <div class="sf" style="margin-bottom:56px">
+      <div class="fs-sub-head">
+        <span class="fs-sub-eyebrow" style="color:var(--orange)">Today — Manual &amp; Error-Prone</span>
+        <h3>Org Onboarding — 5+ Days, 3 Platforms</h3>
+        <p>Getting an org set up to receive payouts requires Tipalti registration, emailed W-9 PDFs, and manual finance-team approval — before funds can move.</p>
+      </div>
+
+      <div class="onboard-stepper">
+        <!-- step 1: email from finance -->
+        <div class="ob-step">
+          <div class="ob-step-rail">
+            <div class="ob-step-dot" style="background:#FEF2F2;color:#DC2626;border-color:#DC2626">1</div>
+            <div class="ob-step-line"></div>
+          </div>
+          <div class="ob-step-content">
+            <div class="ob-step-label">Finance team manually emails Tipalti registration link + W-9 PDF to org treasurer</div>
+            <div class="ob-mock">
+              <div class="ob-mock-bar">
+                <div class="ob-dot" style="background:#FF5F57"></div><div class="ob-dot" style="background:#FFBD2E"></div><div class="ob-dot" style="background:#28CA41"></div>
+                <div class="ob-url">Outlook · Sent Items · payouts-team (customink.com)</div>
+              </div>
+              <div class="ob-mock-body" style="background:#f9fafb">
+                <div style="border:1px solid #E5E7EB;border-radius:8px;padding:14px;background:#fff">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                    <div style="font-size:12px;color:var(--muted)"><b>From:</b> payouts-team (customink.com)</div>
+                    <div style="font-size:11px;color:var(--muted)">Thu, Nov 7 · 2:34 PM</div>
+                  </div>
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:4px"><b>To:</b> treasurer@riverside-pto.org</div>
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:12px"><b>Subject:</b> Action Required: Register with Tipalti to receive your fundraiser payout</div>
+                  <div style="font-size:13px;line-height:1.65;color:var(--text)">
+                    Hi Sarah,<br><br>
+                    Congrats on completing your fundraiser! To receive your payout, you'll need to complete two steps:<br><br>
+                    <b>Step 1:</b> Register your org with Tipalti (our payment platform) at the link below:<br>
+                    <span style="color:#0070F3;font-size:12px;word-break:break-all">https://api.tipalti.com/payer/customink/payee/register?token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9…</span><br><br>
+                    <b>Step 2:</b> Complete the attached <b>W-9 form</b>, sign it, and email the signed copy back to this address.<br><br>
+                    <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:10px 12px;font-size:12px;color:var(--amber);margin:10px 0">
+                      ⚠️ <b>Both steps must be completed</b> before payment can be processed. Allow 3–5 business days after submission.
+                    </div>
+                    <div style="font-size:11px;color:var(--muted);margin-top:8px">📎 Attachment: W-9_Form_CustomInk_Fundraising.pdf (143 KB)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ob-api-note" style="border-color:var(--orange);background:var(--amber-bg);color:#92400E">⚠ Manual: finance copies token from internal spreadsheet, sends individually per org — no automation</div>
+          </div>
+        </div>
+
+        <!-- step 2: Tipalti payee portal -->
+        <div class="ob-step">
+          <div class="ob-step-rail">
+            <div class="ob-step-dot" style="background:#FEF2F2;color:#DC2626;border-color:#DC2626">2</div>
+            <div class="ob-step-line"></div>
+          </div>
+          <div class="ob-step-content">
+            <div class="ob-step-label">Org navigates to Tipalti's payee portal — a separate website they've never seen</div>
+            <div class="ob-mock">
+              <div class="ob-mock-bar">
+                <div class="ob-dot" style="background:#FF5F57"></div><div class="ob-dot" style="background:#FFBD2E"></div><div class="ob-dot" style="background:#28CA41"></div>
+                <div class="ob-url" style="color:#6B7280">api.tipalti.com/payer/customink/payee/register?token=eyJhbGci…</div>
+              </div>
+              <div class="ob-mock-body" style="background:#F3F4F6">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid #E5E7EB">
+                  <div style="width:32px;height:32px;background:#0050B3;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;letter-spacing:-.02em">Ti</div>
+                  <div>
+                    <div style="font-size:13px;font-weight:700">Tipalti — Supplier / Payee Registration</div>
+                    <div style="font-size:11px;color:var(--muted)">Payer: Custom Ink Fundraising</div>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+                  <div class="ob-field"><div class="ob-field-label">Legal Entity Name *</div><div class="ob-field-input" style="font-size:12px">Riverside Elementary PTO</div></div>
+                  <div class="ob-field"><div class="ob-field-label">Entity Type *</div><div class="ob-field-input ob-field-select" style="font-size:12px">Non-Profit Organization ▾</div></div>
+                  <div class="ob-field"><div class="ob-field-label">Payment Method *</div><div class="ob-field-input ob-field-select" style="font-size:12px">ACH – Bank Transfer ▾</div></div>
+                  <div class="ob-field"><div class="ob-field-label">Country *</div><div class="ob-field-input ob-field-select" style="font-size:12px">United States of America ▾</div></div>
+                  <div class="ob-field"><div class="ob-field-label">Bank ABA Routing Number *</div><div class="ob-field-input" style="font-size:12px">031000053</div></div>
+                  <div class="ob-field"><div class="ob-field-label">Bank Account Number *</div><div class="ob-field-input" style="font-size:12px">●●●●●7391</div></div>
+                  <div class="ob-field" style="grid-column:1/-1"><div class="ob-field-label">Tax ID (EIN) — must match W-9 exactly *</div><div class="ob-field-input" style="font-size:12px;border-color:#FCA5A5;background:#FEF2F2;color:#DC2626">52-1234567 ← will be cross-checked manually</div></div>
+                </div>
+                <div style="background:#FEF2F2;border:1px solid #FCA5A5;border-radius:6px;padding:10px;font-size:12px;color:#DC2626;margin-bottom:10px">
+                  ⚠ Payment is held until W-9 is received, verified, and approved by Custom Ink finance team
+                </div>
+                <div style="background:#374151;border-radius:6px;padding:10px 14px;text-align:center;font-size:13px;font-weight:700;color:#fff;cursor:pointer">Submit Registration</div>
+              </div>
+            </div>
+            <div class="ob-api-note" style="border-color:var(--orange);background:var(--amber-bg);color:#92400E">⚠ Orgs frequently abandon form — same data entered again in a platform they've never used</div>
+          </div>
+        </div>
+
+        <!-- step 3: W-9 PDF -->
+        <div class="ob-step">
+          <div class="ob-step-rail">
+            <div class="ob-step-dot" style="background:#FEF2F2;color:#DC2626;border-color:#DC2626">3</div>
+            <div class="ob-step-line"></div>
+          </div>
+          <div class="ob-step-content">
+            <div class="ob-step-label">Org downloads W-9 PDF, prints, signs, scans, emails back — typically 2–4 days</div>
+            <div class="ob-mock">
+              <div class="ob-mock-bar">
+                <div class="ob-dot" style="background:#FF5F57"></div><div class="ob-dot" style="background:#FFBD2E"></div><div class="ob-dot" style="background:#28CA41"></div>
+                <div class="ob-url">W-9_Form_CustomInk_Fundraising.pdf · Adobe Acrobat Reader</div>
+              </div>
+              <div class="ob-mock-body" style="background:#F9FAFB">
+                <div style="border:2px solid #374151;border-radius:6px;background:#fff;padding:16px;max-width:480px;margin:0 auto">
+                  <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:12px">
+                    <div style="font-size:15px;font-weight:900;letter-spacing:-.01em">Form W-9</div>
+                    <div style="font-size:10px;color:#374151">Request for Taxpayer Identification Number and Certification</div>
+                    <div style="font-size:9px;color:var(--muted)">Department of the Treasury · Internal Revenue Service · Rev. March 2024</div>
+                  </div>
+                  <div style="display:grid;gap:10px">
+                    <div>
+                      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px">1. Name (as shown on income tax return)</div>
+                      <div style="border-bottom:1.5px solid #000;padding:3px 2px;font-size:12px;font-family:monospace">Riverside Elementary PTO</div>
+                    </div>
+                    <div>
+                      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px">2. Business name / disregarded entity name, if different</div>
+                      <div style="border-bottom:1.5px solid #000;padding:3px 2px;height:22px;font-size:12px"></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                      <div>
+                        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px">3. Federal tax classification</div>
+                        <div style="border-bottom:1.5px solid #000;padding:3px 2px;font-size:11px;font-family:monospace">☒ Other: Nonprofit/PTO</div>
+                      </div>
+                      <div>
+                        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px">Employer ID Number (EIN)</div>
+                        <div style="border:2px solid #000;padding:4px 8px;font-size:14px;font-family:monospace;letter-spacing:.12em;text-align:center">52 – 1234567</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="margin-top:14px;border-top:1px solid #E5E7EB;padding-top:10px;display:flex;align-items:center;gap:8px">
+                    <div style="font-size:11px;font-style:italic;color:#374151;flex:1">Under penalties of perjury, I certify that the information above is correct…</div>
+                    <div style="border-bottom:1.5px solid #000;width:120px;height:28px;display:flex;align-items:flex-end;padding-bottom:2px;font-size:11px;font-family:cursive;color:#374151">Sarah Chen</div>
+                  </div>
+                  <div style="margin-top:10px;padding:8px 12px;background:#FFFBEB;border-radius:4px;font-size:11px;color:var(--amber);text-align:center">
+                    📎 Print → Sign → Scan → Email to payouts-team (customink.com)
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ob-api-note" style="border-color:var(--orange);background:var(--amber-bg);color:#92400E">⚠ PayPal payout reversals locked 30 days if org account is unclaimed — no automated retry</div>
+          </div>
+        </div>
+
+        <!-- step 4: manual approval queue -->
+        <div class="ob-step">
+          <div class="ob-step-rail">
+            <div class="ob-step-dot" style="background:#FEF2F2;color:#DC2626;border-color:#DC2626">4</div>
+          </div>
+          <div class="ob-step-content">
+            <div class="ob-step-label">Finance team manually reviews W-9, approves payee in Tipalti — funds held until next Monday cycle</div>
+            <div class="ob-mock">
+              <div class="ob-mock-bar">
+                <div class="ob-dot" style="background:#FF5F57"></div><div class="ob-dot" style="background:#FFBD2E"></div><div class="ob-dot" style="background:#28CA41"></div>
+                <div class="ob-url">Tipalti · Admin · Payee Approval Queue</div>
+              </div>
+              <div class="ob-mock-body" style="background:#F3F4F6">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                  <div style="font-size:13px;font-weight:700">Pending Payee Approvals</div>
+                  <div style="background:#FEF2F2;color:#DC2626;font-size:11px;font-weight:700;padding:3px 8px;border-radius:100px;border:1px solid #FCA5A5">7 pending review</div>
+                  <div style="margin-left:auto;font-size:11px;color:var(--muted)">Batch closes Mon 5 PM EST</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <div style="display:grid;grid-template-columns:2fr 1fr 1fr 90px;gap:8px;padding:10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;font-size:12px;align-items:center">
+                    <div><div style="font-weight:700">Riverside Elementary PTO</div><div style="font-size:10px;color:var(--muted)">W-9 received · EIN verified · awaiting approval</div></div>
+                    <div style="color:var(--amber);font-size:11px;font-weight:700">⏳ W-9 Review</div>
+                    <div><span style="font-weight:700">$7,320</span><div style="font-size:10px;color:var(--muted)">held since Jun 1</div></div>
+                    <div style="background:#0050B3;color:#fff;font-size:11px;font-weight:700;padding:6px 8px;border-radius:4px;text-align:center;cursor:pointer">Approve</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:2fr 1fr 1fr 90px;gap:8px;padding:10px;background:#fff;border:1px solid #E5E7EB;border-radius:6px;font-size:12px;align-items:center;opacity:0.6">
+                    <div><div style="font-weight:700">Lincoln High School — Band Booster</div><div style="font-size:10px;color:#DC2626">W-9 not received — 11 days overdue</div></div>
+                    <div style="color:#DC2626;font-size:11px;font-weight:700">✗ Blocked</div>
+                    <div><span style="font-weight:700">$12,840</span><div style="font-size:10px;color:#DC2626">held 11 days</div></div>
+                    <div style="background:#E5E7EB;color:#9CA3AF;font-size:11px;font-weight:700;padding:6px 8px;border-radius:4px;text-align:center">Blocked</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:2fr 1fr 1fr 90px;gap:8px;padding:10px;background:#fff;border:1px solid #E5E7EB;border-radius:6px;font-size:12px;align-items:center;opacity:0.6">
+                    <div><div style="font-weight:700">Greenwood Humane Society</div><div style="font-size:10px;color:#DC2626">Tipalti registration abandoned — resend?</div></div>
+                    <div style="color:#DC2626;font-size:11px;font-weight:700">✗ No payee</div>
+                    <div><span style="font-weight:700">$4,890</span><div style="font-size:10px;color:#DC2626">held 8 days</div></div>
+                    <div style="background:#E5E7EB;color:#9CA3AF;font-size:11px;font-weight:700;padding:6px 8px;border-radius:4px;text-align:center">Resend</div>
+                  </div>
+                </div>
+                <div style="margin-top:10px;padding:10px 12px;background:#FEF2F2;border-radius:6px;font-size:12px;color:#DC2626;font-weight:600">
+                  ✗ Total time: 3–5+ days per org · $25,050 in held funds waiting on manual steps
+                </div>
+              </div>
+            </div>
+            <div class="ob-api-note" style="border-color:#DC2626;background:#FEF2F2;color:#DC2626">✗ Approved org waits for next Monday batch · PayPal $60K/batch limit requires multiple runs for large campaigns</div>
+          </div>
+        </div>
+      </div><!-- /onboard-stepper -->
+    </div>
+
+    <!-- ── TODAY: MANUAL PAYOUT CYCLE ── -->
+    <div class="sf">
+      <div class="fs-sub-head">
+        <span class="fs-sub-eyebrow" style="color:var(--orange)">Custom Ink Finance Team — Every Week</span>
+        <h3>The Weekly Payout Cycle — Monday to Wednesday</h3>
+        <p>Three manual steps, two platforms, one $60K batch ceiling. Every single week.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px">
+        <div style="border-radius:12px;border:2px solid #FCA5A5;background:#FEF2F2;padding:20px">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#DC2626;margin-bottom:6px">Monday</div>
+          <div style="font-size:16px;font-weight:800;margin-bottom:8px">Tipalti Disbursement Run</div>
+          <div style="font-size:13px;color:#374151;line-height:1.55">Finance team logs into Tipalti, manually reviews each closed campaign, confirms payee status, and queues ACH check run for approved orgs.</div>
+          <div style="margin-top:12px;padding:8px;background:#fff;border-radius:6px;font-size:11px;color:#DC2626;font-weight:600">⚠ Orgs without W-9 approval skipped — held another week</div>
+        </div>
+        <div style="border-radius:12px;border:2px solid #FCA5A5;background:#FEF2F2;padding:20px">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#DC2626;margin-bottom:6px">Tuesday</div>
+          <div style="font-size:16px;font-weight:800;margin-bottom:8px">PayPal Mass-Pay CSV Upload</div>
+          <div style="font-size:13px;color:#374151;line-height:1.55">Remaining orgs (not on Tipalti yet) paid via PayPal mass-pay CSV. Team manually exports list, formats columns, uploads. Batches capped at $60K.</div>
+          <div style="margin-top:12px;padding:8px;background:#fff;border-radius:6px;font-size:11px;color:#DC2626;font-weight:600">⚠ Large campaigns require 2–3 separate PayPal batch uploads</div>
+        </div>
+        <div style="border-radius:12px;border:2px solid #FDE68A;background:#FFFBEB;padding:20px">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--amber);margin-bottom:6px">Wednesday</div>
+          <div style="font-size:16px;font-weight:800;margin-bottom:8px">Payment Run + Exception Triage</div>
+          <div style="font-size:13px;color:#374151;line-height:1.55">ACH and PayPal payments process. Team manually tracks failures, unclaimed PayPal payments, and reversal requests. Failed payouts re-queued for next Monday.</div>
+          <div style="margin-top:12px;padding:8px;background:#fff;border-radius:6px;font-size:11px;color:var(--amber);font-weight:600">⏳ Unclaimed PayPal reversals locked for 30 days</div>
+        </div>
+      </div>
+
+      <!-- PayPal CSV upload mock -->
+      <div class="ob-mock" style="margin-bottom:8px">
+        <div class="ob-mock-bar">
+          <div class="ob-dot" style="background:#FF5F57"></div><div class="ob-dot" style="background:#FFBD2E"></div><div class="ob-dot" style="background:#28CA41"></div>
+          <div class="ob-url">PayPal Business · Mass Pay · Send Payments</div>
+        </div>
+        <div class="ob-mock-body" style="background:#F3F4F6">
+          <div style="display:flex;align-items:flex-start;gap:20px">
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#003087">PayPal Mass Pay — Batch Upload</div>
+              <div style="display:grid;gap:8px">
+                <div style="padding:12px 14px;border:2px dashed #CBD5E1;border-radius:8px;text-align:center;background:#fff">
+                  <div style="font-size:22px;margin-bottom:4px">📄</div>
+                  <div style="font-size:13px;font-weight:700;margin-bottom:4px">fundraiser_payouts_nov_wk2.csv</div>
+                  <div style="font-size:11px;color:var(--muted)">47 recipients · $38,420 total · Uploaded Nov 12</div>
+                </div>
+                <div style="padding:10px 14px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;font-size:12px;color:var(--amber)">
+                  ⚠ <b>Batch 1 of 2</b> — Total payout ($94,200) exceeds $60,000 per-batch limit. Second file required.
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px">
+                  <div style="padding:8px;background:#fff;border-radius:6px;text-align:center"><div style="color:var(--muted);margin-bottom:2px">Recipients</div><div style="font-weight:800;font-size:14px">47</div></div>
+                  <div style="padding:8px;background:#fff;border-radius:6px;text-align:center"><div style="color:var(--muted);margin-bottom:2px">This batch</div><div style="font-weight:800;font-size:14px;color:#003087">$38,420</div></div>
+                  <div style="padding:8px;background:#FEF2F2;border-radius:6px;text-align:center"><div style="color:#DC2626;margin-bottom:2px">Remaining</div><div style="font-weight:800;font-size:14px;color:#DC2626">$55,780</div></div>
+                </div>
+              </div>
+            </div>
+            <div style="width:200px;flex-shrink:0">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">CSV Format Required</div>
+              <div style="background:#1e1e2e;border-radius:8px;padding:12px;font-family:monospace;font-size:10px;color:#a8ff78;line-height:1.6">
+                Email,Amount,Currency<br>
+                org1_school_edu,1240,USD<br>
+                treasurer_pto_org,3820,USD<br>
+                contact_nonprofit_org,890,USD<br>
+                <span style="color:#ff6b6b">…44 more rows</span>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:#DC2626">✗ No org name, campaign ID, or payout reason in PayPal — reconciliation done manually in spreadsheet</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:10px 14px;background:#FEF2F2;border-radius:8px;font-size:12px;color:#DC2626;font-weight:600;margin-bottom:8px">
+        ✗ This process runs every single week. Any org that misses the Monday window waits 7 more days.
+      </div>
+    </div>
+
+    <!-- ── STRIPE: ONBOARDING ── -->
+    <div class="sc" style="margin-bottom:56px">
+      <div class="fs-sub-head">
+        <span class="fs-sub-eyebrow" style="color:var(--fund)">With Stripe Connect — Step-by-Step</span>
+        <h3>Org Onboarding — 15 Minutes, No PDFs</h3>
+        <p>Stripe's hosted Connect Onboarding handles all KYC. Custom Ink writes zero compliance code.</p>
+      </div>
+
+      <div class="onboard-stepper">
+        <!-- step 1 -->
+        <div class="ob-step" id="obs-1">
+          <div class="ob-step-rail">
+            <div class="ob-step-dot dot-active">1</div>
+            <div class="ob-step-line"></div>
+          </div>
+          <div class="ob-step-content">
+            <div class="ob-step-label">Org clicks "Create Fundraiser" on Custom Ink</div>
+            <div class="ob-mock ob-mock-active">
+              <div class="ob-mock-bar">
+                <div class="ob-dot" style="background:#FF5F57"></div><div class="ob-dot" style="background:#FFBD2E"></div><div class="ob-dot" style="background:#28CA41"></div>
+                <div class="ob-url">fundraising.customink.com/start</div>
+              </div>
+              <div class="ob-mock-body">
+                <div class="ob-form-title">Start your fundraiser</div>
+                <div class="ob-field-row">
+                  <div class="ob-field"><div class="ob-field-label">Organization name</div><div class="ob-field-input">Riverside Elementary PTO</div></div>
+                  <div class="ob-field"><div class="ob-field-label">Org type</div><div class="ob-field-input ob-field-select">School PTO / PTA ▾</div></div>
+                </div>
+                <div class="ob-field-row">
+                  <div class="ob-field"><div class="ob-field-label">Contact email</div><div class="ob-field-input">treasurer@riverside-pto.org</div></div>
+                  <div class="ob-field"><div class="ob-field-label">State</div><div class="ob-field-input ob-field-select">Virginia ▾</div></div>
+                </div>
+                <div class="ob-cta-btn" style="background:var(--fund)">Continue to verification →</div>
+                <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">You'll verify your org details with Stripe in the next step</div>
+              </div>
+            </div>
+            <div class="ob-api-note">Custom Ink backend: stripe.accounts.create({ business_type: 'non_profit', metadata: { org_id: '...' } })</div>
+          </div>
+        </div>
+
+        <!-- step 2 -->
+        <div class="ob-step" id="obs-2">
+          <div class="ob-step-rail">
+            <div class="ob-step-dot dot-active">2</div>
+            <div class="ob-step-line"></div>
+          </div>
+          <div class="ob-step-content">
+            <div class="ob-step-label">Stripe hosted onboarding opens — org completes KYC in-flow</div>
+            <div class="ob-mock ob-mock-active">
+              <div class="ob-mock-bar">
+                <div class="ob-dot" style="background:#FF5F57"></div><div class="ob-dot" style="background:#FFBD2E"></div><div class="ob-dot" style="background:#28CA41"></div>
+                <div class="ob-url" style="color:var(--stripe)">🔒 connect.stripe.com/setup/e/acct_1R… · Secured by Stripe</div>
+              </div>
+              <div class="ob-mock-body">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+                  <div style="font-size:22px">⚡</div>
+                  <div><div style="font-size:13px;font-weight:800;color:var(--stripe)">Stripe</div><div style="font-size:11px;color:var(--muted)">Secure identity verification for Custom Ink</div></div>
+                </div>
+                <div class="ob-progress-bar"><div class="ob-progress-fill" style="width:60%"></div></div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Step 2 of 3 — Organization details</div>
+                <div class="ob-field-row">
+                  <div class="ob-field"><div class="ob-field-label">EIN / Tax ID</div><div class="ob-field-input">52 – 1234567</div></div>
+                  <div class="ob-field"><div class="ob-field-label">Legal business name</div><div class="ob-field-input">Riverside Elementary PTO</div></div>
+                </div>
+                <div class="ob-field-row">
+                  <div class="ob-field"><div class="ob-field-label">Business type</div><div class="ob-field-input ob-field-verified">✓ Non-profit organization</div></div>
+                  <div class="ob-field"><div class="ob-field-label">IRS 501(c)(3) status</div><div class="ob-field-input ob-field-verified">✓ Confirmed</div></div>
+                </div>
+                <div style="background:var(--stripe-bg);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--stripe);margin-bottom:12px">
+                  🔒 Stripe handles all identity verification — Custom Ink never stores or sees this data
+                </div>
+                <div class="ob-cta-btn" style="background:var(--stripe)">Continue →</div>
+              </div>
+            </div>
+            <div class="ob-api-note">stripe.accountLinks.create({ account: acct_xyz, type: 'account_onboarding', collect: 'eventually_due' }) → redirect org to Stripe-hosted URL</div>
+          </div>
+        </div>
+
+        <!-- step 3 -->
+        <div class="ob-step" id="obs-3">
+          <div class="ob-step-rail">
+            <div class="ob-step-dot dot-active">3</div>
+            <div class="ob-step-line"></div>
+          </div>
+          <div class="ob-step-content">
+            <div class="ob-step-label">Bank account connected via Financial Connections — instant, no micro-deposits</div>
+            <div class="ob-mock ob-mock-active">
+              <div class="ob-mock-bar">
+                <div class="ob-dot" style="background:#FF5F57"></div><div class="ob-dot" style="background:#FFBD2E"></div><div class="ob-dot" style="background:#28CA41"></div>
+                <div class="ob-url" style="color:var(--stripe)">🔒 connect.stripe.com/setup/e/acct_1R… · Secured by Stripe</div>
+              </div>
+              <div class="ob-mock-body">
+                <div style="text-align:center;margin-bottom:16px">
+                  <div style="font-size:13px;font-weight:800;margin-bottom:4px">Connect your payout bank account</div>
+                  <div style="font-size:12px;color:var(--muted)">Funds from your campaigns will be deposited here</div>
+                </div>
+                <div class="ob-bank-options">
+                  <div class="ob-bank-btn ob-bank-selected">
+                    <span style="font-size:18px">🏦</span>
+                    <div><div style="font-weight:700;font-size:13px">Link instantly</div><div style="font-size:11px;color:var(--muted)">Connect via Financial Connections</div></div>
+                    <span class="ob-recommended">Recommended</span>
+                  </div>
+                  <div class="ob-bank-btn">
+                    <span style="font-size:18px">🔢</span>
+                    <div><div style="font-weight:700;font-size:13px">Enter account numbers</div><div style="font-size:11px;color:var(--muted)">Manual entry + micro-deposit (2–3 days)</div></div>
+                  </div>
+                </div>
+                <div style="margin:12px 0;background:var(--fund-bg);border-radius:8px;padding:12px 14px">
+                  <div style="font-size:12px;font-weight:700;color:var(--fund);margin-bottom:4px">✓ Bank selected: PNC Bank — Checking ••••7391</div>
+                  <div style="font-size:11px;color:var(--muted)">Account ownership verified instantly · No micro-deposits needed</div>
+                </div>
+                <div class="ob-cta-btn" style="background:var(--fund)">Confirm bank account →</div>
+              </div>
+            </div>
+            <div class="ob-api-note">financial_connections.sessions.create({ account_holder: { account: acct_xyz } }) → bank ownership verified before any payout</div>
+          </div>
+        </div>
+
+        <!-- step 4 -->
+        <div class="ob-step" id="obs-4">
+          <div class="ob-step-rail">
+            <div class="ob-step-dot dot-complete">✓</div>
+          </div>
+          <div class="ob-step-content">
+            <div class="ob-step-label">Org is live — verified badge, campaign launches immediately</div>
+            <div class="ob-mock ob-mock-active">
+              <div class="ob-mock-bar">
+                <div class="ob-dot" style="background:#FF5F57"></div><div class="ob-dot" style="background:#FFBD2E"></div><div class="ob-dot" style="background:#28CA41"></div>
+                <div class="ob-url">fundraising.customink.com/org/riverside-pto/dashboard</div>
+              </div>
+              <div class="ob-mock-body">
+                <div style="text-align:center;padding:20px 0">
+                  <div style="width:56px;height:56px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 12px;border:2px solid #A7F3D0">✓</div>
+                  <div style="font-size:18px;font-weight:800;margin-bottom:4px">You're verified!</div>
+                  <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Riverside Elementary PTO is now a verified nonprofit on Custom Ink Fundraising</div>
+                  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:20px">
+                    <span style="padding:5px 12px;background:var(--green-bg);border-radius:100px;font-size:12px;font-weight:700;color:var(--green)">✓ Verified Nonprofit</span>
+                    <span style="padding:5px 12px;background:var(--fund-bg);border-radius:100px;font-size:12px;font-weight:700;color:var(--fund)">✓ Bank Connected</span>
+                    <span style="padding:5px 12px;background:var(--stripe-bg);border-radius:100px;font-size:12px;font-weight:700;color:var(--stripe)">✓ Payouts Enabled</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;background:var(--bg);border-radius:10px;padding:14px">
+                    <div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Payout account</div><div style="font-size:13px;font-weight:600">PNC Checking ••••7391</div></div>
+                    <div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">First payout</div><div style="font-size:13px;font-weight:600">After campaign closes</div></div>
+                    <div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Platform fee</div><div style="font-size:13px;font-weight:600">0% (nonprofit)</div></div>
+                    <div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">EIN on receipts</div><div style="font-size:13px;font-weight:600">52-1234567</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ob-api-note">Webhook: account.updated → charges_enabled: true, payouts_enabled: true → Custom Ink enables campaign launch button</div>
+          </div>
+        </div>
+      </div><!-- /onboard-stepper -->
+    </div>
+
+    <!-- ── STRIPE: INTEGRATION SHAPE ── -->
+    <div class="sc" style="margin-bottom:56px">
+      <div class="fs-sub-head">
+        <span class="fs-sub-eyebrow" style="color:var(--stripe)">Recommended Integration Spec</span>
+        <h3>Connect Integration Shape — Fundraising</h3>
+        <p>The specific Connect configuration Custom Ink should implement for fundraising orgs. These are deliberate choices, not defaults.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+
+        <div style="border-radius:14px;border:2px solid var(--stripe);background:var(--stripe-bg);padding:20px">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--stripe);margin-bottom:8px">Account Type</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="font-size:20px;font-weight:900;color:var(--stripe)">Express</div>
+            <div style="background:var(--stripe);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:100px">Recommended</div>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Stripe hosts the dashboard and KYC. Custom Ink controls payout timing and fee structure. Orgs see a lightweight Stripe Express portal — not a full Stripe account.</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Stripe hosts dashboard — Custom Ink owns experience</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Stripe handles all KYC + identity verification</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Custom Ink never stores PII</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:#DC2626;font-weight:700">≠</span> Standard: org owns full Stripe account (too much access)</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:#DC2626;font-weight:700">≠</span> Custom: Custom Ink builds all UX (too much work)</div>
+          </div>
+          <div style="margin-top:10px;padding:8px 10px;background:#fff;border-radius:8px;font-family:monospace;font-size:11px;color:var(--stripe)">stripe.accounts.create({ type: 'express' })</div>
+        </div>
+
+        <div style="border-radius:14px;border:2px solid var(--fund);background:var(--fund-bg);padding:20px">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--fund);margin-bottom:8px">Charge Model</div>
+          <div style="font-size:20px;font-weight:900;color:var(--fund);margin-bottom:10px">Destination Charges</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Charge is made on the <em>platform</em> (Custom Ink). Stripe automatically splits: Custom Ink keeps the application fee, remainder transfers to org's connected account at campaign close.</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Custom Ink owns the buyer relationship + receipt</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> One Stripe charge — automatic split on settle</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Funds held on platform until campaign closes</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Radar + fraud rules apply at platform level</div>
+          </div>
+          <div style="padding:8px 10px;background:#fff;border-radius:8px;font-family:monospace;font-size:11px;color:var(--fund)">
+            payment_intents.create({<br>
+            &nbsp;&nbsp;application_fee_amount: feeInCents,<br>
+            &nbsp;&nbsp;transfer_data: { destination: acct_id }<br>
+            })
+          </div>
+        </div>
+
+        <div style="border-radius:14px;border:2px solid var(--green);background:var(--green-bg);padding:20px">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--green);margin-bottom:8px">Fee Structure</div>
+          <div style="font-size:20px;font-weight:900;color:var(--green);margin-bottom:10px">application_fee_amount</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Custom Ink sets an application fee per charge, configurable by org type. Stripe deducts Stripe's processing fee from Custom Ink's platform balance — Custom Ink never pays fees on behalf of orgs.</div>
+          <div style="display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fff;border-radius:6px;font-size:12px">
+              <span style="font-weight:600">Nonprofits / PTOs</span><span style="color:var(--green);font-weight:700">0% application fee</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fff;border-radius:6px;font-size:12px">
+              <span style="font-weight:600">School sports teams</span><span style="color:var(--fund);font-weight:700">Configurable per deal</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fff;border-radius:6px;font-size:12px">
+              <span style="font-weight:600">Stripe processing fee</span><span style="color:var(--muted);font-weight:600">2.9% + 30¢ (platform pays)</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fff;border-radius:6px;font-size:12px">
+              <span style="font-weight:600">1099-K generation</span><span style="color:var(--green);font-weight:700">✓ Stripe auto-handles</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-radius:14px;border:2px solid var(--gof);background:var(--gof-bg);padding:20px">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--gof);margin-bottom:8px">Payout + Dashboard</div>
+          <div style="font-size:20px;font-weight:900;color:var(--gof);margin-bottom:10px">T+2 Auto · Express Portal</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Payouts triggered by Custom Ink webhook on campaign close. Stripe disburses T+2 to org's bank. Org views payout history in Stripe Express — Custom Ink controls which fields are visible.</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Campaign-close webhook triggers transfer immediately</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> T+2 rolling schedule (configurable to T+7 for risk)</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Stripe Express dashboard: org sees payouts, bank, tax docs</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Platform Controls: Custom Ink can pause/delay any payout</div>
+          </div>
+          <div style="padding:8px 10px;background:#fff;border-radius:8px;font-family:monospace;font-size:11px;color:var(--gof)">
+            transfers.create({ destination: acct_id,<br>
+            &nbsp;&nbsp;amount: netCents }) on campaign.closed
+          </div>
+        </div>
+
+      </div>
+
+      <div style="background:linear-gradient(135deg,var(--stripe-bg),var(--fund-bg));border-radius:14px;border:1.5px solid rgba(99,91,255,.2);padding:20px;display:flex;align-items:center;gap:16px">
+        <div style="font-size:32px">🔒</div>
+        <div>
+          <div style="font-size:14px;font-weight:800;margin-bottom:4px">What Custom Ink never has to build</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">Identity verification</span>
+            <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">W-9 / 1099-K compliance</span>
+            <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">Bank account validation</span>
+            <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">Payout ledger</span>
+            <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">Escheatment tracking</span>
+            <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">Fraud rules on transfers</span>
+            <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">Express org portal</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAYOUT DASHBOARD ── -->
+    <div class="sc">
+      <div class="fs-sub-head">
+        <span class="fs-sub-eyebrow" style="color:var(--orange)">Custom Ink Internal View</span>
+        <h3>Stripe Connect — Payout Command Center</h3>
+        <p>What the Custom Ink finance team sees when campaigns close and it's time to disburse.</p>
+      </div>
+
+      <div class="payout-dashboard">
+        <div class="pd-titlebar">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font-size:14px;font-weight:800;color:#fff">⚡ Stripe Connect — Fundraising Payouts</div>
+            <div style="background:#00C896;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:100px;letter-spacing:.1em">LIVE</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:11px;color:rgba(255,255,255,.4)">Custom Ink Platform Account</div>
+            <div style="padding:6px 14px;background:rgba(255,255,255,.1);border-radius:6px;font-size:12px;font-weight:600;color:rgba(255,255,255,.7);cursor:pointer">Export CSV</div>
+          </div>
+        </div>
+
+        <div class="pd-body">
+          <div class="pd-summary-bar">
+            <div class="pd-summary-stat">
+              <div class="pd-ss-label">Ready to Disburse</div>
+              <div class="pd-ss-val" style="color:var(--green)">$41,280</div>
+              <div class="pd-ss-sub">across 7 closed campaigns</div>
+            </div>
+            <div class="pd-summary-stat">
+              <div class="pd-ss-label">Active Campaigns</div>
+              <div class="pd-ss-val" style="color:var(--fund)">12</div>
+              <div class="pd-ss-sub">$23,540 in-flight</div>
+            </div>
+            <div class="pd-summary-stat">
+              <div class="pd-ss-label">Payouts This Month</div>
+              <div class="pd-ss-val" style="color:var(--stripe)">$128,400</div>
+              <div class="pd-ss-sub">↑ 18% vs last month</div>
+            </div>
+            <div class="pd-summary-stat">
+              <div class="pd-ss-label">Platform Fee Collected</div>
+              <div class="pd-ss-val" style="color:var(--orange)">$0</div>
+              <div class="pd-ss-sub">0% for nonprofits ✓</div>
+            </div>
+          </div>
+
+          <div class="pd-table-wrap">
+            <div class="pd-table-header">
+              <div class="pd-th" style="flex:2">Organization</div>
+              <div class="pd-th">Campaign</div>
+              <div class="pd-th">Closed</div>
+              <div class="pd-th">Amount</div>
+              <div class="pd-th">Status</div>
+              <div class="pd-th">Action</div>
+            </div>
+
+            <div class="pd-row pd-row-ready" id="pdr-1">
+              <div class="pd-cell pd-cell-org" style="flex:2">
+                <div class="pd-org-avatar" style="background:var(--fund-bg);color:var(--fund)">RP</div>
+                <div><div class="pd-org-name">Riverside Elementary PTO</div><div class="pd-org-meta">acct_1RkJxQ… · Verified 501(c)(3)</div></div>
+              </div>
+              <div class="pd-cell" style="font-size:12px">Spirit Wear 2025</div>
+              <div class="pd-cell" style="font-size:12px;color:var(--muted)">Jun 1</div>
+              <div class="pd-cell"><span style="font-weight:800;font-size:14px">$7,320</span></div>
+              <div class="pd-cell"><span class="pd-badge pd-badge-ready">Ready</span></div>
+              <div class="pd-cell"><button class="pd-action-btn" onclick="triggerPayout('pdr-1','$7,320','Riverside PTO')">⚡ Payout Now</button></div>
+            </div>
+
+            <div class="pd-row pd-row-ready" id="pdr-2">
+              <div class="pd-cell pd-cell-org" style="flex:2">
+                <div class="pd-org-avatar" style="background:var(--gof-bg);color:var(--gof)">LH</div>
+                <div><div class="pd-org-name">Lincoln High School — Band Booster</div><div class="pd-org-meta">acct_1RkMnP… · Verified 501(c)(3)</div></div>
+              </div>
+              <div class="pd-cell" style="font-size:12px">Band Camp Gear '25</div>
+              <div class="pd-cell" style="font-size:12px;color:var(--muted)">May 30</div>
+              <div class="pd-cell"><span style="font-weight:800;font-size:14px">$12,840</span></div>
+              <div class="pd-cell"><span class="pd-badge pd-badge-ready">Ready</span></div>
+              <div class="pd-cell"><button class="pd-action-btn" onclick="triggerPayout('pdr-2','$12,840','Lincoln Band Booster')">⚡ Payout Now</button></div>
+            </div>
+
+            <div class="pd-row pd-row-transit" id="pdr-3">
+              <div class="pd-cell pd-cell-org" style="flex:2">
+                <div class="pd-org-avatar" style="background:var(--store-bg);color:var(--store)">SF</div>
+                <div><div class="pd-org-name">Sunset FC Soccer Club</div><div class="pd-org-meta">acct_1RkPqR… · Verified Nonprofit</div></div>
+              </div>
+              <div class="pd-cell" style="font-size:12px">Spring Tournament Kits</div>
+              <div class="pd-cell" style="font-size:12px;color:var(--muted)">May 28</div>
+              <div class="pd-cell"><span style="font-weight:800;font-size:14px">$9,150</span></div>
+              <div class="pd-cell"><span class="pd-badge pd-badge-transit">In Transit</span></div>
+              <div class="pd-cell"><div style="font-size:11px;color:var(--muted)">Est. Jun 7</div></div>
+            </div>
+
+            <div class="pd-row pd-row-ready" id="pdr-4">
+              <div class="pd-cell pd-cell-org" style="flex:2">
+                <div class="pd-org-avatar" style="background:var(--green-bg);color:var(--green)">GH</div>
+                <div><div class="pd-org-name">Greenwood Humane Society</div><div class="pd-org-meta">acct_1RkTvW… · Verified 501(c)(3)</div></div>
+              </div>
+              <div class="pd-cell" style="font-size:12px">Paws &amp; Tees Drive</div>
+              <div class="pd-cell" style="font-size:12px;color:var(--muted)">Jun 2</div>
+              <div class="pd-cell"><span style="font-weight:800;font-size:14px">$4,890</span></div>
+              <div class="pd-cell"><span class="pd-badge pd-badge-ready">Ready</span></div>
+              <div class="pd-cell"><button class="pd-action-btn" onclick="triggerPayout('pdr-4','$4,890','Greenwood Humane Society')">⚡ Payout Now</button></div>
+            </div>
+
+            <div class="pd-row" id="pdr-5" style="opacity:.5">
+              <div class="pd-cell pd-cell-org" style="flex:2">
+                <div class="pd-org-avatar" style="background:var(--red-bg);color:var(--red)">VN</div>
+                <div><div class="pd-org-name">Valley Neighborhood Watch</div><div class="pd-org-meta">acct_1RkUxY… · ⚠️ Payout paused — review required</div></div>
+              </div>
+              <div class="pd-cell" style="font-size:12px">Community Safety Tees</div>
+              <div class="pd-cell" style="font-size:12px;color:var(--muted)">Jun 1</div>
+              <div class="pd-cell"><span style="font-weight:800;font-size:14px">$2,100</span></div>
+              <div class="pd-cell"><span class="pd-badge pd-badge-hold">On Hold</span></div>
+              <div class="pd-cell"><button class="pd-action-btn pd-action-review" onclick="showHoldReason()">🔍 Review</button></div>
+            </div>
+          </div>
+
+          <div class="pd-bulk-row">
+            <div style="font-size:13px;color:var(--muted)">3 campaigns ready · <strong style="color:var(--green)">$24,050</strong> total</div>
+            <button class="pd-bulk-btn" onclick="triggerBulkPayout()">⚡ Disburse All Ready Campaigns</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- hold reason modal -->
+      <div class="pd-modal-overlay" id="hold-modal" onclick="closeModal()">
+        <div class="pd-modal" onclick="event.stopPropagation()">
+          <div class="pd-modal-head">🔍 Payout Hold — Valley Neighborhood Watch</div>
+          <div class="pd-modal-body">
+            <div style="background:var(--amber-bg);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--amber);font-weight:600">⚠️ Radar flagged: 3 donations from the same card within 8 minutes</div>
+            <div style="font-size:13px;margin-bottom:12px;line-height:1.6;color:var(--text)">Custom Ink's velocity rule triggered a 14-day payout delay on this account. The $2,100 balance is held while the risk team reviews transaction history.</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:8px 12px;background:var(--bg);border-radius:6px"><span style="color:var(--muted)">Radar rule triggered</span><span style="font-weight:600">velocity &gt; 3 same card / 10min</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:8px 12px;background:var(--bg);border-radius:6px"><span style="color:var(--muted)">Delay applied</span><span style="font-weight:600">14 days (Jun 15)</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:8px 12px;background:var(--bg);border-radius:6px"><span style="color:var(--muted)">Action taken</span><span style="font-weight:600">Platform Controls: delay_days: 14</span></div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button onclick="closeModal()" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:700;cursor:pointer">Keep Hold</button>
+              <button onclick="releaseHold()" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer">Release &amp; Payout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pd-toast" id="payout-toast">
+        <span id="toast-text">⚡ $7,320 payout initiated to Riverside PTO</span>
+      </div>
+    </div><!-- /payout dashboard -->
+
+  </div><!-- /fs-inner -->
+</div>
+
+<!-- ══ CAPABILITIES GRID ══ -->
+<div class="caps-section">
+  <div class="caps-inner">
+    <div class="caps-eyebrow">Stripe Connect — Flow by Flow</div>
+    <h2 class="caps-title">What <em>Each Flow</em> Gets</h2>
+    <p class="caps-sub">Not a generic platform — specific Connect capabilities mapped to each business line's actual problem.</p>
+    <div class="caps-grid">
+
+      <!-- GOF row -->
+      <div class="cap-tile ct-gof">
+        <div class="cap-tile-icon">🏢</div>
+        <div class="cap-tile-flow">Group Orders (GOF)</div>
+        <h3>Destination Charges + Escrow</h3>
+        <p>Buyer pays upfront. Funds held in Custom Ink's Stripe balance. Released to production partners after fulfillment. No more net-term accounting headaches.</p>
+        <div class="cap-api">transfer_data.destination → release on fulfillment</div>
+      </div>
+      <div class="cap-tile ct-gof">
+        <div class="cap-tile-icon">📄</div>
+        <div class="cap-tile-flow">Group Orders (GOF)</div>
+        <h3>Stripe Invoicing + ACH Debit</h3>
+        <p>Send invoices directly from Stripe for large B2B accounts. Auto-collect via ACH on net-30 terms. Replaces the "mega complicated" manual invoicing in GOF today.</p>
+        <div class="cap-api">stripe.invoices.create → payment_settings.payment_method_types: ['ach_debit']</div>
+      </div>
+      <div class="cap-tile ct-gof">
+        <div class="cap-tile-icon">🔍</div>
+        <div class="cap-tile-flow">Group Orders (GOF)</div>
+        <h3>Platform Controls + Radar</h3>
+        <p>GOF integrated into Custom Ink's core payment process — Scott's goal. All GOF transactions share the same Radar rules and Sigma analytics as fundraising and stores.</p>
+        <div class="cap-api">Radar: block if ::risk_level = 'highest' (applies to all flows)</div>
+      </div>
+
+      <!-- Fundraising row -->
+      <div class="cap-tile ct-fund">
+        <div class="cap-tile-icon">⚡</div>
+        <div class="cap-tile-flow">Fundraising</div>
+        <h3>Express Onboarding in 15 min</h3>
+        <p>Schools and nonprofits onboard via Stripe's hosted flow — EIN, 501(c)(3) docs, bank account verified via Financial Connections. No PDFs, no W-9 forms, no Tipalti registration links. Replaces the current manual Tipalti payee onboarding.</p>
+        <div class="cap-api">stripe.accountLinks.create({ type: 'account_onboarding', business_type: 'non_profit' })</div>
+      </div>
+      <div class="cap-tile ct-fund">
+        <div class="cap-tile-icon">📅</div>
+        <div class="cap-tile-flow">Fundraising</div>
+        <h3>Campaign-Close Payout Trigger</h3>
+        <p>Webhook fires when campaign ends + orders ship → Stripe auto-disburses to org's connected account. Eliminates the entire Monday disbursement → Tuesday PayPal upload → Wednesday payment run weekly cycle.</p>
+        <div class="cap-api">stripe.payouts.create({ amount }, { stripeAccount: orgId }) on campaign.closed webhook</div>
+      </div>
+      <div class="cap-tile ct-fund">
+        <div class="cap-tile-icon">🔀</div>
+        <div class="cap-tile-flow">Fundraising</div>
+        <h3>Product + Donation Split</h3>
+        <p>One donor charge → Custom Ink keeps product margin, transfers donation to org's connected account. Native to Connect — no bespoke accounting logic needed.</p>
+        <div class="cap-api">transfer_data: { destination: orgAcct, amount: donationCents }</div>
+      </div>
+
+      <!-- Stores row -->
+      <div class="cap-tile ct-store">
+        <div class="cap-tile-icon">🔄</div>
+        <div class="cap-tile-flow">Online Stores</div>
+        <h3>Rolling Payout Schedules</h3>
+        <p>Each store's payout frequency (daily / weekly / monthly) configured via API. Replaces Tipalti for scheduled org payments — same API, fraction of the complexity.</p>
+        <div class="cap-api">stripe.accounts.update(orgId, { settings: { payouts: { schedule: { interval: 'weekly' } } } })</div>
+      </div>
+      <div class="cap-tile ct-store">
+        <div class="cap-tile-icon">🤝</div>
+        <div class="cap-tile-flow">Online Stores</div>
+        <h3>POD Partner Revenue Split</h3>
+        <p>Custom Ink's print-on-demand pilot: one charge splits between Custom Ink (platform fee) + POD fulfillment partner (connected account). Separate Charges & Transfers makes this clean.</p>
+        <div class="cap-api">stripe.transfers.create({ destination: podPartnerAcct, amount: fulfillmentCost })</div>
+      </div>
+      <div class="cap-tile ct-store">
+        <div class="cap-tile-icon">📊</div>
+        <div class="cap-tile-flow">Online Stores</div>
+        <h3>Tipalti Replacement + Compliance Built-In</h3>
+        <p>Connect handles KYC, bank verification, payout scheduling, and 1099-K generation — resolving the compliance blockers (W-9 collection, IRS validation, escheatment tracking) that currently prevent Fulfill Engine stores from legally distributing profits.</p>
+        <div class="cap-api">1099: stripe.tax.forms.list({ type: '1099-K', connected_account: orgId })</div>
+      </div>
+
+      <!-- Shared row -->
+      <div class="cap-tile ct-all" style="grid-column: span 3">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px">
+          <div>
+            <div class="cap-tile-icon">🛡️</div>
+            <div class="cap-tile-flow">All Three Flows</div>
+            <h3>One Radar Rule Set</h3>
+            <p>Configure fraud rules once — Radar enforces across GOF, fundraising, and store transactions. Win rate improves for all three simultaneously.</p>
+          </div>
+          <div>
+            <div class="cap-tile-icon">📈</div>
+            <div class="cap-tile-flow">All Three Flows</div>
+            <h3>Sigma — One Report</h3>
+            <p>Cross-flow SQL analytics: total revenue, platform fees, org payouts, and chargeback rates — one query across all three business lines.</p>
+          </div>
+          <div>
+            <div class="cap-tile-icon">↩️</div>
+            <div class="cap-tile-flow">All Three Flows</div>
+            <h3>Unified Refunds</h3>
+            <p>Nicole's team processes any refund — GOF order, fundraising donation, store purchase — through one interface. No more Braintree, PayPal, or check-printing.</p>
+          </div>
+          <div>
+            <div class="cap-tile-icon">📋</div>
+            <div class="cap-tile-flow">All Three Flows</div>
+            <h3>Shared KYC Layer</h3>
+            <p>An org that runs a fundraising campaign AND an online store KYC's once — their connected account works across both. No re-onboarding across platforms.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ BEFORE / AFTER ══ -->
+<div class="compare-section">
+  <div style="text-align:center;margin-bottom:32px">
+    <div class="eyebrow ey-stripe">Side by Side</div>
+    <h2 class="section-h2">The Full Picture</h2>
+    <p class="section-p">Every dimension where consolidation onto Stripe Connect changes the equation for Custom Ink.</p>
+  </div>
+  <div class="compare-grid">
+    <div class="compare-col">
+      <div class="compare-col-head cch-before">⚠️ Today — Three Silos</div>
+      <div class="compare-col-body">
+        <div class="compare-row"><div class="cr-icon">🏗️</div><div class="cr-body"><h4>Three separate platforms</h4><p>GOF, Fundraising, and Stores each have their own system, codebase, and ops runbook. No shared infrastructure.</p></div></div>
+        <div class="compare-row"><div class="cr-icon">💸</div><div class="cr-body"><h4>5+ payout destinations, different cadences</h4><p>Fundraising: Tipalti checks (weekly) + PayPal Tuesday runs. Stores: legacy PayPal mass-pay (monthly, $60K/batch cap) + Tipalti ACH Net60 migration in progress. GOF: Braintree + manual wires.</p></div></div>
+        <div class="compare-row"><div class="cr-icon">📋</div><div class="cr-body"><h4>Compliance debt blocking payouts</h4><p>Fulfill Engine stores can't legally distribute profits yet — 1099/W-9 collection, IRS validation, escheatment tracking, and cross-system COGS recognition all unresolved. Payout flow is manual end-to-end: STS → Finance → Tipalti approval chain.</p></div></div>
+        <div class="compare-row"><div class="cr-icon">🔒</div><div class="cr-body"><h4>W-9 collection per payee, every new store</h4><p>New Tipalti payees must register via email link, submit W-9, and select ACH before receiving any payment. Unregistered email = blocked payout. No shared identity layer across flows.</p></div></div>
+        <div class="compare-row"><div class="cr-icon">🛡️</div><div class="cr-body"><h4>Fraud siloed per platform</h4><p>A fraudster blocked on fundraising can still transact on stores. No cross-platform Radar rule enforcement.</p></div></div>
+        <div class="compare-row"><div class="cr-icon">🔧</div><div class="cr-body"><h4>GOF "mega complicated"</h4><p>Described internally as over-engineered for its business value. Technical debt without a clear remediation path.</p></div></div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-col-head cch-after">✨ With Stripe Connect</div>
+      <div class="compare-col-body">
+        <div class="compare-row"><div class="cr-icon">⚡</div><div class="cr-body"><h4>One platform, three configurations</h4><p>Stripe Connect is the shared layer. Each flow uses different Connect capabilities (destination charges, Express accounts, Separate Transfers) on the same API.</p></div></div>
+        <div class="compare-row"><div class="cr-icon">🏦</div><div class="cr-body"><h4>One payout API</h4><p>stripe.payouts.create handles everything — org disbursements, store payouts, fulfillment partner splits. One contract, one support team, one API key.</p></div></div>
+        <div class="compare-row"><div class="cr-icon">📊</div><div class="cr-body"><h4>One Sigma report</h4><p>SELECT * from all three flows in one query. Cross-flow revenue analytics, platform fee P&L, and donor LTV without a data warehouse.</p></div></div>
+        <div class="compare-row"><div class="cr-icon">✅</div><div class="cr-body"><h4>KYC once, works everywhere</h4><p>Connected account created once per org. That account works for fundraising campaigns, online stores, and future products Custom Ink builds on Connect.</p></div></div>
+        <div class="compare-row"><div class="cr-icon">🤖</div><div class="cr-body"><h4>Radar across all flows</h4><p>Rules configured once apply everywhere — velocity, geo-risk, card-testing detection. A fraud signal on one flow informs the others.</p></div></div>
+        <div class="compare-row"><div class="cr-icon">🧹</div><div class="cr-body"><h4>GOF integrated into core</h4><p>GOF absorbed into Custom Ink's core payment process — Scott's stated goal. Stripe Connect is the "core payment process" it integrates into.</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MIGRATION TIMELINE ══ -->
+<div class="timeline-section">
+  <div class="timeline-inner">
+    <div class="tl-head">
+      <div class="eyebrow ey-stripe">Suggested Path</div>
+      <h2>Migration in Four Phases</h2>
+      <p>Custom Ink's stated goal is consolidation. This is the order that delivers value fastest with lowest disruption.</p>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-marker tm-1">1</div>
+        <div class="tl-content">
+          <div class="tl-phase">Phase 1 · Weeks 1–6</div>
+          <h3>Fundraising → Stripe Connect (replaces Tipalti + PayPal weekly cycle)</h3>
+          <p>Highest urgency — the current 3-day weekly manual cycle (disbursement Mon, PayPal Tue, payment run Wed) becomes a single automated trigger at campaign close. Migrate org accounts to Stripe Express, eliminate Tipalti check runs, handle returned checks and reissues via API instead of manual tickets.</p>
+          <div class="tl-tags">
+            <span class="tl-tag tt-fund">🎽 Fundraising</span>
+            <span class="tl-tag tt-stripe">Connect Express</span>
+            <span class="tl-tag tt-stripe">Replaces Tipalti Checks</span>
+            <span class="tl-tag tt-stripe">Replaces PayPal Uploads</span>
+          </div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-marker tm-2">2</div>
+        <div class="tl-content">
+          <div class="tl-phase">Phase 2 · Weeks 6–14</div>
+          <h3>Online Stores → Stripe Connect (resolves payout compliance + replaces Tipalti/PayPal)</h3>
+          <p>Stripe Connect's built-in KYC, 1099-K generation, and bank verification resolves the compliance blockers that currently prevent Fulfill Engine stores from distributing profits. Replaces: legacy monthly PayPal mass-pay (with $60K batch limits), Tipalti Net60 ACH migration, and manual STS→Finance→Tipalti approval chains. All 4 payout types (For Profit, Revenue Share, Rebate, Sponsorship) handled via one API.</p>
+          <div class="tl-tags">
+            <span class="tl-tag tt-store">🏪 Online Stores</span>
+            <span class="tl-tag tt-stripe">Payout Schedules</span>
+            <span class="tl-tag tt-stripe">1099-K Built-In</span>
+            <span class="tl-tag tt-stripe">Replaces Tipalti + PayPal</span>
+            <span class="tl-tag tt-green">Unlocks Profit Payouts</span>
+          </div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-marker tm-3">3</div>
+        <div class="tl-content">
+          <div class="tl-phase">Phase 3 · Months 4–8</div>
+          <h3>Group Orders (GOF) → Integrated into core Connect payment flow</h3>
+          <p>Absorb GOF's bespoke payment logic into Stripe Connect destination charges. Replace the "mega complicated" invoicing with Stripe Invoicing + ACH debit for B2B accounts. GOF becomes a configuration of the same platform — not a separate system.</p>
+          <div class="tl-tags">
+            <span class="tl-tag tt-gof">🏢 GOF</span>
+            <span class="tl-tag tt-stripe">Stripe Invoicing</span>
+            <span class="tl-tag tt-stripe">ACH Debit</span>
+            <span class="tl-tag tt-stripe">Destination Charges</span>
+            <span class="tl-tag tt-green">Eliminates tech debt</span>
+          </div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-marker tm-4">4</div>
+        <div class="tl-content">
+          <div class="tl-phase">Phase 4 · Ongoing</div>
+          <h3>Full consolidation — One platform, shared everything</h3>
+          <p>All three flows share: one Radar rule set, one Sigma analytics layer, one reconciliation export, one KYC process, one refund interface. Scott's cross-flow fraud strategy is possible. Nicole's team processes every refund from one screen. Custom Ink has one payment infrastructure team instead of three.</p>
+          <div class="tl-tags">
+            <span class="tl-tag tt-stripe">🛡️ Unified Radar</span>
+            <span class="tl-tag tt-stripe">📊 Sigma Cross-Flow</span>
+            <span class="tl-tag tt-stripe">↩️ One Refund UI</span>
+            <span class="tl-tag tt-green">One payment team</span>
+            <span class="tl-tag tt-green">One API contract</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BIG NUMBERS ══ -->
+<div class="big-number-section">
+  <div class="bn-inner">
+    <div class="bn-label">The consolidation case — by the numbers</div>
+    <div class="bn-grid">
+      <div class="bn-item">
+        <div class="bn-num">3→1</div>
+        <div class="bn-desc">Payout platforms consolidated</div>
+      </div>
+      <div class="bn-item">
+        <div class="bn-num">5+→1</div>
+        <div class="bn-desc">Outgoing payout workflows replaced</div>
+      </div>
+      <div class="bn-item">
+        <div class="bn-num">0</div>
+        <div class="bn-desc">Manual PayPal uploads remaining</div>
+      </div>
+      <div class="bn-item">
+        <div class="bn-num">1</div>
+        <div class="bn-desc">KYC per org, works across all flows</div>
+      </div>
+    </div>
+    <div class="bn-cta">One Stripe Connect integration powers Group Orders, Fundraising, and Online Stores — simultaneously.</div>
+  </div>
+</div>
+
+<footer>Custom Ink × Stripe Connect — Platform Consolidation Vision · Internal use only</footer>
+
+<script>
+  function setState(s) {
+    document.documentElement.setAttribute('data-state', s);
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 't' || e.key === 'T') {
+      const cur = document.documentElement.getAttribute('data-state');
+      setState(cur === 'current' ? 'future' : 'current');
+    }
+  });
+
+  function triggerPayout(rowId, amount, orgName) {
+    const row = document.getElementById(rowId);
+    const btn = row.querySelector('.pd-action-btn');
+    btn.disabled = true;
+    btn.textContent = '⟳ Processing…';
+    btn.style.opacity = '.5';
+    setTimeout(() => {
+      row.style.opacity = '.45';
+      row.style.transition = 'opacity .4s';
+      const badge = row.querySelector('.pd-badge');
+      badge.className = 'pd-badge pd-badge-transit';
+      badge.textContent = 'In Transit';
+      btn.parentElement.innerHTML = '<div style="font-size:11px;color:var(--muted)">Est. ' + getEstDate() + '</div>';
+      showToast('⚡ ' + amount + ' payout initiated to ' + orgName);
+    }, 1400);
+  }
+
+  function triggerBulkPayout() {
+    const readyBtns = document.querySelectorAll('.pd-row-ready .pd-action-btn');
+    let i = 0;
+    readyBtns.forEach(btn => {
+      const row = btn.closest('.pd-row');
+      setTimeout(() => {
+        row.style.opacity = '.45';
+        row.querySelector('.pd-badge').textContent = 'In Transit';
+        row.querySelector('.pd-badge').className = 'pd-badge pd-badge-transit';
+        btn.parentElement.innerHTML = '<div style="font-size:11px;color:var(--muted)">Est. ' + getEstDate() + '</div>';
+      }, i * 300);
+      i++;
+    });
+    setTimeout(() => showToast('⚡ $24,050 bulk payout initiated across 3 campaigns'), 600);
+  }
+
+  function showHoldReason() {
+    document.getElementById('hold-modal').classList.add('visible');
+  }
+  function closeModal() {
+    document.getElementById('hold-modal').classList.remove('visible');
+  }
+  function releaseHold() {
+    closeModal();
+    const row = document.getElementById('pdr-5');
+    row.style.opacity = '1';
+    row.querySelector('.pd-badge').className = 'pd-badge pd-badge-transit';
+    row.querySelector('.pd-badge').textContent = 'In Transit';
+    row.querySelector('.pd-action-review').parentElement.innerHTML = '<div style="font-size:11px;color:var(--muted)">Est. ' + getEstDate() + '</div>';
+    showToast('✓ Hold released — $2,100 payout initiated to Valley Neighborhood Watch');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('payout-toast');
+    document.getElementById('toast-text').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  function getEstDate() {
+    const d = new Date(); d.setDate(d.getDate() + 2);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+</script>
+</body>
+</html>

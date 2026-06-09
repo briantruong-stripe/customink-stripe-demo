@@ -1,0 +1,2364 @@
+<!DOCTYPE html>
+<html lang="en" data-state="current">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CustomInk — Design Custom Products</title>
+<script src="https://js.stripe.com/v3/"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ── */
+:root{
+  --orange:#FA3C00; --orange-d:#c73100;
+  --dark:#1a1a1a; --text:#333; --muted:#717171;
+  --border:#e5e5e5; --bg:#f5f5f5; --white:#fff;
+  --stripe:#635BFF; --stripe-d:#0A2540;
+  --green:#00875A; --green-bg:#f0fdf4;
+  --red:#DC2626; --red-bg:#fef2f2;
+  --amber:#D97706;
+  --t:all .28s cubic-bezier(.4,0,.2,1);
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--text);background:#fff;line-height:1.5;overflow-x:hidden;}
+a{text-decoration:none;color:inherit;}
+button,input{font-family:inherit;}
+img{max-width:100%;}
+/* state classes */
+html[data-state="current"] .sf{display:none!important;}
+html[data-state="future"]  .sc{display:none!important;}
+
+/* ── DEMO HUD ── */
+.demo-hud{
+  background:#0a0a1a;
+  padding:10px 20px;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  position:sticky;top:0;z-index:900;
+  border-bottom:2px solid transparent;
+  transition:border-color .3s;
+}
+html[data-state="current"] .demo-hud{border-bottom-color:var(--orange);}
+html[data-state="future"]  .demo-hud{border-bottom-color:var(--stripe);}
+.demo-mode-chip{
+  font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.14);
+  padding:3px 9px;border-radius:4px;flex-shrink:0;
+}
+.demo-toggle-track{
+  display:flex;align-items:center;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:100px;padding:3px;gap:2px;
+}
+.demo-state-btn{
+  padding:7px 16px;border-radius:100px;
+  font-size:12px;font-weight:700;cursor:pointer;
+  transition:all .28s cubic-bezier(.4,0,.2,1);border:none;
+  background:none;color:rgba(255,255,255,.28);white-space:nowrap;
+}
+.demo-state-btn:hover{color:rgba(255,255,255,.5);}
+html[data-state="current"] .demo-state-btn.cur-btn{
+  background:var(--orange);color:#fff;
+  box-shadow:0 2px 10px rgba(250,60,0,.45);
+}
+html[data-state="future"] .demo-state-btn.fut-btn{
+  background:var(--stripe);color:#fff;
+  box-shadow:0 2px 10px rgba(99,91,255,.5);
+}
+.demo-hud-hint{font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;}
+/* keep pill/thumb for any remaining usage */
+.ts-pill{
+  position:relative;width:52px;height:26px;
+  background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);
+  border-radius:13px;cursor:pointer;transition:var(--t);outline:none;padding:0;
+}
+html[data-state="future"] .ts-pill{background:var(--stripe);border-color:var(--stripe);}
+.ts-thumb{
+  position:absolute;top:2px;left:2px;width:18px;height:18px;
+  background:#fff;border-radius:50%;transition:var(--t);
+  box-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+html[data-state="future"] .ts-thumb{transform:translateX(26px);}
+.ts-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.02em;}
+html[data-state="current"] .ts-label.cur{color:#FF8A65;}
+html[data-state="future"]  .ts-label.fut{color:#A5B4FC;}
+.ts-hint{font-size:11px;color:rgba(255,255,255,.25);margin-left:6px;}
+
+/* ── UTILITY BAR ── */
+.util-bar{
+  background:var(--dark);color:rgba(255,255,255,.75);
+  padding:7px 24px;display:flex;align-items:center;justify-content:space-between;font-size:12px;
+}
+.util-right{display:flex;gap:20px;align-items:center;}
+.util-right a{color:rgba(255,255,255,.7);font-size:12px;transition:color .2s;}
+.util-right a:hover{color:#fff;}
+
+/* ── MAIN NAV ── */
+.main-nav{
+  background:#fff;border-bottom:1px solid var(--border);
+  padding:0 24px;display:flex;align-items:center;
+  position:sticky;top:46px;z-index:800;
+  box-shadow:0 1px 0 rgba(0,0,0,.04);
+}
+.cink-logo{
+  font-size:22px;font-weight:900;color:var(--orange);
+  padding:14px 24px 14px 0;letter-spacing:-.5px;white-space:nowrap;flex-shrink:0;
+}
+.cink-logo span{color:var(--dark);}
+.nav-links{display:flex;flex:1;}
+.nav-link{
+  padding:18px 13px;font-size:13px;font-weight:500;color:var(--text);
+  white-space:nowrap;border-bottom:3px solid transparent;
+  transition:var(--t);display:block;
+}
+.nav-link:hover{border-bottom-color:var(--orange);color:var(--orange);}
+.nav-right{display:flex;align-items:center;gap:12px;margin-left:auto;padding-left:16px;}
+.cart-btn{
+  position:relative;background:none;border:none;cursor:pointer;
+  padding:8px;font-size:20px;color:var(--dark);
+}
+.cart-badge{
+  position:absolute;top:2px;right:2px;
+  background:var(--orange);color:#fff;font-size:10px;font-weight:700;
+  width:17px;height:17px;border-radius:50%;
+  display:none;align-items:center;justify-content:center;
+  line-height:1;
+}
+.cart-badge.visible{display:flex;}
+html[data-state="future"] .cart-badge{background:var(--stripe);}
+.btn-start{
+  background:var(--orange);color:#fff;border:none;
+  padding:9px 20px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;
+  transition:var(--t);white-space:nowrap;
+}
+.btn-start:hover{background:var(--orange-d);}
+html[data-state="future"] .btn-start{background:var(--stripe);}
+html[data-state="future"] .btn-start:hover{background:#4f46e5;}
+
+/* ── HERO ── */
+.hero{background:#fff;padding:48px 24px 48px;}
+.hero-inner{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1fr 520px;gap:64px;align-items:center;}
+.hero-h1{font-size:52px;font-weight:900;color:var(--dark);line-height:1.05;letter-spacing:-2px;margin-bottom:16px;}
+.hero-sub{font-size:16px;color:var(--muted);margin-bottom:28px;line-height:1.6;max-width:400px;}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;align-items:center;}
+.hbtn-p{
+  background:var(--orange);color:#fff;padding:14px 28px;border-radius:6px;
+  font-size:15px;font-weight:700;border:none;cursor:pointer;
+  transition:var(--t);display:inline-flex;align-items:center;gap:7px;
+}
+.hbtn-p:hover{background:var(--orange-d);transform:translateY(-1px);}
+html[data-state="future"] .hbtn-p{background:var(--stripe);}
+html[data-state="future"] .hbtn-p:hover{background:#4f46e5;}
+.hbtn-s{
+  background:#fff;color:var(--dark);padding:14px 22px;border-radius:6px;
+  font-size:14px;font-weight:600;border:1.5px solid var(--border);cursor:pointer;
+  transition:var(--t);display:inline-flex;align-items:center;gap:7px;
+}
+.hbtn-s:hover{border-color:#999;background:var(--bg);}
+.hero-trust{display:flex;gap:20px;flex-wrap:wrap;}
+.trust-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);}
+.trust-item strong{color:var(--dark);}
+/* Hero image */
+.hero-img-wrap{
+  position:relative;border-radius:16px;overflow:hidden;
+  background:#e8e8de;
+}
+.hero-img-wrap img{width:100%;height:380px;object-fit:cover;display:block;}
+.hero-img-badge{
+  position:absolute;bottom:16px;left:16px;
+  background:rgba(255,255,255,.95);border-radius:10px;padding:10px 14px;
+  font-size:12px;font-weight:700;color:var(--dark);
+  box-shadow:0 4px 16px rgba(0,0,0,.12);
+}
+.hero-img-badge span{color:var(--orange);font-size:16px;display:block;font-weight:900;}
+
+/* ── VALUE PROPS ── */
+.value-bar{background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:24px;}
+.value-inner{max-width:1240px;margin:0 auto;display:flex;align-items:stretch;gap:0;}
+.vp-item{display:flex;align-items:center;gap:12px;padding:8px 16px;flex:1;}
+.vp-icon{font-size:22px;flex-shrink:0;}
+.vp-title{font-size:13px;font-weight:700;color:var(--dark);}
+.vp-sub{font-size:12px;color:var(--muted);}
+
+/* ── SECTION STYLES ── */
+.section{padding:64px 24px;}
+.section.gray{background:var(--bg);}
+.section-inner{max-width:1240px;margin:0 auto;}
+.section-h{font-size:26px;font-weight:800;color:var(--dark);letter-spacing:-.4px;margin-bottom:4px;}
+.section-sub{font-size:14px;color:var(--muted);margin-bottom:32px;}
+.section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;}
+.see-all{font-size:13px;font-weight:600;color:var(--orange);white-space:nowrap;}
+html[data-state="future"] .see-all{color:var(--stripe);}
+
+/* ── CATEGORY GRID ── */
+.cat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
+.cat-card{
+  background:#fff;border:1px solid var(--border);border-radius:12px;
+  padding:18px 10px;text-align:center;cursor:pointer;transition:var(--t);
+}
+.cat-card:hover{box-shadow:var(--shadow);transform:translateY(-2px);border-color:#ccc;}
+.cat-icon{font-size:30px;margin-bottom:8px;display:block;}
+.cat-name{font-size:12px;font-weight:600;color:var(--dark);}
+
+/* ── PRODUCT GRID ── */
+.prod-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+.prod-card{
+  background:#fff;border:1px solid var(--border);border-radius:12px;
+  cursor:pointer;transition:var(--t);position:relative;
+}
+.prod-card:hover{box-shadow:var(--shadow);transform:translateY(-2px);}
+.prod-img{
+  aspect-ratio:4/3;overflow:hidden;position:relative;
+  background:linear-gradient(135deg,#f5f5f5,#ebebeb);
+  display:flex;align-items:center;justify-content:center;font-size:56px;
+  border-radius:12px 12px 0 0;
+}
+.prod-img img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;display:block;transition:transform .4s ease;
+}
+.prod-card:hover .prod-img img{transform:scale(1.04);}
+.prod-badge{
+  position:absolute;top:10px;left:10px;z-index:1;
+  background:var(--orange);color:#fff;font-size:10px;font-weight:700;
+  padding:3px 8px;border-radius:4px;letter-spacing:.03em;
+}
+.prod-info{padding:14px 16px;}
+.prod-name{font-size:14px;font-weight:600;color:var(--dark);margin-bottom:4px;}
+.prod-price{font-size:13px;color:var(--muted);}
+.prod-price strong{color:var(--orange);}
+html[data-state="future"] .prod-price strong{color:var(--stripe);}
+.prod-atc{
+  width:100%;background:none;border:1.5px solid var(--border);
+  border-radius:8px;padding:8px;font-size:13px;font-weight:600;color:var(--dark);
+  cursor:pointer;margin-top:10px;transition:var(--t);
+}
+.prod-atc:hover{background:var(--orange);color:#fff;border-color:var(--orange);}
+html[data-state="future"] .prod-atc:hover{background:var(--stripe);border-color:var(--stripe);}
+
+/* ── TRUST BANNER ── */
+.trust-banner{background:var(--orange);padding:36px 24px;text-align:center;color:#fff;}
+html[data-state="future"] .trust-banner{background:var(--stripe-d);}
+.tb-stars{font-size:22px;margin-bottom:8px;}
+.tb-h{font-size:24px;font-weight:800;margin-bottom:6px;}
+.tb-sub{font-size:15px;opacity:.85;}
+
+/* ── REVIEWS ── */
+.rev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+.rev-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;}
+.rev-stars{color:#F59E0B;font-size:15px;margin-bottom:12px;}
+.rev-text{font-size:14px;color:var(--text);line-height:1.65;margin-bottom:14px;}
+.rev-name{font-size:13px;font-weight:700;color:var(--dark);}
+.rev-org{font-size:12px;color:var(--muted);}
+
+/* ── FOOTER ── */
+footer{background:var(--dark);color:rgba(255,255,255,.55);padding:52px 24px 24px;}
+.foot-inner{max-width:1240px;margin:0 auto;}
+.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px;}
+.foot-brand{font-size:20px;font-weight:900;color:#fff;margin-bottom:10px;}
+.foot-brand span{color:var(--orange);}
+.foot-tagline{font-size:13px;line-height:1.65;margin-bottom:14px;}
+.foot-col-h{font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;}
+.foot-links{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.foot-links a{font-size:13px;color:rgba(255,255,255,.5);transition:color .2s;}
+.foot-links a:hover{color:#fff;}
+.foot-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:22px;display:flex;justify-content:space-between;align-items:center;font-size:12px;}
+.foot-wm{font-size:11px;font-weight:600;color:rgba(99,91,255,.55);}
+
+/* ── FLOATING INSIGHTS WIDGET ── */
+.widget-btn{
+  position:fixed;bottom:28px;right:28px;z-index:700;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--stripe-d);color:#fff;border:none;cursor:pointer;
+  box-shadow:0 4px 20px rgba(10,37,64,.35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;transition:var(--t);
+}
+.widget-btn:hover{background:#1a3a5c;transform:scale(1.08);}
+.widget-tooltip{
+  position:absolute;right:60px;top:50%;transform:translateY(-50%);
+  background:var(--stripe-d);color:#fff;font-size:11px;font-weight:600;
+  padding:5px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;
+  opacity:0;transition:opacity .2s;
+}
+.widget-btn:hover .widget-tooltip{opacity:1;}
+
+/* ── INSIGHTS PANEL ── */
+.insights-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:800;opacity:0;pointer-events:none;transition:opacity .3s;}
+.insights-overlay.open{opacity:1;pointer-events:all;}
+.insights-panel{
+  position:fixed;top:0;right:0;bottom:0;width:600px;max-width:95vw;
+  background:var(--stripe-d);color:#fff;z-index:801;
+  transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto;display:flex;flex-direction:column;
+}
+.insights-panel.open{transform:none;}
+.ip-header{
+  padding:24px 28px;border-bottom:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(0,0,0,.2);position:sticky;top:0;z-index:1;
+}
+.ip-title{font-size:16px;font-weight:700;}
+.ip-badge{background:var(--stripe);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:4px;letter-spacing:.05em;}
+.ip-close{
+  background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;
+  font-size:20px;line-height:1;transition:color .2s;padding:4px;
+}
+.ip-close:hover{color:#fff;}
+.ip-body{padding:24px 28px;flex:1;}
+.ip-section{margin-bottom:32px;}
+.ip-section-h{
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  color:rgba(255,255,255,.4);margin-bottom:16px;padding-bottom:8px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+/* insight diagrams */
+.ins-diag{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px;margin-bottom:14px;}
+.ins-diag-h{font-size:12px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.ins-diag-h.red{color:#FCA5A5;} .ins-diag-h.grn{color:#6EE7B7;}
+.dot{width:7px;height:7px;border-radius:50%;} .dot.red{background:#EF4444;animation:blink 2s infinite;} .dot.grn{background:#10B981;animation:blink 3s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.ins-brand-row{display:flex;gap:7px;margin-bottom:10px;}
+.ins-bnode{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:9px 6px;text-align:center;}
+.ins-bnode.live{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.07);}
+.ins-bnode.fut{border-color:rgba(99,91,255,.35);background:rgba(99,91,255,.05);}
+.ins-bnode-name{font-size:10px;font-weight:700;color:#fff;}
+.ins-bnode-sub{font-size:9px;color:rgba(255,255,255,.35);margin-top:2px;}
+.mess-conn{height:36px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='36'%3E%3Cline x1='15%25' y1='0' x2='22%25' y2='36' stroke='rgba(239,68,68,.35)' stroke-width='1.5'/%3E%3Cline x1='35%25' y1='0' x2='58%25' y2='36' stroke='rgba(239,68,68,.28)' stroke-width='1.5'/%3E%3Cline x1='55%25' y1='0' x2='10%25' y2='36' stroke='rgba(239,68,68,.3)' stroke-width='1.5'/%3E%3Cline x1='75%25' y1='0' x2='82%25' y2='36' stroke='rgba(239,68,68,.25)' stroke-width='1.5'/%3E%3Cline x1='90%25' y1='0' x2='90%25' y2='36' stroke='rgba(239,68,68,.3)' stroke-width='1.5'/%3E%3Cline x1='20%25' y1='0' x2='88%25' y2='36' stroke='rgba(239,68,68,.18)' stroke-width='1'/%3E%3C/svg%3E");}
+.clean-conn{height:28px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='28'%3E%3Cline x1='18%25' y1='0' x2='50%25' y2='28' stroke='rgba(99,91,255,.5)' stroke-width='1.5'/%3E%3Cline x1='50%25' y1='0' x2='50%25' y2='28' stroke='rgba(99,91,255,.6)' stroke-width='2'/%3E%3Cline x1='82%25' y1='0' x2='50%25' y2='28' stroke='rgba(99,91,255,.5)' stroke-width='1.5'/%3E%3C/svg%3E");}
+.proc-row{display:flex;gap:6px;margin-bottom:6px;}
+.pnode{flex:1;border-radius:7px;padding:7px 8px;font-size:10px;font-weight:600;text-align:center;border:1px solid;}
+.pnode-sub{font-size:9px;font-weight:400;opacity:.6;margin-top:1px;}
+.p-bt{background:rgba(0,103,184,.15);border-color:rgba(0,103,184,.4);color:#93C5FD;}
+.p-an{background:rgba(107,114,128,.18);border-color:rgba(107,114,128,.4);color:#D1D5DB;}
+.p-vx{background:rgba(217,119,6,.14);border-color:rgba(217,119,6,.35);color:#FCD34D;}
+.p-hg{background:rgba(107,114,128,.13);border-color:rgba(107,114,128,.3);color:#9CA3AF;}
+.p-hw{background:rgba(16,185,129,.13);border-color:rgba(16,185,129,.3);color:#6EE7B7;}
+.p-mn{background:rgba(220,38,38,.09);border-color:rgba(220,38,38,.3);color:#FCA5A5;}
+.p-st{background:rgba(99,91,255,.15);border-color:rgba(99,91,255,.4);color:#A5B4FC;}
+.stripe-box{background:rgba(99,91,255,.08);border:2px solid rgba(99,91,255,.35);border-radius:12px;padding:16px;margin-bottom:8px;}
+.stripe-box-h{font-size:11px;font-weight:700;color:#A5B4FC;display:flex;align-items:center;gap:7px;margin-bottom:12px;}
+.sp-pill{background:var(--stripe);color:#fff;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:800;}
+.sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.sp-item{background:rgba(99,91,255,.12);border:1px solid rgba(99,91,255,.25);border-radius:6px;padding:7px 9px;font-size:10px;font-weight:600;color:#C7D2FE;display:flex;align-items:center;gap:5px;}
+.sp-chk{color:#6EE7B7;}
+.inc-badge{background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.28);border-radius:7px;padding:8px 10px;font-size:11px;color:#FCA5A5;display:flex;gap:7px;align-items:flex-start;margin-top:7px;line-height:1.5;}
+.inc-icon{flex-shrink:0;margin-top:1px;}
+
+/* metric grid in insights */
+.ins-m-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ins-m-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px;}
+.ins-m-val{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:3px;}
+.ins-m-val.rd{color:#FCA5A5;} .ins-m-val.gn{color:#6EE7B7;} .ins-m-val.pu{color:#A5B4FC;} .ins-m-val.am{color:#FCD34D;}
+.ins-m-lbl{font-size:12px;font-weight:600;color:rgba(255,255,255,.7);}
+.ins-m-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
+.ins-delta{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;margin-top:6px;}
+.ins-delta.bad{background:rgba(220,38,38,.18);color:#FCA5A5;}
+.ins-delta.good{background:rgba(16,185,129,.18);color:#6EE7B7;}
+
+/* theme cards in insights */
+.ins-theme{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;}
+.ins-theme::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--stripe);}
+.ins-theme.urgent::before{background:var(--red);}
+.ins-theme-num{font-size:10px;font-weight:700;color:rgba(99,91,255,.8);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.ins-theme.urgent .ins-theme-num{color:#FCA5A5;}
+.ins-theme-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:5px;}
+.ins-theme-desc{font-size:12px;color:rgba(255,255,255,.5);line-height:1.55;}
+.ins-theme-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.ins-tag{background:rgba(99,91,255,.18);color:#C7D2FE;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.ins-theme.urgent .ins-tag{background:rgba(220,38,38,.18);color:#FCA5A5;}
+
+/* ── CART DRAWER ── */
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:850;opacity:0;pointer-events:none;transition:opacity .3s;}
+.cart-overlay.open{opacity:1;pointer-events:all;}
+.cart-drawer{
+  position:fixed;top:0;right:0;bottom:0;width:420px;max-width:95vw;
+  background:#fff;z-index:851;
+  transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+}
+.cart-drawer.open{transform:none;}
+.cart-header{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.cart-h{font-size:16px;font-weight:700;}
+.close-btn{background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);line-height:1;padding:4px;}
+.close-btn:hover{color:var(--dark);}
+.cart-items{flex:1;overflow-y:auto;padding:16px 22px;}
+.cart-item{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);}
+.cart-item:last-child{border-bottom:none;}
+.cart-item-icon{font-size:32px;width:52px;height:52px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cart-item-name{font-size:14px;font-weight:600;color:var(--dark);}
+.cart-item-qty{font-size:12px;color:var(--muted);margin-top:2px;}
+.cart-item-price{font-size:14px;font-weight:700;color:var(--dark);margin-left:auto;}
+.cart-empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.cart-footer{padding:16px 22px;border-top:1px solid var(--border);}
+.cart-totals{margin-bottom:14px;}
+.cart-row{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;color:var(--muted);}
+.cart-row.total{font-weight:700;font-size:16px;color:var(--dark);border-top:1px solid var(--border);margin-top:8px;padding-top:10px;}
+.cart-checkout-btn{
+  width:100%;background:var(--orange);color:#fff;border:none;
+  padding:14px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;
+  transition:var(--t);
+}
+.cart-checkout-btn:hover{background:var(--orange-d);}
+html[data-state="future"] .cart-checkout-btn{background:var(--stripe);}
+html[data-state="future"] .cart-checkout-btn:hover{background:#4f46e5;}
+
+/* ── CHECKOUT MODAL ── */
+.checkout-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:900;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.checkout-overlay.open{opacity:1;pointer-events:all;}
+.checkout-modal{
+  background:#fff;border-radius:20px;width:100%;max-width:900px;
+  max-height:90vh;overflow:hidden;display:flex;flex-direction:column;
+  transform:translateY(20px);transition:transform .35s cubic-bezier(.4,0,.2,1);
+  box-shadow:var(--shadow-lg);
+}
+.checkout-overlay.open .checkout-modal{transform:none;}
+.co-modal-header{
+  padding:18px 28px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:#fff;
+}
+.co-modal-h{font-size:16px;font-weight:700;color:var(--dark);}
+.co-modal-body{display:flex;flex:1;overflow:hidden;}
+
+/* Checkout - Order Summary (RIGHT side) */
+.co-summary{
+  width:320px;flex-shrink:0;background:var(--bg);
+  padding:24px;border-left:1px solid var(--border);overflow-y:auto;
+  order:2;
+}
+.co-sum-h{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:16px;}
+.co-sum-item{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.co-sum-item:last-of-type{border-bottom:none;}
+.co-sum-icon{font-size:24px;width:44px;height:44px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);flex-shrink:0;}
+.co-sum-name{font-size:13px;font-weight:600;color:var(--dark);}
+.co-sum-qty{font-size:12px;color:var(--muted);margin-top:1px;}
+.co-sum-price{font-size:13px;font-weight:700;color:var(--dark);margin-left:auto;}
+.co-divider{height:1px;background:var(--border);margin:16px 0;}
+.co-totals-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:var(--muted);}
+.co-totals-row.total{font-weight:800;font-size:17px;color:var(--dark);margin-top:8px;padding-top:12px;border-top:1px solid var(--border);}
+.co-place-btn{
+  width:100%;background:var(--orange);color:#fff;border:none;
+  padding:14px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;
+  margin-top:16px;transition:var(--t);
+}
+.co-place-btn:hover{background:var(--orange-d);}
+html[data-state="future"] .co-place-btn{background:var(--stripe);}
+
+/* Checkout - Payment area (LEFT side) */
+.co-payment{flex:1;padding:28px 32px;overflow-y:auto;position:relative;order:1;}
+.co-page-h{font-size:26px;font-weight:800;color:var(--dark);margin-bottom:22px;}
+/* Screen states */
+.co-screen{display:none;}
+.co-screen.active{display:flex;flex-direction:column;gap:0;}
+
+/* Info blocks (contact/shipping) */
+.co-info-block{
+  border:1px solid var(--border);border-radius:10px;padding:14px 18px;
+  margin-bottom:12px;display:flex;align-items:center;gap:12px;
+}
+.co-info-main{flex:1;font-size:13px;color:var(--dark);}
+.co-info-name{font-weight:600;}
+.co-info-label{font-size:12px;color:var(--muted);margin-bottom:2px;}
+.co-info-val{font-size:13px;color:var(--dark);}
+.co-info-edit{font-size:12px;font-weight:600;color:var(--orange);cursor:pointer;white-space:nowrap;}
+html[data-state="future"] .co-info-edit{color:var(--stripe);}
+
+/* Payment section */
+.co-pay-section{margin-top:8px;}
+.co-pay-h{font-size:18px;font-weight:700;color:var(--dark);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.co-login-banner{
+  background:#EEF2FF;border:1.5px solid #C7D2FE;border-radius:8px;
+  padding:11px 14px;font-size:13px;color:#1e40af;
+  display:flex;align-items:center;gap:9px;margin-bottom:14px;
+}
+.co-login-banner a{color:var(--stripe);font-weight:600;cursor:pointer;}
+
+/* Radio payment options */
+.pay-method-list{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px;}
+.pay-radio-row{
+  display:flex;align-items:center;gap:12px;padding:14px 16px;
+  border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
+}
+.pay-radio-row:last-child{border-bottom:none;}
+.pay-radio-row:hover{background:#fafafa;}
+.pay-radio-row.selected{background:#f8f8ff;}
+.pay-radio-row input[type=radio]{accent-color:var(--orange);width:16px;height:16px;cursor:pointer;flex-shrink:0;}
+html[data-state="future"] .pay-radio-row input[type=radio]{accent-color:var(--stripe);}
+.pay-radio-label{font-size:14px;font-weight:500;color:var(--dark);flex:1;}
+.pay-radio-icons{display:flex;gap:4px;align-items:center;}
+.pay-card-icon{
+  height:22px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;
+  font-size:10px;font-weight:700;display:inline-flex;align-items:center;background:#fff;
+}
+
+/* Card form (expands under Credit Card radio) */
+.bt-card-form{padding:16px;background:#fafafa;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;}
+.bt-fi{
+  width:100%;border:1.5px solid var(--border);border-radius:8px;
+  padding:11px 13px;font-size:14px;color:var(--text);
+  transition:var(--t);outline:none;background:#fff;
+}
+.bt-fi:focus{border-color:var(--orange);}
+html[data-state="future"] .bt-fi:focus{border-color:var(--stripe);}
+.bt-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.billing-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dark);margin-bottom:16px;}
+.billing-check input{accent-color:var(--orange);width:15px;height:15px;}
+html[data-state="future"] .billing-check input{accent-color:var(--stripe);}
+
+.bt-submit{
+  width:100%;background:var(--orange);color:#fff;border:none;
+  padding:14px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;
+  transition:var(--t);
+}
+/* ── LEGACY BRAINTREE FORM ── */
+.co-login-banner-bt{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;margin-bottom:14px;
+  background:#eef4ff;border:1px solid #b8d0f5;border-radius:3px;
+  font-size:13px;color:#1a1a1a;
+}
+.co-login-banner-bt a{color:#0066cc;font-weight:600;text-decoration:underline;cursor:pointer;}
+.btl-info-icon{
+  width:20px;height:20px;background:#0066cc;color:#fff;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;flex-shrink:0;font-style:normal;
+}
+.btl-section{border:1px solid #c8c8c8;border-radius:3px;overflow:visible;margin-bottom:10px;background:#fff;}
+.btl-header{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;background:#f3f3f3;border-bottom:1px solid #c8c8c8;
+}
+.btl-header-title{font-size:14px;font-weight:600;color:#222;flex:1;}
+.btl-brands{display:flex;gap:4px;align-items:center;}
+.btl-brand{
+  font-size:9px;font-weight:800;padding:2px 5px;border-radius:2px;letter-spacing:.03em;
+  border:1px solid currentColor;line-height:1.4;
+}
+.btl-body{padding:14px 14px 6px;display:flex;flex-direction:column;gap:12px;}
+.btl-fg{display:flex;flex-direction:column;gap:4px;}
+.btl-lbl{font-size:13px;font-weight:400;color:#333;}
+.btl-lbl-hint{font-size:11px;color:#777;}
+.btl-inp{
+  width:100%;padding:8px 10px;font-size:14px;font-family:inherit;
+  border:1px solid #b0b0b0;border-radius:2px;background:#fff;color:#1a1a1a;
+  outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;
+}
+.btl-inp:focus{border-color:#0066cc;box-shadow:0 0 0 2px rgba(0,102,204,.15);}
+.btl-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.btl-paypal-note{font-size:12px;color:#555;text-align:center;padding:8px 0 10px;}
+.btl-paypal-note a{color:#0066cc;}
+.btl-choose-btn{
+  width:100%;padding:12px;background:#fff;border:1px solid #c8c8c8;border-radius:3px;
+  font-size:14px;font-weight:400;color:#333;cursor:pointer;text-align:center;
+  margin-bottom:10px;transition:background .15s;
+}
+.btl-choose-btn:hover{background:#f5f5f5;}
+.btl-alt-methods{display:none;flex-direction:column;gap:0;margin-bottom:10px;border:1px solid #c8c8c8;border-radius:3px;overflow:hidden;}
+.btl-alt-methods.open{display:flex;}
+.btl-alt-row{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border-bottom:1px solid #e8e8e8;cursor:pointer;background:#fff;
+  font-size:14px;color:#222;transition:background .12s;
+}
+.btl-alt-row:last-child{border-bottom:none;}
+.btl-alt-row:hover{background:#f9f9f9;}
+.bt-submit:hover{background:var(--orange-d);}
+
+/* Stripe form (future state) */
+.stripe-form-h{font-size:15px;font-weight:700;color:var(--dark);}
+.stripe-badge-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+/* stripe-form-badge now defined below as ghost annotation pill */
+.link-banner{
+  background:#EEF2FF;border:1.5px solid #C7D2FE;border-radius:8px;
+  padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+.link-icon{width:28px;height:28px;background:var(--stripe);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0;}
+.link-text strong{font-size:13px;font-weight:700;color:var(--stripe-d);}
+.link-text span{font-size:12px;color:var(--muted);display:block;margin-top:1px;}
+#payment-element{min-height:80px;}
+.stripe-submit{
+  width:100%;background:var(--stripe);color:#fff;border:none;
+  padding:14px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;
+  margin-top:16px;transition:var(--t);display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.stripe-submit:hover{background:#4f46e5;}
+.stripe-submit:disabled{opacity:.6;cursor:not-allowed;}
+.stripe-powered{font-size:11px;color:var(--muted);text-align:center;display:flex;align-items:center;justify-content:center;gap:5px;margin-top:10px;}
+.stripe-test-card{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  margin-top:10px;margin-bottom:6px;padding:7px 10px;
+  background:#fafafe;border:1px dashed rgba(99,91,255,.3);border-radius:7px;
+  font-size:11px;
+}
+.stc-label{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);flex-shrink:0;}
+.stc-field{
+  font-family:'Courier New',monospace;font-size:12px;font-weight:700;
+  color:var(--stripe);letter-spacing:.04em;cursor:pointer;
+  padding:1px 5px;border-radius:3px;transition:background .15s;
+}
+.stc-field:hover{background:rgba(99,91,255,.1);}
+.stc-field.copied{background:rgba(0,135,90,.12);color:var(--green);}
+.stc-sep{color:var(--border);font-size:11px;}
+
+/* Processing screen */
+.co-processing{text-align:center;padding:40px 20px;}
+.spinner{
+  width:44px;height:44px;border:3px solid var(--border);
+  border-top-color:var(--orange);border-radius:50%;
+  animation:spin .8s linear infinite;margin:0 auto 16px;
+}
+html[data-state="future"] .spinner{border-top-color:var(--stripe);}
+@keyframes spin{to{transform:rotate(360deg);}}
+.processing-h{font-size:16px;font-weight:700;color:var(--dark);margin-bottom:8px;}
+.processing-sub{font-size:14px;color:var(--muted);}
+.processing-steps{margin-top:20px;display:flex;flex-direction:column;gap:8px;text-align:left;max-width:280px;margin-left:auto;margin-right:auto;}
+.p-step{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.p-step.done{color:var(--green);}
+.p-step.active{color:var(--dark);font-weight:600;}
+.p-step-icon{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.p-step.done .p-step-icon{background:var(--green);border-color:var(--green);color:#fff;}
+.p-step.active .p-step-icon{border-color:var(--stripe);background:var(--stripe);color:#fff;}
+
+/* Success screen */
+.co-success{text-align:center;padding:32px 20px;}
+.success-icon{font-size:52px;margin-bottom:16px;display:block;}
+.success-h{font-size:22px;font-weight:800;color:var(--dark);margin-bottom:8px;}
+.success-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.65;}
+.order-detail-box{
+  background:var(--bg);border-radius:12px;padding:18px;margin-bottom:20px;
+  text-align:left;
+}
+.od-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;}
+.od-label{color:var(--muted);}
+.od-val{font-weight:600;color:var(--dark);}
+.od-val.green{color:var(--green);}
+.od-val.stripe{color:var(--stripe);}
+.od-val.mono{font-family:monospace;font-size:12px;}
+.success-close{
+  background:var(--orange);color:#fff;border:none;
+  padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;
+  transition:var(--t);
+}
+html[data-state="future"] .success-close{background:var(--stripe);}
+
+/* Error message */
+.co-error{background:var(--red-bg);border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--red);display:none;}
+.co-error.visible{display:block;}
+
+/* ── ⚡ INSIGHT TOOLTIPS ── */
+.fp-tip{position:relative;display:inline-flex;align-items:center;cursor:help;vertical-align:middle;}
+.fp-tip-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;border-radius:50%;
+  background:rgba(99,91,255,.12);border:1px solid rgba(99,91,255,.3);
+  font-size:10px;margin-left:5px;color:var(--stripe);
+  transition:all .2s;flex-shrink:0;font-style:normal;
+}
+.fp-tip:hover .fp-tip-icon{background:var(--stripe);color:#fff;border-color:var(--stripe);}
+/* Ghost tooltip icon — used on value bar unified platform tip */
+.fp-tip-ghost .fp-tip-icon{
+  opacity:.2;background:transparent;border-color:rgba(99,91,255,.2);
+  transition:all .25s;
+}
+.fp-tip-ghost:hover .fp-tip-icon{opacity:1;background:var(--stripe);color:#fff;border-color:var(--stripe);}
+/* Popup styles — visibility handled by JS fixed positioning, not CSS hover */
+.fp-tip-popup{
+  position:fixed;z-index:9999;
+  width:300px;background:#fff;border-radius:12px;
+  border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.14);
+  overflow:hidden;opacity:0;pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease;
+  transform:translateY(6px);
+  display:none;
+}
+.fp-tip-popup.fp-visible{display:block;}
+.fp-tip-hdr{
+  padding:8px 13px;background:var(--bg);border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+  display:flex;align-items:center;gap:6px;
+}
+.fp-tip-hdr-icon{font-size:12px;}
+.fp-tip-cols{display:grid;grid-template-columns:1fr 1fr;}
+.fp-tip-col{padding:11px 13px;}
+.fp-tip-col:first-child{border-right:1px solid var(--border);}
+.fp-tip-col-h{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.fp-tip-col.bad .fp-tip-col-h{color:var(--red);}
+.fp-tip-col.good .fp-tip-col-h{color:var(--green);}
+.fp-tip-text{font-size:12px;line-height:1.55;color:var(--text);}
+/* Demo simulation notice inside tooltips */
+.fp-tip-demo-note{
+  padding:6px 13px;background:rgba(99,91,255,.06);border-top:1px solid var(--border);
+  font-size:10px;color:var(--muted);font-style:italic;
+}
+/* ── DEMO ANNOTATION CHIPS ── */
+/* Used in checkout rows to annotate "what Stripe enables" without polluting the consumer UI */
+.da-chip{
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--stripe);background:rgba(99,91,255,.08);border:1px solid rgba(99,91,255,.2);
+  border-radius:4px;padding:2px 6px;white-space:nowrap;flex-shrink:0;cursor:help;
+  transition:all .15s;user-select:none;
+}
+.fp-tip:hover .da-chip{background:var(--stripe);color:#fff;border-color:var(--stripe);}
+/* Warning chip — orange, used in current-state to signal missing capability */
+.da-chip-warn{
+  color:var(--amber);background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);
+}
+.fp-tip:hover .da-chip-warn{background:var(--amber);color:#fff;border-color:var(--amber);}
+/* Stripe-branded tooltip header (purple) */
+.fp-tip-popup.stripe-tip .fp-tip-hdr{background:var(--stripe);color:rgba(255,255,255,.92);}
+.fp-tip-popup.stripe-tip .fp-tip-hdr-icon{color:rgba(255,255,255,.8);}
+/* Warning tooltip header (amber) — used for current-state risk callouts */
+.fp-tip-popup.warn-tip .fp-tip-hdr{background:var(--amber);color:rgba(255,255,255,.92);}
+.fp-tip-popup.warn-tip .fp-tip-hdr-icon{color:rgba(255,255,255,.8);}
+/* Address autocomplete */
+.addr-input-wrap{position:relative;}
+.addr-suggestions{
+  position:absolute;top:100%;left:0;right:0;z-index:500;
+  background:#fff;border:1px solid var(--border);border-top:none;
+  border-radius:0 0 8px 8px;box-shadow:0 6px 20px rgba(0,0,0,.12);
+  display:none;max-height:220px;overflow-y:auto;
+}
+.addr-sug-row{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;
+  border-bottom:1px solid var(--border);transition:background .1s;
+}
+.addr-sug-row:last-child{border-bottom:none;}
+.addr-sug-row:hover{background:#f5f4ff;}
+.addr-sug-pin{font-size:14px;flex-shrink:0;color:var(--stripe);}
+.addr-sug-main{font-size:13px;font-weight:600;color:var(--dark);line-height:1.3;}
+.addr-sug-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.addr-gmaps-footer{
+  display:flex;align-items:center;justify-content:flex-end;gap:5px;
+  padding:5px 10px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);
+}
+.co-addr-manual{display:flex;flex-direction:column;gap:8px;padding:12px;background:#fafafa;border:1px solid var(--border);border-radius:8px;margin-top:8px;}
+.co-addr-manual .bt-fi{background:#fff;}
+.co-addr-grid{display:grid;grid-template-columns:1fr 80px 100px;gap:8px;}
+/* Stripe Tax badge → purple chip to match demo annotation system */
+.co-tax-badge.good{
+  background:rgba(99,91,255,.1);color:var(--stripe);border:1px solid rgba(99,91,255,.2);
+  border-radius:4px;font-size:9px;font-weight:700;padding:2px 6px;
+  text-transform:uppercase;letter-spacing:.06em;cursor:help;
+}
+/* demo annotations bar below submit — replaces inline text */
+.stripe-demo-bar{
+  display:flex;align-items:center;flex-wrap:wrap;gap:6px;
+  margin-top:10px;padding:8px 10px;
+  background:rgba(99,91,255,.03);border:1px solid rgba(99,91,255,.1);border-radius:8px;
+}
+.stripe-demo-bar-label{font-size:10px;color:var(--muted);flex-shrink:0;}
+/* Demo annotation in value bar — hide the text label, show chip */
+.vp-demo-ann{
+  display:flex;align-items:center;gap:6px;margin-top:4px;
+}
+/* stripe-form-badge → ghost annotation pill */
+.stripe-form-badge{
+  font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:rgba(99,91,255,.5);background:rgba(99,91,255,.06);
+  border:1px solid rgba(99,91,255,.18);border-radius:4px;
+  padding:2px 7px;cursor:default;transition:all .2s;
+}
+/* Link annotation row — replaces the full link-banner */
+.link-ann-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+  padding:8px 12px;border-radius:8px;background:rgba(99,91,255,.04);
+  border:1px solid rgba(99,91,255,.12);
+}
+.link-ann-label{font-size:12px;color:var(--muted);flex:1;}
+.link-ann-label strong{color:var(--dark);font-weight:600;}
+/* Address section styling */
+.co-addr-section{margin-bottom:16px;}
+.co-addr-row{display:flex;gap:8px;margin-top:8px;}
+.co-addr-row .bt-fi{flex:1;}
+
+/* checkout enhancements */
+.co-tax-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:var(--muted);align-items:center;}
+.co-tax-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:5px;}
+.co-tax-badge.bad{background:rgba(217,119,6,.12);color:var(--amber);}
+.co-tax-badge.good{background:rgba(0,135,90,.1);color:var(--green);}
+.stripe-protection-bar{
+  background:#f0fdf4;border:1px solid rgba(0,135,90,.2);border-radius:9px;
+  padding:10px 13px;display:flex;gap:16px;flex-wrap:wrap;
+}
+.sp-item-pill{font-size:11px;font-weight:600;color:var(--green);display:flex;align-items:center;gap:5px;}
+.bt-warning-bar{
+  background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.2);border-radius:9px;
+  padding:10px 13px;font-size:11px;color:var(--amber);display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+}
+
+/* ── STRIPE ELEMENT ZONES (keynote-style purple highlight) ── */
+.stripe-el-zone{position:relative;border-radius:8px;}
+.stripe-el-zone::before{
+  content:'';position:absolute;inset:-4px;border-radius:11px;
+  border:1.5px solid transparent;pointer-events:none;
+  transition:border-color .3s,box-shadow .3s;z-index:1;
+}
+.stripe-el-zone:hover::before{
+  border-color:rgba(99,91,255,.4);
+  box-shadow:0 0 0 4px rgba(99,91,255,.05),0 0 22px rgba(99,91,255,.1);
+}
+/* corner brackets — always faintly visible, pop on hover */
+.zel-corner,.zel-corner-br{
+  position:absolute;width:10px;height:10px;pointer-events:none;
+  transition:border-color .3s;z-index:2;
+}
+.zel-corner{top:-5px;left:-5px;border-top:2px solid rgba(99,91,255,.18);border-left:2px solid rgba(99,91,255,.18);border-radius:2px 0 0 0;}
+.zel-corner-br{bottom:-5px;right:-5px;border-bottom:2px solid rgba(99,91,255,.18);border-right:2px solid rgba(99,91,255,.18);border-radius:0 0 2px 0;}
+.stripe-el-zone:hover .zel-corner,.stripe-el-zone:hover .zel-corner-br{border-color:rgba(99,91,255,.85);}
+/* floating label — invisible until zone hover */
+.sel-tip{
+  position:absolute;top:-12px;right:4px;
+  opacity:0;pointer-events:none;transition:opacity .2s;z-index:10;
+}
+.stripe-el-zone:hover .sel-tip{opacity:1;pointer-events:auto;}
+.sel-trigger{
+  display:inline-block;font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--stripe);background:#fff;border:1.5px solid rgba(99,91,255,.35);
+  border-radius:4px;padding:2px 8px;cursor:help;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(99,91,255,.15);
+}
+/* ── EXPRESS CHECKOUT ELEMENT ── */
+.express-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.express-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  height:42px;border-radius:6px;font-size:13px;font-weight:600;cursor:default;
+  border:1.5px solid var(--border);user-select:none;
+}
+.express-btn-apple{background:#000;color:#fff;border-color:#000;font-size:14px;}
+.express-btn-gpay{background:#fff;color:#1a1a1a;border-color:#dadce0;font-size:12px;letter-spacing:.01em;}
+.express-btn-link{background:var(--stripe);color:#fff;border-color:var(--stripe);}
+.express-divider{
+  display:flex;align-items:center;gap:10px;
+  margin:14px 0;font-size:11px;color:var(--muted);
+}
+.express-divider::before,.express-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+/* ── RESPONSIVE ── */
+@media(max-width:860px){
+  .hero-inner{grid-template-columns:1fr;}
+  .hero-showcase{display:none;}
+  .cat-grid{grid-template-columns:repeat(3,1fr);}
+  .prod-grid{grid-template-columns:repeat(2,1fr);}
+  .rev-grid{grid-template-columns:1fr;}
+  .foot-grid{grid-template-columns:1fr 1fr;}
+  .co-modal-body{flex-direction:column;}
+  .co-summary{width:100%;border-right:none;border-bottom:1px solid var(--border);max-height:220px;}
+}
+@media(max-width:600px){
+  .nav-links{display:none;}
+  .cat-grid{grid-template-columns:repeat(2,1fr);}
+  .prod-grid{grid-template-columns:repeat(2,1fr);}
+  .foot-grid{grid-template-columns:1fr;}
+  .hero-h1{font-size:34px;}
+  .value-inner{grid-template-columns:1fr 1fr;}
+  .ins-m-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ DEMO HUD ═══════ -->
+<div class="demo-hud">
+  <span class="demo-mode-chip">DEMO</span>
+  <div class="demo-toggle-track">
+    <button class="demo-state-btn cur-btn" onclick="if(document.documentElement.dataset.state!=='current') toggleState()">
+      🔴&nbsp; Current State &mdash; Braintree / Vertex / HyperWallet
+    </button>
+    <button class="demo-state-btn fut-btn" onclick="if(document.documentElement.dataset.state!=='future') toggleState()">
+      🟢&nbsp; Future State &mdash; Stripe Unified Platform
+    </button>
+  </div>
+  <span class="demo-hud-hint">press T to toggle</span>
+</div>
+
+<!-- ═══════ UTILITY BAR ═══════ -->
+<div class="util-bar">
+  <span>📞 <strong style="color:#fff">888-293-3295</strong> · Mon–Fri 8am–Midnight ET · Sat–Sun 10am–6pm ET</span>
+  <div class="util-right">
+    <a href="#">💬 Chat Now</a>
+    <a href="#">Sign In</a>
+    <a href="#">My Designs</a>
+  </div>
+</div>
+
+<!-- ═══════ MAIN NAV ═══════ -->
+<nav class="main-nav">
+  <a href="#" class="cink-logo"><img src="https://cms.greathillpartners.com/system/uploads/fae/image/asset/605/xxl_Custom_Ink_Color_Logo_500px.png" alt="CustomInk" style="height:32px;width:auto;display:block;"></a>
+  <div class="nav-links">
+    <a href="#" class="nav-link">T-Shirts</a>
+    <a href="#" class="nav-link">Sweatshirts</a>
+    <a href="#" class="nav-link">Hats</a>
+    <a href="#" class="nav-link">Bags &amp; Accessories</a>
+    <a href="#" class="nav-link">Face Masks</a>
+    <a href="#" class="nav-link" style="position:relative;">Fundraising
+      <span class="fp-tip" style="display:inline-flex;margin-left:1px;"><i class="fp-tip-icon" style="margin-left:2px;">⚡</i>
+        <div class="fp-tip-popup fp-tip-left" style="left:-80px;">
+          <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>Fundraising Disbursements</div>
+          <div class="fp-tip-cols">
+            <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · HyperWallet</div><div class="fp-tip-text">$100–150K/week disbursed manually via HyperWallet. Multi-day delays, high ops cost, no real-time visibility.</div></div>
+            <div class="fp-tip-col good"><div class="fp-tip-col-h">Future · Connect</div><div class="fp-tip-text">Stripe Connect automates payouts to schools & nonprofits. T+2 settlement, real-time tracking, ~$10M/yr in managed disbursements.</div></div>
+          </div>
+        </div>
+      </span>
+    </a>
+    <a href="#" class="nav-link">Stores</a>
+    <a href="#" class="nav-link">Pro</a>
+  </div>
+  <div class="nav-right">
+    <button class="cart-btn" onclick="openCart()" title="View Cart">
+      🛒
+      <span class="cart-badge" id="cartBadge">0</span>
+    </button>
+    <button class="btn-start" onclick="openCheckoutDirect()">Start Designing</button>
+  </div>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <h1 class="hero-h1">Custom Everything,<br>All In One Place.</h1>
+      <p class="hero-sub">Over 10,000 custom swag options for your business, schools or team. No minimums. Free shipping on 12+ items.</p>
+      <div class="hero-btns">
+        <button class="hbtn-p" onclick="openCheckoutDirect()">Get Started</button>
+        <button class="hbtn-s" onclick="scrollToProducts()">Browse Products</button>
+        <span class="fp-tip" style="align-self:center;"><i class="fp-tip-icon" style="width:22px;height:22px;font-size:12px;">⚡</i>
+          <div class="fp-tip-popup fp-tip-left">
+            <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>Checkout Abandonment · $600M+ GMV</div>
+            <div class="fp-tip-cols">
+              <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · 30%+ Lost</div><div class="fp-tip-text">PayPal redirect breaks flow. Card form friction. 30%+ abandonment = ~$180M+ in at-risk revenue annually.</div></div>
+              <div class="fp-tip-col good"><div class="fp-tip-col-h">Future · Link + OCS</div><div class="fp-tip-text">Link 1-click for 50M+ users + Optimized Checkout Suite. Scott's agentic checkout: 2–3 mo build vs 8 mo traditional. ~10pt recovery.</div></div>
+            </div>
+          </div>
+        </span>
+      </div>
+      <div class="hero-trust">
+        <div class="trust-item"><span>★★★★★</span><strong>4.9</strong><span>/ 100K reviews</span></div>
+        <div class="trust-item">🚚 <span>Free shipping 12+</span></div>
+        <div class="trust-item">✂️ <span>No minimums</span></div>
+        <div class="trust-item">
+          🔒 <span class="sc">Braintree secured</span>
+          <span class="sf">Stripe secured</span>
+          <span class="fp-tip"><i class="fp-tip-icon">⚡</i>
+            <div class="fp-tip-popup">
+              <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>Payment Security Delta</div>
+              <div class="fp-tip-cols">
+                <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Braintree</div><div class="fp-tip-text">Dec 2024: undocumented API change → 24-hr outage → $115K lost. No fraud governance framework — security team broke checkout last week.</div></div>
+                <div class="fp-tip-col good"><div class="fp-tip-col-h">Future · Stripe</div><div class="fp-tip-text">Radar ML sees 92% of cards before your transaction. 99.99% SLA. Managed governance CoE so no rogue rule changes.</div></div>
+              </div>
+            </div>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-img-wrap">
+      <img src="https://www.customink.com/assets/site_content/pages/home/marquee/spring2026/xl-50d5bd07c81c38a07702feece328f6837142dd3e6e0d1961e526380c818132dd.webp" alt="Custom branded products" onerror="this.src='https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=560&h=400&fit=crop&auto=format&q=85'">
+      <div class="hero-img-badge">
+        <span>10,000+</span>Custom product options
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ VALUE PROPS ═══════ -->
+<div class="value-bar">
+  <div class="value-inner">
+    <div class="vp-item">
+      <span class="vp-icon">🚚</span>
+      <div><div class="vp-title">Free Shipping</div><div class="vp-sub">On orders of 12+ items</div></div>
+    </div>
+    <div class="vp-item">
+      <span class="vp-icon">🎨</span>
+      <div><div class="vp-title">Free Design Help</div><div class="vp-sub">Expert artists on call</div></div>
+    </div>
+    <div class="vp-item">
+      <span class="vp-icon">✂️</span>
+      <div><div class="vp-title">No Minimums</div><div class="vp-sub">Order 1 or 10,000</div></div>
+    </div>
+    <div class="vp-item">
+      <span class="vp-icon">🏆</span>
+      <div>
+        <div class="vp-title">Award-Winning Quality</div>
+        <div class="vp-sub">100% satisfaction guarantee</div>
+      </div>
+    </div>
+    <div class="vp-item" style="border-left:1px solid var(--border);padding-left:20px;">
+      <span class="vp-icon">💳</span>
+      <div>
+        <div class="vp-title">Secure Checkout</div>
+        <div class="vp-sub">SSL encrypted · PCI compliant</div>
+        <div class="vp-demo-ann">
+          <span class="fp-tip sc"><span class="da-chip">⚡ 4 processors</span>
+            <div class="fp-tip-popup stripe-tip">
+              <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>DEMO · Current Payment Stack</div>
+              <div class="fp-tip-cols">
+                <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · 4 Systems</div><div class="fp-tip-text">Braintree (CustomInk.com), Authorize.net (SwagPro), Vertex Tax (separate), HyperWallet (disbursements) — 4 contracts, 4 reconciliations, fragmented data.</div></div>
+                <div class="fp-tip-col good"><div class="fp-tip-col-h">Future · 1 Platform</div><div class="fp-tip-text">Stripe consolidates all 3 brands. Tax + Radar + Connect + Billing in one API. Swag.com already live — proven migration path.</div></div>
+              </div>
+            </div>
+          </span>
+          <span class="fp-tip sf"><span class="da-chip">⚡ Stripe unified</span>
+            <div class="fp-tip-popup stripe-tip">
+              <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>DEMO · Stripe Unified Platform</div>
+              <div class="fp-tip-cols">
+                <div class="fp-tip-col bad"><div class="fp-tip-col-h">Was · 4 Stacks</div><div class="fp-tip-text">Braintree + Authorize.net + Vertex + HyperWallet. 4 separate engineering integrations. Daily manual reconciliation. Zero unified data visibility.</div></div>
+                <div class="fp-tip-col good"><div class="fp-tip-col-h">Now · 1 Platform</div><div class="fp-tip-text">One Stripe account. Tax + Radar + Link + Billing + Connect live together. Single NetSuite connector. Real-time cross-brand reporting.</div></div>
+              </div>
+            </div>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ CATEGORIES ═══════ -->
+<section class="section gray">
+  <div class="section-inner">
+    <div class="section-header">
+      <div>
+        <div class="section-h">Shop by Category</div>
+        <div class="section-sub">Custom-printed on demand — ships in 5–7 business days</div>
+      </div>
+      <a href="#" class="see-all">View all categories →</a>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-card" onclick="addToCart({id:1,name:'Classic T-Shirt',icon:'👕',price:9.99,qty:24})"><span class="cat-icon">👕</span><div class="cat-name">T-Shirts</div></div>
+      <div class="cat-card" onclick="addToCart({id:2,name:'Zip Hoodie',icon:'🧥',price:29.99,qty:12})"><span class="cat-icon">🧥</span><div class="cat-name">Sweatshirts</div></div>
+      <div class="cat-card" onclick="addToCart({id:3,name:'Classic Cap',icon:'🧢',price:14.99,qty:24})"><span class="cat-icon">🧢</span><div class="cat-name">Hats &amp; Caps</div></div>
+      <div class="cat-card" onclick="addToCart({id:4,name:'Tote Bag',icon:'👜',price:7.99,qty:36})"><span class="cat-icon">👜</span><div class="cat-name">Bags</div></div>
+      <div class="cat-card" onclick="addToCart({id:5,name:'Performance Polo',icon:'🎽',price:19.99,qty:12})"><span class="cat-icon">🎽</span><div class="cat-name">Polos</div></div>
+      <div class="cat-card" onclick="addToCart({id:7,name:'Crewneck Sweatshirt',icon:'🩱',price:24.99,qty:12})"><span class="cat-icon">🩱</span><div class="cat-name">Crewnecks</div></div>
+      <div class="cat-card" onclick="addToCart({id:8,name:'Face Mask',icon:'😷',price:3.99,qty:50})"><span class="cat-icon">😷</span><div class="cat-name">Face Masks</div></div>
+      <div class="cat-card" onclick="addToCart({id:9,name:'Custom Mug',icon:'☕',price:8.99,qty:24})"><span class="cat-icon">☕</span><div class="cat-name">Drinkware</div></div>
+      <div class="cat-card" onclick="addToCart({id:10,name:'Custom Sticker Pack',icon:'🌟',price:2.99,qty:100})"><span class="cat-icon">🌟</span><div class="cat-name">Stickers</div></div>
+      <div class="cat-card" onclick="addToCart({id:11,name:'Button-Down Shirt',icon:'👔',price:34.99,qty:6})"><span class="cat-icon">👔</span><div class="cat-name">Button-Downs</div></div>
+      <div class="cat-card" onclick="addToCart({id:12,name:'Custom Notebook',icon:'📓',price:6.99,qty:24})"><span class="cat-icon">📓</span><div class="cat-name">Stationery</div></div>
+      <div class="cat-card" onclick="addToCart({id:13,name:'Custom Umbrella',icon:'☂️',price:22.99,qty:12})"><span class="cat-icon">☂️</span><div class="cat-name">Promo Items</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ PRODUCTS ═══════ -->
+<section class="section" id="products-section">
+  <div class="section-inner">
+    <div class="section-header">
+      <div>
+        <div class="section-h">Featured Products</div>
+        <div class="section-sub">Our most popular custom items — click any product to add to cart</div>
+      </div>
+      <a href="#" class="see-all">See all products →</a>
+    </div>
+    <div class="prod-grid">
+      <div class="prod-card">
+        <div class="prod-img"><span class="prod-badge">BESTSELLER</span><img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=300&fit=crop&auto=format&q=80" alt="Classic T-Shirt"></div>
+        <div class="prod-info">
+          <div class="prod-name">Classic T-Shirt</div>
+          <div class="prod-price">From <strong>$9.99</strong> ea.
+            <span class="fp-tip"><i class="fp-tip-icon">⚡</i>
+              <div class="fp-tip-popup">
+                <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>Checkout Experience Delta</div>
+                <div class="fp-tip-cols">
+                  <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current</div><div class="fp-tip-text">Braintree form — redirect to PayPal. 30%+ cart abandonment on $600M+ GMV.</div></div>
+                  <div class="fp-tip-col good"><div class="fp-tip-col-h">Future</div><div class="fp-tip-text">Stripe Link 1-click autofill. Saved cards across 50M+ Link users. ~10pt abandonment recovery.</div></div>
+                </div>
+              </div>
+            </span>
+          </div>
+          <button class="prod-atc" onclick="addToCart({id:1,name:'Classic T-Shirt',icon:'👕',price:9.99,qty:24})">+ Add to Cart</button>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-img"><img src="https://images.unsplash.com/photo-1620799139834-6b8f844fbe61?w=400&h=300&fit=crop&auto=format&q=80" alt="Zip-Up Hoodie" onerror="this.src='https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=400&h=300&fit=crop&auto=format&q=80'"></div>
+        <div class="prod-info">
+          <div class="prod-name">Zip-Up Hoodie</div>
+          <div class="prod-price">From <strong>$29.99</strong> ea.</div>
+          <button class="prod-atc" onclick="addToCart({id:2,name:'Zip Hoodie',icon:'🧥',price:29.99,qty:12})">+ Add to Cart</button>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-img"><img src="https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=400&h=300&fit=crop&auto=format&q=80" alt="Classic Cap"></div>
+        <div class="prod-info">
+          <div class="prod-name">Classic Cap</div>
+          <div class="prod-price">From <strong>$14.99</strong> ea.</div>
+          <button class="prod-atc" onclick="addToCart({id:3,name:'Classic Cap',icon:'🧢',price:14.99,qty:24})">+ Add to Cart</button>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-img"><img src="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&h=300&fit=crop&auto=format&q=80" alt="Performance Polo"></div>
+        <div class="prod-info">
+          <div class="prod-name">Performance Polo</div>
+          <div class="prod-price">From <strong>$19.99</strong> ea.
+            <span class="fp-tip"><i class="fp-tip-icon">⚡</i>
+              <div class="fp-tip-popup">
+                <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>BNPL for B2B Orders</div>
+                <div class="fp-tip-cols">
+                  <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current</div><div class="fp-tip-text">No BNPL options. Large corporate orders paid upfront via Braintree only.</div></div>
+                  <div class="fp-tip-col good"><div class="fp-tip-col-h">Future</div><div class="fp-tip-text">Stripe natively offers Klarna & Affirm. Larger order sizes, higher conversion on bulk buys.</div></div>
+                </div>
+              </div>
+            </span>
+          </div>
+          <button class="prod-atc" onclick="addToCart({id:5,name:'Performance Polo',icon:'🎽',price:19.99,qty:12})">+ Add to Cart</button>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-img"><img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=300&fit=crop&auto=format&q=80" alt="Canvas Tote Bag"></div>
+        <div class="prod-info">
+          <div class="prod-name">Canvas Tote Bag</div>
+          <div class="prod-price">From <strong>$7.99</strong> ea.</div>
+          <button class="prod-atc" onclick="addToCart({id:4,name:'Tote Bag',icon:'👜',price:7.99,qty:36})">+ Add to Cart</button>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-img"><span class="prod-badge">NEW</span><img src="https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=400&h=300&fit=crop&auto=format&q=80" alt="Crewneck Sweatshirt"></div>
+        <div class="prod-info">
+          <div class="prod-name">Crewneck Sweatshirt</div>
+          <div class="prod-price">From <strong>$24.99</strong> ea.</div>
+          <button class="prod-atc" onclick="addToCart({id:7,name:'Crewneck Sweatshirt',icon:'🩱',price:24.99,qty:12})">+ Add to Cart</button>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-img"><img src="https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=400&h=300&fit=crop&auto=format&q=80" alt="Custom Socks"></div>
+        <div class="prod-info">
+          <div class="prod-name">Custom Socks</div>
+          <div class="prod-price">From <strong>$5.99</strong> ea.</div>
+          <button class="prod-atc" onclick="addToCart({id:6,name:'Custom Socks',icon:'🧦',price:5.99,qty:48})">+ Add to Cart</button>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-img"><img src="https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=400&h=300&fit=crop&auto=format&q=80" alt="Custom Mug"></div>
+        <div class="prod-info">
+          <div class="prod-name">Custom Mug</div>
+          <div class="prod-price">From <strong>$8.99</strong> ea.</div>
+          <button class="prod-atc" onclick="addToCart({id:9,name:'Custom Mug',icon:'☕',price:8.99,qty:24})">+ Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ TRUST BANNER ═══════ -->
+<div class="trust-banner">
+  <div class="tb-stars">★★★★★</div>
+  <div class="tb-h">9 in 10 Customers Would Reorder</div>
+  <div class="tb-sub">Over 100,000 verified reviews · Award-winning quality · 100% satisfaction guarantee</div>
+</div>
+
+<!-- ═══════ REVIEWS ═══════ -->
+<section class="section">
+  <div class="section-inner">
+    <div class="section-h" style="text-align:center;margin-bottom:6px;">What Our Customers Say</div>
+    <div class="section-sub" style="text-align:center;margin-bottom:32px;">Real orders from real teams</div>
+    <div class="rev-grid">
+      <div class="rev-card">
+        <div class="rev-stars">★★★★★</div>
+        <div class="rev-text">"The shirts arrived perfectly on time for our company kickoff. Quality exceeded expectations, and the design team was incredibly helpful."</div>
+        <div class="rev-name">Sarah M.</div>
+        <div class="rev-org">Marketing Manager, TechCorp</div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-stars">★★★★★</div>
+        <div class="rev-text">"Our school fundraiser hoodies were a massive hit. The whole process from design to delivery was smooth — and they arrived faster than expected."</div>
+        <div class="rev-name">James K.</div>
+        <div class="rev-org">PTA President, Lincoln Elementary</div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-stars">★★★★★</div>
+        <div class="rev-text">"Used CustomInk for our annual company swag bags. The quality is always consistent year after year, and our team looks forward to it every time."</div>
+        <div class="rev-name">Amanda T.</div>
+        <div class="rev-org">People Ops Lead, Startup Inc.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer>
+  <div class="foot-inner">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand">Custom<span>Ink</span></div>
+        <div class="foot-tagline">The world's #1 custom apparel platform. Design your own T-shirts, hoodies, hats, and more. No minimums.</div>
+      </div>
+      <div>
+        <div class="foot-col-h">Products</div>
+        <ul class="foot-links">
+          <li><a href="#">T-Shirts</a></li>
+          <li><a href="#">Sweatshirts</a></li>
+          <li><a href="#">Hats &amp; Caps</a></li>
+          <li><a href="#">Bags</a></li>
+          <li><a href="#">Face Masks</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="foot-col-h">Services</div>
+        <ul class="foot-links">
+          <li><a href="#">Fundraising</a></li>
+          <li><a href="#">Custom Stores</a></li>
+          <li><a href="#">Swag.com</a></li>
+          <li><a href="#">SwagPro</a></li>
+          <li><a href="#">Corporate</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="foot-col-h">Support</div>
+        <ul class="foot-links">
+          <li><a href="#">Chat Now</a></li>
+          <li><a href="#">888-293-3295</a></li>
+          <li><a href="#">FAQs</a></li>
+          <li><a href="#">Shipping Info</a></li>
+          <li><a href="#">Returns</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 CustomInk, LLC. All rights reserved.</span>
+      <div class="foot-wm">⚡ Stripe × CustomInk · Workshop Demo · Brian Truong, SA</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════ FLOATING INSIGHTS WIDGET ═══════ -->
+<button class="widget-btn" onclick="openInsights()" title="Demo Insights">
+  ⚡
+  <span class="widget-tooltip">Stripe Demo Insights</span>
+</button>
+
+<!-- ═══════ INSIGHTS PANEL ═══════ -->
+<div class="insights-overlay" id="insightsOverlay" onclick="closeInsights()"></div>
+<div class="insights-panel" id="insightsPanel">
+  <div class="ip-header">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="ip-title">Stripe × CustomInk</div>
+      <span class="ip-badge">JUNE 11, 2026</span>
+    </div>
+    <button class="ip-close" onclick="closeInsights()">✕</button>
+  </div>
+  <div class="ip-body">
+
+    <!-- Architecture -->
+    <div class="ip-section">
+      <div class="ip-section-h">Payment Architecture</div>
+      <div class="ins-diag">
+        <div class="ins-diag-h red"><span class="dot red"></span>Current State · 4 Fragmented Stacks</div>
+        <div class="ins-brand-row">
+          <div class="ins-bnode"><div class="ins-bnode-name">CustomInk.com</div><div class="ins-bnode-sub">$600M+ vol</div></div>
+          <div class="ins-bnode live"><div class="ins-bnode-name">Swag.com</div><div class="ins-bnode-sub">Stripe ✓ live</div></div>
+          <div class="ins-bnode"><div class="ins-bnode-name">SwagPro</div><div class="ins-bnode-sub">Printfection</div></div>
+        </div>
+        <div class="mess-conn"></div>
+        <div class="proc-row">
+          <div class="pnode p-bt">Braintree/PayPal<div class="pnode-sub">Core checkout</div></div>
+          <div class="pnode p-an">Authorize.net<div class="pnode-sub">SwagPro</div></div>
+        </div>
+        <div class="proc-row" style="margin-top:6px;">
+          <div class="pnode p-vx">Vertex Tax<div class="pnode-sub">⚠ Problematic</div></div>
+          <div class="pnode p-hg">Homegrown Billing<div class="pnode-sub">SwagPro 100%</div></div>
+          <div class="pnode p-hw">HyperWallet<div class="pnode-sub">Manual payouts</div></div>
+        </div>
+        <div class="proc-row" style="margin-top:6px;">
+          <div class="pnode p-mn">Manual Recon<div class="pnode-sub">No unified view</div></div>
+          <div class="pnode p-mn">Manual Disbursements<div class="pnode-sub">$100–150K/wk</div></div>
+        </div>
+        <div class="inc-badge"><span class="inc-icon">🚨</span><span><strong>Dec 2024:</strong> Undocumented Braintree API change → 24-hr outage → $115K lost</span></div>
+        <div class="inc-badge"><span class="inc-icon">⛔</span><span><strong>Funds hold:</strong> Braintree held funds 3 days (intl banking)</span></div>
+        <div class="inc-badge"><span class="inc-icon">🔥</span><span><strong>Last week:</strong> Security team enabled BT fraud layers → broke checkout. No governance framework.</span></div>
+      </div>
+
+      <div class="ins-diag">
+        <div class="ins-diag-h grn"><span class="dot grn"></span>Future State · Stripe Unified</div>
+        <div class="ins-brand-row">
+          <div class="ins-bnode fut"><div class="ins-bnode-name">CustomInk.com</div><div class="ins-bnode-sub">Anchor migration</div></div>
+          <div class="ins-bnode live"><div class="ins-bnode-name">Swag.com</div><div class="ins-bnode-sub">Live ✓</div></div>
+          <div class="ins-bnode fut"><div class="ins-bnode-name">SwagPro</div><div class="ins-bnode-sub">Quick win</div></div>
+        </div>
+        <div class="clean-conn"></div>
+        <div class="stripe-box">
+          <div class="stripe-box-h"><span class="sp-pill">STRIPE</span>Unified Platform · All Three Brands</div>
+          <div class="sp-grid">
+            <div class="sp-item"><span class="sp-chk">✓</span>Checkout + Link + OCS</div>
+            <div class="sp-item"><span class="sp-chk">✓</span>Radar (92% seen)</div>
+            <div class="sp-item"><span class="sp-chk">✓</span>Stripe Tax</div>
+            <div class="sp-item"><span class="sp-chk">✓</span>Billing + Subs</div>
+            <div class="sp-item"><span class="sp-chk">✓</span>Connect (Payouts)</div>
+            <div class="sp-item"><span class="sp-chk">✓</span>Klarna + Affirm</div>
+          </div>
+        </div>
+        <div class="proc-row">
+          <div class="pnode p-st" style="flex:1;">NetSuite Connector<div class="pnode-sub">Unified recon</div></div>
+          <div class="pnode p-st" style="flex:1;">Automated Payouts<div class="pnode-sub">$10M/yr via Connect</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="ip-section">
+      <div class="ip-section-h">Business Impact</div>
+      <div class="ins-m-grid">
+        <div class="ins-m-card">
+          <div class="ins-m-val sc rd">$115K</div><div class="ins-m-val sf gn">$0</div>
+          <div class="ins-m-lbl sc">Single Incident Cost</div><div class="ins-m-lbl sf">Incident Cost</div>
+          <div class="ins-m-sub sc">24-hr Braintree outage</div><div class="ins-m-sub sf">99.99% SLA</div>
+          <div class="ins-delta bad sc">⚠ Dec 2024</div><div class="ins-delta good sf">✓ Resolved</div>
+        </div>
+        <div class="ins-m-card">
+          <div class="ins-m-val sc am">30%+</div><div class="ins-m-val sf gn">~20%</div>
+          <div class="ins-m-lbl">Cart Abandonment</div>
+          <div class="ins-m-sub sc">On $600M+ GMV</div><div class="ins-m-sub sf">Link + OCS recovery</div>
+          <div class="ins-delta bad sc">↑ Above avg</div><div class="ins-delta good sf">↓ 10pt gain</div>
+        </div>
+        <div class="ins-m-card">
+          <div class="ins-m-val sc rd">4</div><div class="ins-m-val sf gn">1</div>
+          <div class="ins-m-lbl">Payment Stacks</div>
+          <div class="ins-m-sub sc">4 reconciliations</div><div class="ins-m-sub sf">Single source</div>
+          <div class="ins-delta bad sc">⚠ Fragmented</div><div class="ins-delta good sf">✓ Unified</div>
+        </div>
+        <div class="ins-m-card">
+          <div class="ins-m-val sc am">$150K</div><div class="ins-m-val sf pu">Auto</div>
+          <div class="ins-m-lbl">Weekly Payouts</div>
+          <div class="ins-m-sub sc">100% manual</div><div class="ins-m-sub sf">Connect automation</div>
+          <div class="ins-delta bad sc">⚠ by hand</div><div class="ins-delta good sf">✓ $10M/yr</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Themes -->
+    <div class="ip-section">
+      <div class="ip-section-h">6 Innovation Themes · June 11 Workshop</div>
+      <div class="ins-theme">
+        <div class="ins-theme-num">Theme 1</div>
+        <div class="ins-theme-title">Unified Commerce: One Stripe, Three Brands</div>
+        <div class="ins-theme-desc">Consolidate CustomInk, Swag.com, and SwagPro. Swag is the proof point.</div>
+        <div class="ins-theme-tags"><span class="ins-tag">Connect</span><span class="ins-tag">Billing</span><span class="ins-tag">NetSuite</span></div>
+      </div>
+      <div class="ins-theme">
+        <div class="ins-theme-num">Theme 2</div>
+        <div class="ins-theme-title">Checkout Experience &amp; Revenue Recovery</div>
+        <div class="ins-theme-desc">30%+ abandonment on $600M+ GMV. Link, OCS, BNPL natively. Scott's agentic checkout: 2–3 mo vs. 8 mo traditional.</div>
+        <div class="ins-theme-tags"><span class="ins-tag">Link</span><span class="ins-tag">OCS</span><span class="ins-tag">Klarna</span><span class="ins-tag">Affirm</span></div>
+      </div>
+      <div class="ins-theme urgent">
+        <div class="ins-theme-num">⚡ URGENT — Theme 3</div>
+        <div class="ins-theme-title">Intelligent Fraud &amp; Risk</div>
+        <div class="ins-theme-desc">$115K outage. 3-day fund hold. Security team broke checkout last week. Need Radar's 92% card-seen-before rate + governance framework.</div>
+        <div class="ins-theme-tags"><span class="ins-tag">Radar</span><span class="ins-tag">Governance</span><span class="ins-tag">CoE</span></div>
+      </div>
+      <div class="ins-theme">
+        <div class="ins-theme-num">Theme 4</div>
+        <div class="ins-theme-title">Agentic Commerce &amp; Future-Ready Platform</div>
+        <div class="ins-theme-desc">Scott's team: 2–3 month agentic headless checkout vs 8-month traditional rebuild.</div>
+        <div class="ins-theme-tags"><span class="ins-tag">AI Commerce</span><span class="ins-tag">Headless</span><span class="ins-tag">APIs</span></div>
+      </div>
+      <div class="ins-theme">
+        <div class="ins-theme-num">Theme 5</div>
+        <div class="ins-theme-title">Payment Center of Excellence</div>
+        <div class="ins-theme-desc">Centralized operating model for fraud governance, tax, and payouts across all three brands.</div>
+        <div class="ins-theme-tags"><span class="ins-tag">Governance</span><span class="ins-tag">CoE</span><span class="ins-tag">Operations</span></div>
+      </div>
+      <div class="ins-theme">
+        <div class="ins-theme-num">Theme 6</div>
+        <div class="ins-theme-title">Billing, Subscriptions &amp; Fundraising</div>
+        <div class="ins-theme-desc">Deprecate 100% homegrown SwagPro billing. Automate $100–150K/week fundraising via Connect.</div>
+        <div class="ins-theme-tags"><span class="ins-tag">Billing</span><span class="ins-tag">Connect</span><span class="ins-tag">Fundraising</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════ CART DRAWER ═══════ -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-header">
+    <div class="cart-h">Your Cart</div>
+    <button class="close-btn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <div class="cart-empty">Your cart is empty.<br>Browse products to get started.</div>
+  </div>
+  <div class="cart-footer" id="cartFooter" style="display:none;">
+    <div class="cart-totals" id="cartTotals"></div>
+    <button class="cart-checkout-btn" onclick="closeCart(); openCheckout();">Proceed to Checkout →</button>
+  </div>
+</div>
+
+<!-- ═══════ CHECKOUT MODAL ═══════ -->
+<div class="checkout-overlay" id="checkoutOverlay">
+  <div class="checkout-modal" id="checkoutModal">
+    <div class="co-modal-header">
+      <div class="co-modal-h" id="coModalTitle">Checkout</div>
+      <button class="close-btn" onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="co-modal-body">
+
+      <!-- LEFT: Payment flows -->
+      <div class="co-payment">
+
+        <!-- CURRENT STATE: Braintree-style form -->
+        <div class="co-screen" id="screenBtForm">
+          <div class="co-page-h">Checkout</div>
+
+          <div class="co-info-block">
+            <div class="co-info-main">
+              <span class="co-info-name">Demo Customer</span>
+              <span style="color:var(--muted);font-size:13px;margin-left:8px;">555-293-3295</span>
+            </div>
+            <span class="co-info-edit">Edit</span>
+          </div>
+
+          <div class="co-info-block" style="flex-direction:column;gap:8px;align-items:stretch;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="co-info-label" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">Shipping Address</div>
+              <span class="co-info-edit">Edit</span>
+            </div>
+            <div class="co-addr-manual">
+              <input class="bt-fi" type="text" placeholder="Street address" value="4604 Eisenhower Ave" style="background:#fff;">
+              <input class="bt-fi" type="text" placeholder="Apt, suite, etc. (optional)" style="background:#fff;">
+              <div class="co-addr-grid">
+                <input class="bt-fi" type="text" placeholder="City" value="Alexandria" style="background:#fff;">
+                <input class="bt-fi" type="text" placeholder="State" value="VA" style="background:#fff;">
+                <input class="bt-fi" type="text" placeholder="ZIP" value="22304" style="background:#fff;">
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                <span style="font-size:11px;color:var(--muted);">No address autocomplete available</span>
+                <span class="fp-tip"><span class="da-chip da-chip-warn">⚠ No autocomplete</span>
+                  <div class="fp-tip-popup warn-tip">
+                    <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚠</span>DEMO · Address Entry Friction</div>
+                    <div class="fp-tip-cols">
+                      <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Manual fields</div><div class="fp-tip-text">Custom-built 4-field form. No autocomplete. Users must type full address. Format varies by country — high error rate, high drop-off on international orders.</div></div>
+                      <div class="fp-tip-col good"><div class="fp-tip-col-h">Stripe Address Element</div><div class="fp-tip-text">Google Maps autocomplete built-in. Type 3 chars → instant validated suggestions. Pre-fills from Link. Single component replaces all custom address logic.</div></div>
+                    </div>
+                  </div>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="co-pay-section">
+
+            <!-- Legacy login banner -->
+            <div class="co-login-banner-bt">
+              <i class="btl-info-icon">i</i>
+              <span><a href="#" onclick="return false">Log in</a> to auto-fill your payment information for faster checkout.</span>
+              <span class="fp-tip" style="margin-left:auto;flex-shrink:0;" onclick="event.stopPropagation()">
+                <span class="da-chip da-chip-warn">⚠ Processor risk</span>
+                <div class="fp-tip-popup warn-tip">
+                  <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚠</span>DEMO · Payment Processor Risk</div>
+                  <div class="fp-tip-cols">
+                    <div class="fp-tip-col bad"><div class="fp-tip-col-h">Now · Braintree</div><div class="fp-tip-text">Dec 2024 API change → 24-hr outage → $115K lost revenue. Braintree held funds 3 days on international orders. Security team broke checkout with no governance framework.</div></div>
+                    <div class="fp-tip-col good"><div class="fp-tip-col-h">Future · Stripe</div><div class="fp-tip-text">99.99% SLA. Instant payouts. Radar CoE governance prevents rogue rule changes. Single API across all 3 brands.</div></div>
+                  </div>
+                </div>
+              </span>
+            </div>
+
+            <!-- Pay With Card panel -->
+            <div class="btl-section">
+              <div class="btl-header">
+                <svg width="20" height="16" viewBox="0 0 20 16" fill="none" style="flex-shrink:0;"><rect width="20" height="16" rx="2" fill="#e0e0e0"/><rect y="3" width="20" height="3" fill="#aaa"/><rect x="2" y="9" width="4" height="2" rx="1" fill="#aaa"/></svg>
+                <span class="btl-header-title">Pay With Card</span>
+                <div class="btl-brands">
+                  <span class="btl-brand" style="color:#1a1fe8;">VISA</span>
+                  <span class="btl-brand" style="background:linear-gradient(to right,#eb001b 40%,#f79e1b 60%);color:#fff;border-color:transparent;">MC</span>
+                  <span class="btl-brand" style="color:#444;">UnionPay</span>
+                  <span class="btl-brand" style="color:#007bc1;">AMEX</span>
+                  <span class="btl-brand" style="color:#003087;border-color:#003087;">JCB</span>
+                  <span class="btl-brand" style="color:#f76f20;">Discover</span>
+                </div>
+              </div>
+              <div class="btl-body">
+                <div class="btl-fg">
+                  <label class="btl-lbl">Cardholder Name</label>
+                  <input class="btl-inp" id="btName" type="text" placeholder="Cardholder Name" />
+                </div>
+                <div class="btl-fg">
+                  <label class="btl-lbl">Card Number</label>
+                  <input class="btl-inp" id="btCardNum" type="text" placeholder="•••• •••• •••• ••••" maxlength="19" oninput="formatCardNumber(this)" />
+                </div>
+                <div class="btl-two">
+                  <div class="btl-fg">
+                    <label class="btl-lbl">Expiration Date <span class="btl-lbl-hint">(MM/YY)</span></label>
+                    <input class="btl-inp" id="btExpiry" type="text" placeholder="MM/YY" maxlength="7" oninput="formatExpiry(this)" />
+                  </div>
+                  <div class="btl-fg">
+                    <label class="btl-lbl">CVV <span class="btl-lbl-hint">(3 or 4 digits)</span>
+                      <span class="fp-tip" style="margin-left:4px;" onclick="event.stopPropagation()">
+                        <span class="da-chip da-chip-warn" style="font-size:8px;padding:1px 4px;">⚠ No BNPL</span>
+                        <div class="fp-tip-popup warn-tip">
+                          <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚠</span>DEMO · Buy Now, Pay Later</div>
+                          <div class="fp-tip-cols">
+                            <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Card only</div><div class="fp-tip-text">No BNPL options. Large corporate orders ($500–$5K) must be paid upfront. No installment option — causes friction on bulk orders.</div></div>
+                            <div class="fp-tip-col good"><div class="fp-tip-col-h">Stripe · Klarna + Affirm</div><div class="fp-tip-text">Stripe natively supports Klarna, Affirm, Afterpay. Larger order sizes, higher conversion on bulk buys. Enabled in a single API flag — no new contracts.</div></div>
+                          </div>
+                        </div>
+                      </span>
+                    </label>
+                    <input class="btl-inp" id="btCvv" type="text" placeholder="•••" maxlength="4" />
+                  </div>
+                </div>
+                <div class="btl-paypal-note">By paying with my card, I agree to the <a href="#" onclick="return false">PayPal Privacy Statement</a>.</div>
+              </div>
+            </div>
+
+            <!-- Choose Another Way To Pay -->
+            <button class="btl-choose-btn" onclick="toggleBtAltMethods(this)">Choose Another Way To Pay</button>
+            <div class="btl-alt-methods" id="btAltMethods">
+              <div class="btl-alt-row" onclick="simulatePayPalRedirect()">
+                <span style="font-size:14px;font-weight:800;color:#003087;letter-spacing:-.3px;">Pay<span style="color:#009cde;">Pal</span></span>
+                <span class="fp-tip" style="margin-left:auto;" onclick="event.stopPropagation()">
+                  <span class="da-chip da-chip-warn">⚠ Redirect risk</span>
+                  <div class="fp-tip-popup warn-tip">
+                    <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚠</span>DEMO · PayPal Redirect Impact</div>
+                    <div class="fp-tip-cols">
+                      <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Leaves site</div><div class="fp-tip-text">Clicking PayPal redirects to paypal.com. ~40% of users who click never return. Biggest single abandonment driver on $600M+ GMV.</div></div>
+                      <div class="fp-tip-col good"><div class="fp-tip-col-h">Stripe · No redirect</div><div class="fp-tip-text">Stripe's PayPal stays within the checkout — no domain redirect. Link offers the same 1-click UX without leaving the page.</div></div>
+                    </div>
+                  </div>
+                </span>
+              </div>
+              <div class="btl-alt-row">
+                <span style="font-size:13px;font-weight:700;letter-spacing:-.3px;"><span style="color:#4285F4;">G</span><span style="color:#EA4335;">o</span><span style="color:#FBBC05;">o</span><span style="color:#4285F4;">g</span><span style="color:#34A853;">l</span><span style="color:#EA4335;">e</span> Pay</span>
+              </div>
+              <div class="btl-alt-row">
+                <span style="font-size:13px;color:#555;">📄 Purchase Order / Net-30</span>
+                <span class="fp-tip" style="margin-left:auto;" onclick="event.stopPropagation()">
+                  <span class="da-chip da-chip-warn">⚠ No ACH/wire</span>
+                  <div class="fp-tip-popup warn-tip">
+                    <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚠</span>DEMO · Bank Transfers &amp; ACH</div>
+                    <div class="fp-tip-cols">
+                      <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Manual PO</div><div class="fp-tip-text">PO payments manually invoiced. No automated bank transfer. AP teams send wires ad hoc. High reconciliation overhead for B2B orders.</div></div>
+                      <div class="fp-tip-col good"><div class="fp-tip-col-h">Stripe · ACH + Wire</div><div class="fp-tip-text">Stripe supports ACH Direct Debit, wire transfers, and bank redirects natively. Lower card fees, automated reconciliation.</div></div>
+                    </div>
+                  </div>
+                </span>
+              </div>
+            </div>
+
+            <label class="billing-check">
+              <input type="checkbox" checked> My billing address is the same as my shipping address
+            </label>
+
+            <div class="co-error" id="btError"></div>
+            <button class="bt-submit" onclick="handleBraintreeSubmit()">Place My Order — <span id="btAmount">$0.00</span></button>
+          </div>
+        </div>
+
+        <!-- FUTURE STATE: Stripe Elements Form -->
+        <div class="co-screen" id="screenStripeForm">
+          <div class="co-page-h">Checkout</div>
+
+          <div class="co-info-block">
+            <div class="co-info-main">
+              <span class="co-info-name">Demo Customer</span>
+              <span style="color:var(--muted);font-size:13px;margin-left:8px;">555-293-3295</span>
+            </div>
+            <span class="co-info-edit">Edit</span>
+          </div>
+
+          <div class="co-info-block" style="flex-direction:column;gap:8px;align-items:stretch;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="co-info-label" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">Shipping Address</div>
+              <span class="co-info-edit">Edit</span>
+            </div>
+            <div class="stripe-el-zone" style="margin-top:2px;">
+              <div class="zel-corner"></div>
+              <div class="zel-corner-br"></div>
+              <div class="addr-input-wrap">
+              <input class="bt-fi" type="text" id="stripeAddrInput" autocomplete="off"
+                placeholder="Start typing your address…"
+                oninput="filterAddressSuggestions(this.value)"
+                onfocus="filterAddressSuggestions(this.value)"
+                style="padding-left:32px;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 fill=%22%23635BFF%22 viewBox=%220 0 24 24%22><path d=%22M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z%22/></svg>');background-repeat:no-repeat;background-position:10px center;background-size:16px;">
+              <div class="addr-suggestions" id="stripeAddrSuggestions">
+                <!-- populated by JS -->
+              </div>
+            </div>
+            <div id="stripeAddrConfirmed" style="display:none;font-size:13px;color:var(--muted);padding:4px 0 0;"></div>
+            <div class="addr-gmaps-footer" id="stripeAddrFooter" style="display:none;">
+              <span>Powered by</span>
+              <svg height="12" viewBox="0 0 64 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+                <text x="0" y="15" font-family="Arial" font-size="14" font-weight="700" fill="#4285F4">G</text>
+                <text x="9" y="15" font-family="Arial" font-size="14" font-weight="700" fill="#EA4335">o</text>
+                <text x="18" y="15" font-family="Arial" font-size="14" font-weight="700" fill="#FBBC05">o</text>
+                <text x="27" y="15" font-family="Arial" font-size="14" font-weight="700" fill="#4285F4">g</text>
+                <text x="35" y="15" font-family="Arial" font-size="14" font-weight="700" fill="#34A853">l</text>
+                <text x="41" y="15" font-family="Arial" font-size="14" font-weight="700" fill="#EA4335">e</text>
+                <text x="50" y="15" font-family="Arial" font-size="14" font-weight="400" fill="#757575"> Maps</text>
+              </svg>
+            </div>
+              <span class="fp-tip sel-tip">
+                <span class="sel-trigger">⚡ Address Element</span>
+                <div class="fp-tip-popup stripe-tip">
+                  <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>DEMO · Address Element</div>
+                  <div class="fp-tip-cols">
+                    <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Custom form</div><div class="fp-tip-text">Manually maintained fields, no autocomplete, US-only format. International expansion requires months of per-country format logic.</div></div>
+                    <div class="fp-tip-col good"><div class="fp-tip-col-h">Stripe · Drop-in + Google Maps</div><div class="fp-tip-text">Google Maps autocomplete, per-country format validation, pre-fills from saved Link addresses. 40+ countries out of the box — zero custom form code.</div></div>
+                  </div>
+                </div>
+              </span>
+            </div><!-- /stripe-el-zone -->
+          </div>
+
+          <div class="co-pay-section">
+            <div class="co-pay-h">
+              Payment
+              <span class="fp-tip" style="margin-left:4px;"><span class="da-chip">⚡ OCS</span>
+                <div class="fp-tip-popup stripe-tip">
+                  <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>DEMO · Stripe Optimized Checkout Suite</div>
+                  <div class="fp-tip-cols">
+                    <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · 4 vendors</div><div class="fp-tip-text">Braintree (card), separate PayPal SDK, Vertex (tax), HyperWallet (payouts). 4 contracts, 4 reconciliations, no unified data layer.</div></div>
+                    <div class="fp-tip-col good"><div class="fp-tip-col-h">Stripe OCS · 4 components, 1 API</div><div class="fp-tip-text">Express Checkout Element · Payment Element · Link · Address Element. One Stripe account, one dashboard, one contract. Hover each section below to explore.</div></div>
+                  </div>
+                </div>
+              </span>
+              <span class="fp-tip" style="margin-left:4px;"><span class="da-chip">⚡ Unified platform</span>
+                <div class="fp-tip-popup stripe-tip">
+                  <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>DEMO · Unified Platform Value</div>
+                  <div class="fp-tip-cols">
+                    <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · 4 Stacks</div><div class="fp-tip-text">Braintree + Authorize.net + Vertex + HyperWallet. 4 reconciliations, no unified data, no cross-brand visibility.</div></div>
+                    <div class="fp-tip-col good"><div class="fp-tip-col-h">Stripe · 1 Platform</div><div class="fp-tip-text">One Stripe account across CustomInk, Swag.com & SwagPro. Single NetSuite connector. Real-time reporting. Tax + Radar + Connect built-in.</div></div>
+                  </div>
+                </div>
+              </span>
+              <span class="fp-tip" style="margin-left:4px;"><span class="da-chip" style="background:rgba(0,135,90,.08);border-color:rgba(0,135,90,.25);color:var(--green);">⚡ Radar</span>
+                <div class="fp-tip-popup stripe-tip">
+                  <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>DEMO · Radar Fraud Intelligence</div>
+                  <div class="fp-tip-cols">
+                    <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Manual rules</div><div class="fp-tip-text">Ad-hoc Braintree fraud rules — no governance. Security team disabled checkout last week via rogue rule change. No ML signal sharing.</div></div>
+                    <div class="fp-tip-col good"><div class="fp-tip-col-h">Radar · 92% card seen rate</div><div class="fp-tip-text">ML-based: 92% of cards seen before your transaction. Adaptive rules with CoE governance — changes require review board approval.</div></div>
+                  </div>
+                  <div class="fp-tip-demo-note">⚑ "Running Radar fraud check" in the flow below is a demo simulation of this step</div>
+                </div>
+              </span>
+            </div>
+
+            <!-- Express Checkout Element zone -->
+            <div class="stripe-el-zone" style="margin-bottom:0;">
+              <div class="zel-corner"></div>
+              <div class="zel-corner-br"></div>
+              <div class="express-btns">
+                <div class="express-btn express-btn-apple"> Pay</div>
+                <div class="express-btn express-btn-gpay">
+                  <span style="font-size:13px;font-weight:700;letter-spacing:-.2px;"><span style="color:#4285F4;">G</span><span style="color:#EA4335;">o</span><span style="color:#FBBC05;">o</span><span style="color:#4285F4;">g</span><span style="color:#34A853;">l</span><span style="color:#EA4335;">e</span></span>
+                  <span style="font-size:12px;font-weight:600;color:#1a1a1a;margin-left:2px;">Pay</span>
+                </div>
+                <div class="express-btn express-btn-link">⚡ Link</div>
+              </div>
+              <span class="fp-tip sel-tip">
+                <span class="sel-trigger">⚡ Express Checkout Element</span>
+                <div class="fp-tip-popup stripe-tip">
+                  <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>DEMO · Express Checkout Element</div>
+                  <div class="fp-tip-cols">
+                    <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · None</div><div class="fp-tip-text">No express buttons today. Apple Pay and Google Pay each require separate SDK integrations, HTTPS merchant registration, and individual engineering work per wallet.</div></div>
+                    <div class="fp-tip-col good"><div class="fp-tip-col-h">OCS · Auto-detected wallets</div><div class="fp-tip-text">One component renders Apple Pay, Google Pay, and Link natively — auto-detects availability per device. Higher conversion on mobile. New wallets launch without code changes.</div></div>
+                  </div>
+                  <div class="fp-tip-demo-note">⚑ Buttons above are a demo visual — in production these render via Stripe's Express Checkout Element</div>
+                </div>
+              </span>
+            </div>
+
+            <div class="express-divider">or pay another way</div>
+
+            <!-- Link / Email zone -->
+            <div class="stripe-el-zone" style="margin-bottom:12px;">
+              <div class="zel-corner"></div>
+              <div class="zel-corner-br"></div>
+              <input class="bt-fi" type="email" placeholder="Email address" id="stripeEmail" />
+              <span class="fp-tip sel-tip">
+                <span class="sel-trigger">⚡ Link</span>
+                <div class="fp-tip-popup stripe-tip">
+                  <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>DEMO · Stripe Link</div>
+                  <div class="fp-tip-cols">
+                    <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Re-entry every time</div><div class="fp-tip-text">Every returning CustomInk customer re-enters full card + address. ~30%+ checkout abandonment on $600M+ GMV — re-entry friction is the single biggest driver.</div></div>
+                    <div class="fp-tip-col good"><div class="fp-tip-col-h">Link · 50M+ users, 1-click</div><div class="fp-tip-text">Email field detects Link users and autofills card + shipping address in one tap. Works across all Stripe merchants — no CustomInk-specific enrollment. ~10pt abandonment recovery. Enabled by default in OCS.</div></div>
+                  </div>
+                </div>
+              </span>
+            </div>
+
+            <!-- Payment Element zone -->
+            <div class="stripe-el-zone" style="margin-bottom:12px;">
+              <div class="zel-corner"></div>
+              <div class="zel-corner-br"></div>
+              <div id="payment-element" style="min-height:120px;"></div>
+              <span class="fp-tip sel-tip">
+                <span class="sel-trigger">⚡ Payment Element · 50+ dynamic methods</span>
+                <div class="fp-tip-popup stripe-tip">
+                  <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>DEMO · Payment Element · Dynamic Methods</div>
+                  <div class="fp-tip-cols">
+                    <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Card + redirect only</div><div class="fp-tip-text">Braintree is static — card plus PayPal redirect. Adding Klarna, ACH, or any new method requires months of work, a new vendor contract, and a separate reconciliation stream.</div></div>
+                    <div class="fp-tip-col good"><div class="fp-tip-col-h">Stripe · ML-surfaced, 50+ methods</div><div class="fp-tip-text">One embedded UI. Stripe surfaces Visa/MC/Amex + Klarna, Affirm, ACH Debit, iDEAL, and 44 more based on customer location, cart size, and risk profile. New methods activate from the dashboard — zero code changes.</div></div>
+                  </div>
+                </div>
+              </span>
+            </div>
+
+            <div class="stripe-test-card">
+              <span class="stc-label">Test card</span>
+              <span class="stc-field" onclick="copyTestField(this)" title="Click to copy">4242 4242 4242 4242</span>
+              <span class="stc-sep">·</span>
+              <span class="stc-field" onclick="copyTestField(this)" title="Click to copy">12/26</span>
+              <span class="stc-sep">·</span>
+              <span class="stc-field" onclick="copyTestField(this)" title="Click to copy">123</span>
+              <span class="stc-sep">·</span>
+              <span class="stc-field" onclick="copyTestField(this)" title="Click to copy">10001</span>
+            </div>
+            <div class="co-error" id="stripeError"></div>
+            <button class="stripe-submit" id="stripeSubmitBtn" onclick="handleStripeSubmit()">
+              <span>⚡</span>
+              <span id="stripePayLabel">Pay — $0.00</span>
+            </button>
+            <div class="stripe-demo-bar">
+              <span class="stripe-demo-bar-label">DEMO · Also active:</span>
+              <span class="fp-tip"><span class="da-chip">⚡ 99.99% uptime SLA</span>
+                <div class="fp-tip-popup stripe-tip">
+                  <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>DEMO · Uptime SLA Delta</div>
+                  <div class="fp-tip-cols">
+                    <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Braintree</div><div class="fp-tip-text">No contractual SLA. Dec 2024: undocumented API change caused 24-hr checkout outage. $115K lost revenue. No proactive alerting.</div></div>
+                    <div class="fp-tip-col good"><div class="fp-tip-col-h">Stripe · 99.99% SLA</div><div class="fp-tip-text">Contractual 99.99% uptime. Real-time status dashboard. Automatic failover. Incident history tracked at status.stripe.com.</div></div>
+                  </div>
+                </div>
+              </span>
+              <span class="fp-tip"><span class="da-chip" style="background:rgba(0,135,90,.08);border-color:rgba(0,135,90,.25);color:var(--green);">⚡ Radar ML fraud</span>
+                <div class="fp-tip-popup stripe-tip">
+                  <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>DEMO · Radar AI Fraud Intelligence</div>
+                  <div class="fp-tip-cols">
+                    <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Manual Rules</div><div class="fp-tip-text">Ad-hoc Braintree fraud rules. No governance — security team disabled checkout via rogue rule change. No ML signal sharing.</div></div>
+                    <div class="fp-tip-col good"><div class="fp-tip-col-h">Radar · 92% Card Seen Rate</div><div class="fp-tip-text">ML-based: 92% of cards seen before your transaction. Adaptive rules engine with CoE governance — rule changes require review board approval.</div></div>
+                  </div>
+                  <div class="fp-tip-demo-note">⚑ "Running Radar fraud check" in the checkout flow is a demo simulation of this step</div>
+                </div>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROCESSING -->
+        <div class="co-screen" id="screenProcessing">
+          <div class="co-processing">
+            <div class="spinner"></div>
+            <div class="processing-h sc">Processing Your Order</div>
+            <div class="processing-h sf">Confirming with Stripe</div>
+            <div class="processing-sub">Please don't close this window…</div>
+            <div class="processing-steps" id="processingSteps"></div>
+            <div class="sf" style="margin-top:16px;background:rgba(99,91,255,.07);border:1px solid rgba(99,91,255,.15);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--muted);text-align:center;">
+              ⚑ Demo simulation &mdash; steps shown illustrate Stripe's actual flow including Radar ML fraud scoring
+            </div>
+          </div>
+        </div>
+
+        <!-- SUCCESS -->
+        <div class="co-screen" id="screenSuccess">
+          <div class="co-success">
+            <span class="success-icon">🎉</span>
+            <div class="success-h">Order Confirmed!</div>
+            <div class="success-sub">
+              Your custom products are being prepared.<br>You'll receive a confirmation email shortly.
+            </div>
+            <div class="order-detail-box" id="orderDetails"></div>
+            <button class="success-close" onclick="closeCheckout()">Continue Shopping</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Order Summary -->
+      <div class="co-summary">
+        <div class="co-sum-h">Order Summary</div>
+        <div id="coSummaryItems"></div>
+        <div class="co-divider"></div>
+        <div id="coTotals"></div>
+        <button class="co-place-btn sc" onclick="handleBraintreeSubmit()">Place My Order</button>
+        <button class="co-place-btn sf" onclick="handleStripeSubmit()">Place My Order</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   TOOLTIP SYSTEM — fixed positioning so
+   tooltips never clip inside modals/overflow
+══════════════════════════════════════ */
+(function() {
+  function initTooltips(root) {
+    (root || document).querySelectorAll('.fp-tip:not([data-ti])').forEach(tip => {
+      const popup = tip.querySelector('.fp-tip-popup');
+      if (!popup) return;
+
+      // Clone to body-level layer so overflow:hidden on ancestors can't clip it
+      const id = 'tip_' + Math.random().toString(36).slice(2, 9);
+      tip.dataset.ti = id;
+      const clone = popup.cloneNode(true);
+      clone.id = id;
+      // Preserve width from fp-tip-popup CSS; just override position
+      clone.style.position = 'fixed';
+      clone.style.display = 'none';
+      clone.style.zIndex = '9999';
+      clone.style.left = '0';
+      clone.style.top = 'auto';
+      clone.style.transform = 'translateY(6px)';
+      clone.style.bottom = '0';
+      document.body.appendChild(clone);
+      popup.style.display = 'none'; // hide original in-place copy
+
+      function show() {
+        const rect = tip.getBoundingClientRect();
+        const W = 300;
+        let left = rect.left + rect.width / 2 - W / 2;
+        if (left < 8) left = 8;
+        if (left + W > window.innerWidth - 8) left = window.innerWidth - W - 8;
+        clone.style.left = left + 'px';
+        // If trigger is in top 220px of viewport, show below; otherwise show above
+        if (rect.top < 220) {
+          clone.style.top = (rect.bottom + 10) + 'px';
+          clone.style.bottom = 'auto';
+        } else {
+          clone.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
+          clone.style.top = 'auto';
+        }
+        clone.style.display = 'block';
+        clone.classList.add('fp-visible');
+        clone.getBoundingClientRect();
+        clone.style.opacity = '1';
+        clone.style.transform = 'translateY(0)';
+        clone.style.pointerEvents = 'all';
+      }
+      function hide() {
+        clone.style.opacity = '0';
+        clone.style.transform = 'translateY(6px)';
+        clone.style.pointerEvents = 'none';
+        setTimeout(() => {
+          if (clone.style.opacity === '0') { clone.style.display = 'none'; clone.classList.remove('fp-visible'); }
+        }, 220);
+      }
+
+      tip.addEventListener('mouseenter', show);
+      tip.addEventListener('mouseleave', (e) => { if (!clone.contains(e.relatedTarget)) hide(); });
+      clone.addEventListener('mouseenter', () => { clone.style.opacity = '1'; clone.style.transform = 'translateY(0)'; clone.style.pointerEvents = 'all'; });
+      clone.addEventListener('mouseleave', hide);
+    });
+  }
+
+  // Make initTooltips globally accessible (needed by renderOrderSummary for dynamic content)
+  window.initTooltips = initTooltips;
+  document.addEventListener('DOMContentLoaded', () => initTooltips(document));
+})();
+
+/* ══════════════════════════════════════
+   STRIPE INIT
+══════════════════════════════════════ */
+const STRIPE_PK = 'pk_test_51TdyxbQ9wb5pYzAEqN0CkU0hUkd8FX24KBPoAMeJCARPLy0kJLjwgvH3903dk5VnFzcLFiyYzC3kDCTyDP13HGno00CEBtozwn';
+let stripe, stripeElements, paymentEl, isServerMode = false;
+
+function initStripeOnce() {
+  if (!stripe) stripe = Stripe(STRIPE_PK);
+}
+
+const stripeAppearance = {
+  theme: 'flat',
+  variables: {
+    colorPrimary: '#635BFF',
+    colorBackground: '#ffffff',
+    colorText: '#333333',
+    colorDanger: '#dc2626',
+    fontFamily: '"Inter", system-ui, sans-serif',
+    borderRadius: '8px',
+    spacingUnit: '4px',
+  },
+  rules: {
+    '.Input': { border: '1.5px solid #e5e5e5', padding: '11px 13px' },
+    '.Input:focus': { border: '1.5px solid #635BFF', boxShadow: 'none' },
+    '.Label': { fontWeight: '600', fontSize: '13px', color: '#333' },
+  }
+};
+
+/* ══════════════════════════════════════
+   STATE TOGGLE
+══════════════════════════════════════ */
+function toggleState() {
+  const html = document.documentElement;
+  html.dataset.state = html.dataset.state === 'current' ? 'future' : 'current';
+  // if checkout is open, reinit payment form
+  if (document.getElementById('checkoutOverlay').classList.contains('open')) {
+    initPaymentScreen();
+  }
+}
+document.addEventListener('keydown', e => {
+  if ((e.key === 't' || e.key === 'T') && !e.target.matches('input,textarea,select'))
+    toggleState();
+});
+
+/* ══════════════════════════════════════
+   CART
+══════════════════════════════════════ */
+let cart = [];
+
+function addToCart(product) {
+  const existing = cart.find(i => i.id === product.id);
+  if (existing) {
+    existing.qty += product.qty || 1;
+  } else {
+    cart.push({ ...product, qty: product.qty || 1 });
+  }
+  updateCartUI();
+  // brief badge pulse
+  const badge = document.getElementById('cartBadge');
+  badge.style.transform = 'scale(1.4)';
+  setTimeout(() => badge.style.transform = '', 200);
+}
+
+function updateCartUI() {
+  const total = cart.reduce((s, i) => s + i.qty, 0);
+  const badge = document.getElementById('cartBadge');
+  badge.textContent = total;
+  badge.classList.toggle('visible', total > 0);
+  renderCartItems();
+}
+
+function cartSubtotal() {
+  return cart.reduce((s, i) => s + i.price * i.qty, 0);
+}
+
+function renderCartItems() {
+  const el = document.getElementById('cartItems');
+  const footer = document.getElementById('cartFooter');
+  if (!cart.length) {
+    el.innerHTML = '<div class="cart-empty">Your cart is empty.<br>Browse products to get started.</div>';
+    footer.style.display = 'none';
+    return;
+  }
+  el.innerHTML = cart.map(i => `
+    <div class="cart-item">
+      <div class="cart-item-icon">${i.icon}</div>
+      <div>
+        <div class="cart-item-name">${i.name}</div>
+        <div class="cart-item-qty">Qty: ${i.qty}</div>
+      </div>
+      <div class="cart-item-price">$${(i.price * i.qty).toFixed(2)}</div>
+    </div>`).join('');
+  const sub = cartSubtotal();
+  const tax = sub * 0.08;
+  document.getElementById('cartTotals').innerHTML = `
+    <div class="cart-row"><span>Subtotal</span><span>$${sub.toFixed(2)}</span></div>
+    <div class="cart-row"><span>Est. tax</span><span>$${tax.toFixed(2)}</span></div>
+    <div class="cart-row total"><span>Total</span><span>$${(sub + tax).toFixed(2)}</span></div>`;
+  footer.style.display = 'block';
+}
+
+function openCart() { document.getElementById('cartOverlay').classList.add('open'); document.getElementById('cartDrawer').classList.add('open'); }
+function closeCart() { document.getElementById('cartOverlay').classList.remove('open'); document.getElementById('cartDrawer').classList.remove('open'); }
+
+/* ══════════════════════════════════════
+   ADDRESS AUTOCOMPLETE (simulated Google Maps)
+══════════════════════════════════════ */
+const ADDR_SUGGESTIONS = [
+  { main: '4604 Eisenhower Ave', sub: 'Alexandria, VA 22304', full: '4604 Eisenhower Ave, Alexandria, VA 22304' },
+  { main: '1600 Pennsylvania Ave NW', sub: 'Washington, DC 20500', full: '1600 Pennsylvania Ave NW, Washington, DC 20500' },
+  { main: '350 Fifth Avenue', sub: 'New York, NY 10118', full: '350 Fifth Avenue, New York, NY 10118' },
+  { main: '233 S Wacker Dr', sub: 'Chicago, IL 60606', full: '233 S Wacker Dr, Chicago, IL 60606' },
+  { main: '1 Infinite Loop', sub: 'Cupertino, CA 95014', full: '1 Infinite Loop, Cupertino, CA 95014' },
+  { main: '1 Apple Park Way', sub: 'Cupertino, CA 95014', full: '1 Apple Park Way, Cupertino, CA 95014' },
+  { main: '1600 Amphitheatre Pkwy', sub: 'Mountain View, CA 94043', full: '1600 Amphitheatre Pkwy, Mountain View, CA 94043' },
+  { main: '410 Terry Ave N', sub: 'Seattle, WA 98109', full: '410 Terry Ave N, Seattle, WA 98109' },
+  { main: '500 W 2nd St', sub: 'Austin, TX 78701', full: '500 W 2nd St, Austin, TX 78701' },
+  { main: '100 Main St', sub: 'Boston, MA 02101', full: '100 Main St, Boston, MA 02101' },
+];
+
+function filterAddressSuggestions(val) {
+  const box = document.getElementById('stripeAddrSuggestions');
+  if (!box) return;
+  const q = val.trim().toLowerCase();
+  if (!q) { box.style.display = 'none'; return; }
+  const matches = ADDR_SUGGESTIONS.filter(a =>
+    a.main.toLowerCase().includes(q) || a.sub.toLowerCase().includes(q) || a.full.toLowerCase().includes(q)
+  );
+  if (!matches.length) { box.style.display = 'none'; return; }
+  box.innerHTML = matches.map(a => `
+    <div class="addr-sug-row" onmousedown="selectAddress('${a.full.replace(/'/g,"\\'")}')">
+      <div class="addr-sug-pin">📍</div>
+      <div><div class="addr-sug-main">${a.main}</div><div class="addr-sug-sub">${a.sub}</div></div>
+    </div>`).join('') +
+    '<div class="addr-gmaps-footer"><span>Powered by</span> <span style="font-weight:700;"><span style="color:#4285F4;">G</span><span style="color:#EA4335;">o</span><span style="color:#FBBC05;">o</span><span style="color:#4285F4;">g</span><span style="color:#34A853;">l</span><span style="color:#EA4335;">e</span></span> <span style="color:#757575;">Maps</span></div>';
+  box.style.display = 'block';
+}
+
+function selectAddress(full) {
+  const input = document.getElementById('stripeAddrInput');
+  const box = document.getElementById('stripeAddrSuggestions');
+  const confirmed = document.getElementById('stripeAddrConfirmed');
+  const footer = document.getElementById('stripeAddrFooter');
+  if (input) input.value = full;
+  if (box) box.style.display = 'none';
+  if (confirmed) { confirmed.textContent = '✓ Address verified via Google Maps'; confirmed.style.display = 'block'; confirmed.style.color = 'var(--green)'; confirmed.style.fontSize = '11px'; }
+  if (footer) footer.style.display = 'flex';
+}
+
+document.addEventListener('click', function(e) {
+  const box = document.getElementById('stripeAddrSuggestions');
+  const input = document.getElementById('stripeAddrInput');
+  if (box && input && !input.contains(e.target) && !box.contains(e.target)) {
+    box.style.display = 'none';
+  }
+});
+
+/* ══════════════════════════════════════
+   CHECKOUT MODAL
+══════════════════════════════════════ */
+function openCheckoutDirect() {
+  // add a default order if cart is empty
+  if (!cart.length) addToCart({ id:1, name:'Classic T-Shirt', icon:'👕', price:9.99, qty:24 });
+  openCheckout();
+}
+
+function openCheckout() {
+  renderOrderSummary();
+  initPaymentScreen();
+  document.getElementById('checkoutOverlay').classList.add('open');
+}
+
+function closeCheckout() {
+  document.getElementById('checkoutOverlay').classList.remove('open');
+  // reset to form after delay
+  setTimeout(() => {
+    showScreen(document.documentElement.dataset.state === 'current' ? 'screenBtForm' : 'screenStripeForm');
+    document.getElementById('btError').classList.remove('visible');
+    document.getElementById('stripeError').classList.remove('visible');
+  }, 400);
+}
+
+function renderOrderSummary() {
+  const items = cart.length ? cart : [{ id:1, name:'Classic T-Shirt', icon:'👕', price:9.99, qty:24 }];
+  const sub = items.reduce((s,i) => s + i.price * i.qty, 0);
+  const tax = sub * 0.08;
+  const total = sub + tax;
+
+  document.getElementById('coSummaryItems').innerHTML = items.map(i => `
+    <div class="co-sum-item">
+      <div class="co-sum-icon">${i.icon}</div>
+      <div><div class="co-sum-name">${i.name}</div><div class="co-sum-qty">Qty: ${i.qty}</div></div>
+      <div class="co-sum-price">$${(i.price * i.qty).toFixed(2)}</div>
+    </div>`).join('');
+
+  const isFuture = document.documentElement.dataset.state === 'future';
+  const taxTip = isFuture
+    ? `<span class="fp-tip" style="cursor:help;"><span class="co-tax-badge good">⚡ Stripe Tax</span>
+        <div class="fp-tip-popup">
+          <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>Stripe Tax · Auto Compliance</div>
+          <div class="fp-tip-cols">
+            <div class="fp-tip-col bad"><div class="fp-tip-col-h">Current · Vertex</div><div class="fp-tip-text">Separate Vertex contract. Manual nexus config. Engineering integration overhead. Reconciliation siloed from Braintree.</div></div>
+            <div class="fp-tip-col good"><div class="fp-tip-col-h">Future · Stripe Tax</div><div class="fp-tip-text">Native to Stripe — no separate vendor. 200+ jurisdictions auto-calculated. Economic nexus tracked across all 3 brands. ~$40K/yr licensing savings.</div></div>
+          </div>
+        </div></span>`
+    : `<span class="fp-tip" style="cursor:help;"><span class="co-tax-badge bad">Vertex ⚠</span>
+        <div class="fp-tip-popup">
+          <div class="fp-tip-hdr"><span class="fp-tip-hdr-icon">⚡</span>Vertex Tax · Current Pain</div>
+          <div class="fp-tip-cols">
+            <div class="fp-tip-col bad"><div class="fp-tip-col-h">Now · Vertex</div><div class="fp-tip-text">Separate tax engine — own contract, rate update cycle, and engineering integration. Siloed from Braintree, manual reconciliation required.</div></div>
+            <div class="fp-tip-col good"><div class="fp-tip-col-h">With Stripe Tax</div><div class="fp-tip-text">Tax is native to Stripe. No separate vendor. Auto jurisdiction detection, economic nexus tracking, and single reconciliation with payments.</div></div>
+          </div>
+        </div></span>`;
+  document.getElementById('coTotals').innerHTML = `
+    <div class="co-totals-row"><span>Subtotal</span><span>$${sub.toFixed(2)}</span></div>
+    <div class="co-totals-row"><span>Est. tax (8%) ${taxTip}</span><span>$${tax.toFixed(2)}</span></div>
+    <div class="co-totals-row total"><span>Order Total</span><span>$${total.toFixed(2)}</span></div>`;
+  initTooltips(document.getElementById('coTotals'));
+
+  // update button labels
+  const totalStr = `$${total.toFixed(2)}`;
+  const el = document.getElementById('btAmount');
+  if (el) el.textContent = totalStr;
+  const sl = document.getElementById('stripePayLabel');
+  if (sl) sl.textContent = `Pay — ${totalStr}`;
+}
+
+function getOrderTotal() {
+  const items = cart.length ? cart : [{ price:9.99, qty:24 }];
+  const sub = items.reduce((s,i) => s + i.price * i.qty, 0);
+  return Math.round((sub * 1.08) * 100); // cents
+}
+
+function initPaymentScreen() {
+  const state = document.documentElement.dataset.state;
+  if (state === 'current') {
+    showScreen('screenBtForm');
+    // Auto-fill Braintree test card
+    const num = document.getElementById('btCardNum');
+    if (num && !num.value) {
+      num.value = '4242 4242 4242 4242';
+      document.getElementById('btExpiry').value = '12 / 26';
+      document.getElementById('btCvv').value = '123';
+      document.getElementById('btName').value = 'Demo Customer';
+    }
+  } else {
+    showScreen('screenStripeForm');
+    mountStripeElement();
+    // Pre-fill email
+    const email = document.getElementById('stripeEmail');
+    if (email && !email.value) email.value = 'demo-user@example.com';
+    // Pre-fill address
+    const addrInput = document.getElementById('stripeAddrInput');
+    if (addrInput && !addrInput.value) selectAddress('4604 Eisenhower Ave, Alexandria, VA 22304');
+  }
+}
+
+async function mountStripeElement() {
+  initStripeOnce();
+  const container = document.getElementById('payment-element');
+  container.innerHTML = '<div style="text-align:center;padding:24px;color:#999;font-size:13px;">Loading payment form…</div>';
+
+  // destroy previous elements instance
+  if (stripeElements) {
+    try { if (paymentEl) paymentEl.unmount(); } catch(e) {}
+    stripeElements = null; paymentEl = null;
+  }
+
+  const amount = getOrderTotal();
+
+  try {
+    // Try server for real PaymentIntent
+    const resp = await fetch('/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount }),
+      signal: AbortSignal.timeout(4000),
+    });
+    if (resp.ok) {
+      const { clientSecret } = await resp.json();
+      isServerMode = true;
+      stripeElements = stripe.elements({ clientSecret, appearance: stripeAppearance });
+    } else throw new Error('no server');
+  } catch {
+    // Deferred mode — shows form without server
+    isServerMode = false;
+    stripeElements = stripe.elements({
+      mode: 'payment',
+      amount: amount,
+      currency: 'usd',
+      appearance: stripeAppearance,
+    });
+  }
+
+  paymentEl = stripeElements.create('payment', {
+    layout: 'tabs',
+    wallets: { googlePay: 'never', applePay: 'never' },
+  });
+  container.innerHTML = '';
+  paymentEl.mount('#payment-element');
+}
+
+function showScreen(id) {
+  ['screenBtForm','screenStripeForm','screenProcessing','screenSuccess'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.classList.toggle('active', s === id);
+  });
+}
+
+/* ══════════════════════════════════════
+   BRAINTREE FLOW (simulated)
+══════════════════════════════════════ */
+function simulatePayPalRedirect() {
+  const btn = document.querySelector('.bt-pp-btn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span>↻</span> Redirecting to PayPal…';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+    showBtError('PayPal redirect failed. Please pay by card.');
+  }, 2000);
+}
+
+function showBtError(msg) {
+  const el = document.getElementById('btError');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function copyTestField(el) {
+  const text = el.textContent.trim();
+  navigator.clipboard.writeText(text).catch(() => {});
+  el.classList.add('copied');
+  const orig = el.textContent;
+  el.textContent = '✓ copied';
+  setTimeout(() => { el.textContent = orig; el.classList.remove('copied'); }, 1200);
+}
+
+function toggleBtAltMethods(btn) {
+  const el = document.getElementById('btAltMethods');
+  const open = el.classList.toggle('open');
+  btn.textContent = open ? 'Hide Payment Options ▲' : 'Choose Another Way To Pay';
+}
+
+function selectPayMethod(rowEl, method) {
+  document.querySelectorAll('.pay-radio-row').forEach(r => {
+    r.classList.remove('selected');
+    const radio = r.querySelector('input[type=radio]');
+    if (radio) radio.checked = false;
+  });
+  rowEl.classList.add('selected');
+  const radio = rowEl.querySelector('input[type=radio]');
+  if (radio) radio.checked = true;
+  const cardForm = document.getElementById('btCardForm');
+  if (cardForm) cardForm.style.display = method === 'card' ? 'flex' : 'none';
+}
+
+function handleBraintreeSubmit() {
+  document.getElementById('btError').classList.remove('visible');
+  const card = (document.getElementById('btCardNum') || {value:''}).value.replace(/\s/g,'');
+  if (!card || card.length < 15) { showBtError('Please enter a valid card number.'); return; }
+  showScreen('screenProcessing');
+  const steps = [
+    { label: 'Contacting Braintree gateway…', delay: 600 },
+    { label: 'Validating card details…', delay: 1200 },
+    { label: 'Processing payment…', delay: 2200 },
+  ];
+  animateSteps(steps, 'sc', () => {
+    showSuccessScreen({ id: 'bt_' + randId(), amount: getOrderTotal(), source: 'Braintree' });
+  });
+}
+
+/* ══════════════════════════════════════
+   STRIPE FLOW
+══════════════════════════════════════ */
+async function handleStripeSubmit() {
+  document.getElementById('stripeError').classList.remove('visible');
+  const btn = document.getElementById('stripeSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto;"></span>';
+
+  if (!stripeElements) { btn.disabled = false; btn.innerHTML = '⚡ Pay'; return; }
+
+  // Step 1: validate elements
+  const { error: submitErr } = await stripeElements.submit();
+  if (submitErr) {
+    showStripeError(submitErr.message);
+    btn.disabled = false;
+    btn.innerHTML = `<span>⚡</span><span>${document.getElementById('stripePayLabel')?.textContent || 'Pay'}</span>`;
+    return;
+  }
+
+  showScreen('screenProcessing');
+  const amount = getOrderTotal();
+  const steps = [
+    { label: 'Connecting to Stripe…', delay: 400 },
+    { label: 'Running Radar fraud check…', delay: 900 },
+    { label: 'Authorizing payment…', delay: 1600 },
+    { label: 'Confirming with network…', delay: 2400 },
+  ];
+  animateSteps(steps, 'sf', async () => {
+    try {
+      let pi;
+      if (isServerMode) {
+        // confirm with server-created PaymentIntent (already in elements clientSecret)
+        const { error, paymentIntent } = await stripe.confirmPayment({
+          elements: stripeElements,
+          confirmParams: { return_url: window.location.href },
+          redirect: 'if_required',
+        });
+        if (error) throw new Error(error.message);
+        pi = paymentIntent;
+      } else {
+        // demo mode - simulate success
+        await new Promise(r => setTimeout(r, 500));
+        pi = { id: 'pi_demo_' + randId(), amount, status: 'succeeded' };
+      }
+      showSuccessScreen({ id: pi.id, amount: pi.amount || amount, source: 'Stripe' });
+    } catch (err) {
+      showScreen('screenStripeForm');
+      showStripeError(err.message);
+      btn.disabled = false;
+      btn.innerHTML = `<span>⚡</span><span id="stripePayLabel">Pay — $${(amount/100).toFixed(2)}</span>`;
+    }
+  });
+}
+
+function showStripeError(msg) {
+  const el = document.getElementById('stripeError');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+/* ══════════════════════════════════════
+   SHARED HELPERS
+══════════════════════════════════════ */
+function animateSteps(steps, stateClass, onDone) {
+  const container = document.getElementById('processingSteps');
+  container.innerHTML = steps.map((s, i) =>
+    `<div class="p-step" id="pstep${i}">
+      <div class="p-step-icon">…</div>
+      <span>${s.label}</span>
+    </div>`).join('');
+
+  steps.forEach((s, i) => {
+    setTimeout(() => {
+      document.getElementById(`pstep${i}`)?.classList.add('active');
+      document.getElementById(`pstep${i}`).querySelector('.p-step-icon').textContent = '↻';
+    }, s.delay - 200);
+    setTimeout(() => {
+      const el = document.getElementById(`pstep${i}`);
+      if (el) { el.classList.remove('active'); el.classList.add('done'); el.querySelector('.p-step-icon').textContent = '✓'; }
+    }, s.delay);
+  });
+
+  const maxDelay = Math.max(...steps.map(s => s.delay));
+  setTimeout(onDone, maxDelay + 400);
+}
+
+function showSuccessScreen({ id, amount, source }) {
+  const isStripe = source === 'Stripe';
+  const amtStr = `$${(amount / 100).toFixed(2)}`;
+  const orderNum = 'CI-' + Math.floor(Math.random() * 900000 + 100000);
+
+  document.getElementById('orderDetails').innerHTML = `
+    <div class="od-row"><span class="od-label">Order #</span><span class="od-val">${orderNum}</span></div>
+    <div class="od-row"><span class="od-label">Amount charged</span><span class="od-val ${isStripe ? 'green' : ''}">${amtStr}</span></div>
+    <div class="od-row"><span class="od-label">Payment via</span><span class="od-val ${isStripe ? 'stripe' : ''}">${isStripe ? '⚡ Stripe' : 'Braintree'}</span></div>
+    ${isStripe ? `<div class="od-row"><span class="od-label">Transaction ID</span><span class="od-val mono">${id}</span></div>` : ''}
+    ${isStripe ? `<div class="od-row"><span class="od-label">Fraud check</span><span class="od-val green">✓ Radar — Approved</span></div>` : ''}
+    ${isStripe ? `<div class="od-row"><span class="od-label">Tax calculated</span><span class="od-val green">✓ Stripe Tax — Auto</span></div>` : ''}
+    <div class="od-row" style="padding-top:8px;border-top:1px solid var(--border);margin-top:8px;">
+      <span class="od-label">Estimated delivery</span><span class="od-val">5–7 business days</span>
+    </div>`;
+
+  showScreen('screenSuccess');
+  cart = [];
+  updateCartUI();
+}
+
+function formatCardNumber(input) {
+  let v = input.value.replace(/\D/g,'').substring(0,16);
+  input.value = v.replace(/(.{4})/g,'$1 ').trim();
+}
+function formatExpiry(input) {
+  let v = input.value.replace(/\D/g,'').substring(0,4);
+  if (v.length >= 2) v = v.substring(0,2) + ' / ' + v.substring(2);
+  input.value = v;
+}
+function randId() { return Math.random().toString(36).substring(2,11); }
+function scrollToProducts() { document.getElementById('products-section').scrollIntoView({ behavior:'smooth' }); }
+
+/* ══════════════════════════════════════
+   INSIGHTS PANEL
+══════════════════════════════════════ */
+function openInsights() {
+  document.getElementById('insightsOverlay').classList.add('open');
+  document.getElementById('insightsPanel').classList.add('open');
+}
+function closeInsights() {
+  document.getElementById('insightsOverlay').classList.remove('open');
+  document.getElementById('insightsPanel').classList.remove('open');
+}
+// stop click inside panel from closing
+document.getElementById('insightsPanel').addEventListener('click', e => e.stopPropagation());
+</script>
+</body>
+</html>
