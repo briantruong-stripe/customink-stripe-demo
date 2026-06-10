@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #202124;
+    max-width: 720px;
+    margin: 40px auto;
+    padding: 0 24px;
+  }
+
+  /* Internal warning banner */
+  .warning-banner {
+    background: #fce8b2;
+    border: 1.5px solid #f9ab00;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .warning-banner .icon { font-size: 18px; margin-top: 1px; }
+  .warning-banner p { margin: 0; font-size: 10.5pt; color: #3c2e00; }
+  .warning-banner strong { color: #b06000; }
+
+  /* Doc header */
+  .doc-title {
+    font-size: 22pt;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 6px 0;
+    line-height: 1.2;
+  }
+  .doc-subtitle {
+    font-size: 10pt;
+    color: #80868b;
+    margin: 0 0 4px 0;
+    font-style: italic;
+  }
+  .doc-meta {
+    font-size: 9.5pt;
+    color: #80868b;
+    margin: 0 0 32px 0;
+  }
+  hr.title-rule {
+    border: none;
+    border-top: 2px solid #e8eaed;
+    margin: 0 0 28px 0;
+  }
+
+  /* How to use box */
+  .how-to-box {
+    background: #f1f3f4;
+    border-left: 4px solid #4285f4;
+    border-radius: 0 6px 6px 0;
+    padding: 14px 18px;
+    margin-bottom: 36px;
+    font-size: 10.5pt;
+    color: #3c4043;
+  }
+  .how-to-box p { margin: 0; }
+
+  /* Part headers */
+  .part-header {
+    background: #1a1a2e;
+    color: #ffffff;
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 8px 14px;
+    border-radius: 4px;
+    margin: 40px 0 20px 0;
+  }
+
+  /* Section headers */
+  h2.q {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 28px 0 8px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e8eaed;
+  }
+
+  /* Short / full answer labels */
+  .answer-label {
+    font-size: 8.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 12px 0 4px 0;
+  }
+  .answer-label.short { color: #1e8e3e; }
+  .answer-label.full { color: #4285f4; }
+
+  p { margin: 0 0 10px 0; }
+  ul, ol { margin: 6px 0 12px 0; padding-left: 22px; }
+  li { margin-bottom: 4px; }
+
+  /* Code blocks */
+  pre {
+    background: #f1f3f4;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 9pt;
+    line-height: 1.5;
+    margin: 10px 0 14px 0;
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 9pt;
+    background: #f1f3f4;
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 18px 0;
+    font-size: 10pt;
+  }
+  th {
+    background: #f1f3f4;
+    font-weight: 700;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid #dadce0;
+    font-size: 9.5pt;
+  }
+  td {
+    padding: 7px 10px;
+    border: 1px solid #dadce0;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #fafafa; }
+
+  /* Callout blocks */
+  .callout {
+    background: #e8f0fe;
+    border-left: 4px solid #4285f4;
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    margin: 12px 0 16px 0;
+    font-size: 10.5pt;
+  }
+  .callout.warn {
+    background: #fce8b2;
+    border-left-color: #f9ab00;
+  }
+  .callout.green {
+    background: #e6f4ea;
+    border-left-color: #1e8e3e;
+  }
+  .callout p { margin: 0; }
+
+  /* Objection card table */
+  .obj-table th { background: #1a1a2e; color: #fff; }
+  .obj-table td:first-child { font-style: italic; color: #3c4043; font-size: 9.5pt; }
+  .obj-table td:last-child { font-size: 10pt; }
+
+  /* Footer */
+  footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid #e8eaed;
+    font-size: 9pt;
+    color: #80868b;
+  }
+  footer .warning-inline {
+    display: inline-block;
+    background: #fce8b2;
+    color: #b06000;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-right: 8px;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── TOP INTERNAL WARNING ── -->
+<div class="warning-banner">
+  <div class="icon">⚠️</div>
+  <p><strong>INTERNAL USE ONLY — DO NOT DISTRIBUTE.</strong> This document contains unpublished product details, customer-specific context, and internal pricing guidance. Not for forwarding, sharing externally, or use in external-facing materials. If received in error, delete immediately and notify the sender.</p>
+</div>
+
+<!-- ── TITLE ── -->
+<h1 class="doc-title">CustomInk × Stripe Connect<br>Deep Dive Prep &amp; Objection Handling</h1>
+<p class="doc-subtitle">Solutions Engineering · Internal Preparation Document</p>
+<p class="doc-meta">Last updated: June 2026 &nbsp;·&nbsp; Not for external distribution &nbsp;·&nbsp; Questions: brian@stripe.com</p>
+<hr class="title-rule">
+
+<!-- ── HOW TO USE ── -->
+<div class="how-to-box">
+  <p><strong>How to use this doc:</strong> Each section maps to a topic likely to surface in a technical deep dive. For every question there's a <span style="color:#1e8e3e;font-weight:700">Short answer</span> (what to say in the room) and a <span style="color:#4285f4;font-weight:700">Full answer</span> (what's behind it if they push). Objections include a response you can give on the spot — no "let me get back to you."</p>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="part-header">Part 1 — Connect Architecture &amp; Account Types</div>
+
+<h2 class="q">"Why Express and not Standard or Custom?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Express is the only account type where Stripe hosts KYC and the org dashboard without Custom Ink having to build or own either. Standard gives orgs too much control (they see the full Stripe dashboard, can change payout settings). Custom means Custom Ink builds the entire onboarding and dashboard UI themselves — that's exactly the work we're selling them out of.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<table>
+  <tr><th></th><th>Standard</th><th>Express ✓</th><th>Custom</th></tr>
+  <tr><td><strong>KYC hosted by</strong></td><td>Stripe</td><td><strong>Stripe</strong></td><td>Custom Ink</td></tr>
+  <tr><td><strong>Dashboard</strong></td><td>Full Stripe (org sees everything)</td><td><strong>Lightweight Express portal</strong></td><td>Custom Ink builds it</td></tr>
+  <tr><td><strong>Onboarding</strong></td><td>Stripe-hosted</td><td><strong>Stripe-hosted</strong></td><td>Custom Ink builds it</td></tr>
+  <tr><td><strong>Platform control</strong></td><td>Minimal</td><td><strong>High</strong></td><td>Total</td></tr>
+  <tr><td><strong>Build burden</strong></td><td>Low</td><td><strong>Low</strong></td><td>Very high</td></tr>
+</table>
+<p>For Custom Ink specifically: orgs don't need to see raw Stripe data or manage their Stripe settings. They need to verify identity, connect a bank, and see their payout history. Express does exactly that. Standard would expose too much (orgs could change their own payout schedules, see Custom Ink's platform data). Custom would require Custom Ink to build W-9 collection, KYC flows, and a payout portal — the entire problem they have today.</p>
+
+
+<h2 class="q">"What's the difference between destination charges and direct charges?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>With destination charges, the charge is on Custom Ink's Stripe account. Custom Ink owns the buyer relationship, the receipt, and the Radar fraud rules. A portion automatically transfers to the org. With direct charges, the charge would be on the org's account — they'd own the receipt, the dispute liability, and the fraud surface. That's wrong for this use case.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>There are three charge types in Connect:</p>
+<ol>
+  <li><strong>Destination charges</strong> — charge hits Custom Ink platform, <code>transfer_data.destination</code> automatically moves net amount to org at settlement. Custom Ink's Radar rules apply. Custom Ink issues the receipt. Custom Ink handles disputes. <strong>This is what we recommend.</strong></li>
+  <li><strong>Direct charges</strong> — charge hits org's account. Org handles disputes. Org's Radar (or none). Custom Ink collects via application fee. Wrong here — Custom Ink needs to own fraud and the buyer relationship.</li>
+  <li><strong>Separate charges + transfers</strong> — charge hits platform, transfer is a separate manual call. More flexibility, more ops complexity. Best for the POD partner split (Online Stores) where the transfer happens at fulfillment, not at charge time.</li>
+</ol>
+<p>For fundraising: destination charges. For GOF: destination charges with delayed transfer (escrow until fulfillment). For Stores POD: separate charges + transfers.</p>
+
+
+<h2 class="q">"Can Custom Ink hold funds before paying out?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Yes — this is native to Connect. <code>transfer_data.destination</code> doesn't move funds to the org immediately. The transfer happens when Custom Ink calls <code>transfers.create</code>. Until then, the money sits in Custom Ink's platform balance. Custom Ink controls the release trigger.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>For fundraising campaigns, the flow is:</p>
+<ol>
+  <li>Donor pays → charge hits Custom Ink's Stripe balance (destination charge, org is set as transfer destination)</li>
+  <li>Campaign closes → Custom Ink webhook fires <code>transfers.create({ amount: netAmount, destination: orgAcctId })</code></li>
+  <li>Stripe disburses T+2 to org's bank</li>
+</ol>
+<p>No automatic payout to the org occurs until Custom Ink explicitly initiates the transfer. Platform Controls also let Custom Ink set <code>delay_days</code> on payouts or pause a connected account's payouts entirely for fraud review — without touching the underlying charge.</p>
+
+
+<h2 class="q">"What happens if an org fails KYC or gets restricted by Stripe?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Custom Ink gets a webhook (<code>account.updated</code> with <code>requirements.disabled_reason</code>). Payouts to that account are paused by Stripe automatically. Custom Ink surfaces a message: "Action needed — re-verify your account." The org goes back through the hosted flow.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>Stripe monitors connected accounts continuously. If requirements come due, <code>requirements.currently_due</code> populates with a deadline. If not resolved, <code>charges_enabled</code> or <code>payouts_enabled</code> flips to false. Custom Ink handles this with:</p>
+<ul>
+  <li>Webhook listener on <code>account.updated</code></li>
+  <li>Check <code>requirements.currently_due</code> and <code>requirements.past_due</code></li>
+  <li>Generate a new <code>accountLinks.create({ type: 'account_onboarding' })</code> link and direct the org there</li>
+  <li>No funds are lost — they sit in Custom Ink's balance until the account is re-enabled</li>
+</ul>
+<p>This replaces today's Tipalti "abandoned registration" problem: instead of a finance person manually chasing the org, the webhook triggers an automated re-verification email with a fresh Stripe-hosted link.</p>
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="part-header">Part 2 — Payout Mechanics &amp; Timing</div>
+
+<h2 class="q">"How do the payouts actually work — what's T+2?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>T+2 is the standard Stripe Connect payout schedule — funds from charges settled today hit the connected org's bank account two business days later. It's configurable. The weekly manual cycle (Mon/Tue/Wed) goes away entirely; timing is determined by when Custom Ink fires the transfer.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>Stripe's payout timeline for connected accounts:</p>
+<ul>
+  <li>Charge is created → <code>pending</code> in Stripe</li>
+  <li>Card network settles (typically next business day) → <code>available</code></li>
+  <li>Custom Ink calls <code>transfers.create</code> → funds move from Custom Ink's balance to connected account balance</li>
+  <li>Stripe initiates payout to org's bank on their payout schedule (default T+2 rolling)</li>
+</ul>
+<p>Custom Ink controls when to transfer and the per-account payout schedule:</p>
+<pre>stripe.accounts.update(orgId, {
+  settings: { payouts: { schedule: { interval: 'weekly', weekly_anchor: 'monday' } } }
+})</pre>
+<p>For Online Stores this matters: some stores want weekly payouts, some monthly. Each store's preference is a per-account API call — not a platform-level setting.</p>
+
+
+<h2 class="q">"What about the $60K PayPal batch limit — how does Stripe handle large payouts?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>There is no batch limit in Stripe. A single <code>transfers.create</code> call can be for any amount. And unlike PayPal mass-pay CSV, each transfer is tied to a specific connected account with full audit history — no manual reconciliation.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>The PayPal $60K/batch limit is a PayPal-specific constraint requiring Custom Ink to split large campaign disbursements into multiple CSV uploads. In Stripe:</p>
+<ul>
+  <li><code>transfers.create({ amount: 500000, currency: 'usd', destination: 'acct_...' })</code> — no upper limit per call (subject to Custom Ink's own platform balance)</li>
+  <li>Each transfer generates a transfer object with a unique ID, tied to the org's connected account, visible in both Custom Ink's Sigma and the org's Express dashboard</li>
+  <li><code>transfer.metadata</code> can include campaign ID, campaign name, close date — trivial reconciliation vs. PayPal's flat CSV with no contextual fields</li>
+</ul>
+
+
+<h2 class="q">"What about returned / failed payouts? How does re-issuance work?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Stripe fires a <code>payout.failed</code> webhook. Custom Ink catches it, surfaces the failure in the payout dashboard, and can retry with a corrected bank account. The org updates their bank info in the Express portal — no support ticket required.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>Today's process: someone opens a manual ticket → finance investigates → reissues. With Stripe:</p>
+<ol>
+  <li><code>payout.failed</code> webhook → Custom Ink flags the connected account</li>
+  <li>If bank account is wrong: generate new <code>accountLinks.create({ type: 'account_onboarding' })</code> → org re-enters bank info in Stripe hosted flow</li>
+  <li>Stripe validates the new account via Financial Connections or micro-deposits</li>
+  <li>Custom Ink retries <code>transfers.create</code></li>
+</ol>
+<p>Failed payouts are also tracked in Sigma: <code>SELECT * FROM payouts WHERE status = 'failed'</code> — full history, no spreadsheet.</p>
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="part-header">Part 3 — Compliance &amp; Tax</div>
+
+<h2 class="q">"How does Stripe handle 1099-K? What does Custom Ink need to do?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Almost nothing. Stripe generates 1099-K forms automatically for connected accounts that meet the IRS threshold. Custom Ink doesn't collect paper W-9s, doesn't validate EINs manually, doesn't mail tax forms. The org's tax info is captured during Connect onboarding and Stripe handles the rest.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>Stripe's tax responsibilities with Connect Express:</p>
+<ul>
+  <li>During onboarding, Stripe collects TIN/EIN as part of KYC — this is the W-9 equivalent</li>
+  <li>Stripe validates the TIN against IRS records (TIN matching API)</li>
+  <li>At year end, Stripe generates 1099-K for each connected account that exceeds the threshold</li>
+  <li>Forms are filed with the IRS and delivered to the org via the Express dashboard</li>
+  <li>Custom Ink can query: <code>stripe.tax.forms.list({ type: '1099-K', connected_account: orgId })</code></li>
+</ul>
+<p>What this replaces: the emailed W-9 PDF → print → sign → scan → email back flow; manual EIN verification in Tipalti; the finance team's annual 1099 preparation process; and the compliance blockers preventing Fulfill Engine stores from distributing profits.</p>
+<div class="callout warn">
+  <p><strong>Caveat:</strong> Stripe handles 1099-K for payment processing income. If Custom Ink has other tax reporting obligations (e.g., revenue share classified differently), those still need legal review. Stripe does not give tax advice. But for the payment flow as described, they're covered.</p>
+</div>
+
+
+<h2 class="q">"What about escheatment laws — abandoned property?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Stripe doesn't automatically handle state escheatment reporting — that's Custom Ink's obligation. But Stripe makes it tractable: every unclaimed balance is queryable via API with timestamps. Custom Ink can build a lightweight dormancy tracker against this data. Today they have no systematic way to even identify which accounts have unclaimed balances.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>Escheatment laws require companies to report and remit unclaimed property to the state after a dormancy period (typically 3–5 years, varies by state). Currently Custom Ink can't easily track this across Tipalti, PayPal, and manual checks. With Connect:</p>
+<ul>
+  <li><code>stripe.accounts.list()</code> → filter for accounts where <code>payouts_enabled: true</code> but no recent payout activity</li>
+  <li><code>stripe.balance.retrieve({ stripeAccount: orgId })</code> → check for sitting balances</li>
+  <li><code>payout.created</code> webhook timestamps give dormancy start dates</li>
+</ul>
+<p>Custom Ink would need to build a dormancy monitoring job (a cron that queries balances older than N days and flags for compliance review). This is ~1–2 days of engineering work. The underlying data is clean and queryable — vs. today's split data across 3 platforms.</p>
+
+
+<h2 class="q">"What about OFAC / sanctions screening?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Stripe screens all connected accounts against OFAC and other sanctions lists as part of KYC. If a match is found, the account is flagged and restricted before any funds move. Custom Ink doesn't need to run its own OFAC checks on orgs.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>Stripe's compliance coverage for Express accounts includes: OFAC SDN list screening, PEP (Politically Exposed Person) screening, adverse media screening, and ongoing monitoring (not just at onboarding — Stripe rescreens periodically).</p>
+<p>This is particularly relevant vs. today's PayPal mass-pay CSV uploads, where there is effectively no screening at the time of payout. With Stripe Connect, screening happens at account creation and is maintained continuously.</p>
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="part-header">Part 4 — Fraud &amp; Risk</div>
+
+<h2 class="q">"How does Radar work across all three flows — can they really share rules?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Yes. All three flows run on the same Stripe platform account. Radar rules configured at the platform level apply to every charge — GOF, fundraising, and stores, simultaneously. A rule written once covers all three.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>Radar rule logic is evaluated at charge creation time. Because all three flows use Custom Ink's platform account as the charge origin (destination charges, not direct charges), every charge goes through the same Radar instance. Examples:</p>
+<pre># Block if card has been used across 5+ accounts in 24h
+block if: :card_id_count_distinct_user_id_last_24_hours > 5
+
+# Flag high-velocity donations to same org
+review if: :card_id_count_distinct_fundraiser_id_last_10_minutes > 3
+
+# Scope a rule to fundraising only via metadata
+block if: :metadata['flow'] = 'fundraising' and :card_testing_score > 75</pre>
+<p>The Scott cross-flow fraud strategy — block a fraudster on one flow, blocked across all — is possible because: a card blocked by Radar on a GOF order is blocked on a fundraising donation and a store purchase. No rule duplication, no manual coordination between teams.</p>
+
+
+<h2 class="q">"What's the risk to Custom Ink if an org commits fraud — who eats the loss?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>With destination charges, Custom Ink is the merchant of record. If an org fraudulently triggers a payout and donors dispute charges, Custom Ink holds the dispute liability. Stripe doesn't absorb fraud losses. But Platform Controls let Custom Ink hold payouts for review before they go out.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>Liability in Connect — be direct about this:</p>
+<ul>
+  <li><strong>Chargebacks/disputes:</strong> The platform (Custom Ink) is liable on destination charges. If a donor charges back a fraudulent fundraiser, Custom Ink eats the loss unless they've already clawed back the transfer to the org.</li>
+  <li><strong>Mitigation:</strong> Custom Ink can hold transfers for N days (configurable per account) before disbursing. This creates a window to catch chargebacks before money leaves the platform. For high-risk accounts: <code>delay_days: 14</code> on payout schedule.</li>
+  <li><strong>Claw-back:</strong> <code>stripe.accounts.update(orgId, { settings: { payouts: { debit_negative_balances: true } } })</code> — if an org has a negative balance from chargebacks after payout, Stripe can automatically debit their connected bank account to cover it.</li>
+</ul>
+<div class="callout green">
+  <p>Compare to today: with PayPal mass-pay, once a CSV is uploaded and payments go out, there is essentially no claw-back mechanism. With Stripe, there's a recoverable window.</p>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="part-header">Part 5 — Migration &amp; Integration</div>
+
+<h2 class="q">"How long does this actually take to build?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Phase 1 (fundraising on Connect) is realistically 6–8 weeks for an experienced team. Stripe's hosted onboarding and payout APIs do the heavy lifting. The longest part is migrating existing Tipalti payees to Stripe Express, not the integration itself.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<table>
+  <tr><th>Work item</th><th>Estimated time</th></tr>
+  <tr><td><code>accounts.create</code> + <code>accountLinks.create</code> onboarding flow</td><td>3–5 days</td></tr>
+  <tr><td>Webhook handler for <code>account.updated</code> (KYC status changes)</td><td>2 days</td></tr>
+  <tr><td>Payment intent with <code>application_fee_amount</code> + <code>transfer_data</code></td><td>2 days</td></tr>
+  <tr><td>Campaign-close payout trigger + retry logic</td><td>3 days</td></tr>
+  <tr><td>Internal payout dashboard (Sigma + API)</td><td>5 days</td></tr>
+  <tr><td>Migrate existing orgs from Tipalti → Stripe (email re-verification flow)</td><td>5–10 days (ops)</td></tr>
+  <tr><td>Testing + staging</td><td>5 days</td></tr>
+  <tr><td><strong>Total</strong></td><td><strong>~6–8 weeks</strong></td></tr>
+</table>
+<p>What Custom Ink doesn't need to build because Stripe handles it: KYC/identity verification UI, W-9 collection and validation, bank account verification, 1099-K generation, payout ledger for orgs, Express dashboard.</p>
+
+
+<h2 class="q">"Can they run Stripe and Tipalti in parallel during migration?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Yes. New campaigns onboard to Stripe Express. Existing Tipalti payees continue on the old flow until they recertify on Stripe. Custom Ink migrates cohort by cohort — no big bang cutover required.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<ol>
+  <li>New orgs created after cutover → Stripe Express only</li>
+  <li>Existing Tipalti orgs → keep paying via Tipalti until they start a new campaign</li>
+  <li>At each new campaign start → "upgrade your payout account" email with Stripe-hosted onboarding link</li>
+  <li>Once org completes Stripe onboarding → future payouts route to Stripe; Tipalti record marked inactive</li>
+  <li>After 12 months → force-migrate or deactivate remaining Tipalti orgs</li>
+</ol>
+<div class="callout warn">
+  <p><strong>Flag to raise:</strong> Does Custom Ink's Tipalti contract have minimum commitments or early termination fees? Running parallel systems has a cost. Stripe doesn't charge per connected account — only on processed volume.</p>
+</div>
+
+
+<h2 class="q">"Our payment team is stretched thin — how much ongoing maintenance does Connect require?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Less than what they're operating today. The Monday/Tuesday/Wednesday manual cycle alone is several engineer-hours per week. Connect's operational surface is webhook monitoring and occasional account review — not weekly manual uploads.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<table>
+  <tr><th>Task</th><th>Today</th><th>With Connect</th></tr>
+  <tr><td>Weekly payout run</td><td>Manual, 3 steps, 3 days</td><td>Webhook-triggered, automated</td></tr>
+  <tr><td>PayPal batch uploads</td><td>Manual CSV every Tuesday</td><td>Eliminated</td></tr>
+  <tr><td>Failed payout re-issuance</td><td>Manual ticket → finance → reissue</td><td>Webhook → org re-verifies → retry</td></tr>
+  <tr><td>W-9 collection</td><td>Manual per org</td><td>Eliminated (Stripe onboarding)</td></tr>
+  <tr><td>1099 prep</td><td>Manual annual process</td><td>Automated by Stripe</td></tr>
+  <tr><td>Fraud review on transfers</td><td>Manual, case by case</td><td>Radar rules + Platform Controls</td></tr>
+  <tr><td>Reconciliation</td><td>3 separate files, manual merge</td><td>One Sigma query</td></tr>
+</table>
+<p>What still needs ongoing attention: monitoring <code>account.updated</code> webhooks for KYC issues, reviewing Platform Controls queue (paused orgs, flagged payouts), Sigma reporting and anomaly detection, and Stripe API version upgrades (well-documented, predictable cadence).</p>
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="part-header">Part 6 — Commercial &amp; Pricing</div>
+
+<h2 class="q">"What does this actually cost Custom Ink?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Stripe takes 2.9% + 30¢ per transaction for standard card payments. Connect has an additional per-payout fee for connected accounts (list: ~0.25% + 25¢). At Custom Ink's volume, this is a commercial negotiation — don't quote list prices in the room.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<p>Three pricing layers for Custom Ink:</p>
+<ol>
+  <li><strong>Platform processing fees:</strong> 2.9% + 30¢ per charge (standard) — Custom Ink already pays similar on Braintree/Payflow. Rate negotiable at volume.</li>
+  <li><strong>Connect fees:</strong> ~0.25% + 25¢ per payout to connected accounts (list price) — negotiable. Some structures use a per-active-account monthly fee instead.</li>
+  <li><strong>Express account fees:</strong> No charge per account created; fees apply on payouts.</li>
+</ol>
+<p>Cost offsets: Tipalti contract eliminated or reduced; PayPal mass-pay fees eliminated; engineering time saved on manual weekly cycle; compliance cost savings (W-9, 1099, escheatment infrastructure).</p>
+<div class="callout warn">
+  <p><strong>Don't quote specific rates in the room.</strong> Stripe pricing for platforms at Custom Ink's volume is negotiated. The right answer: "this is a commercial conversation we'd have with your team and our sales team together."</p>
+</div>
+
+
+<h2 class="q">"What's the switching cost if they want to leave Stripe later?"</h2>
+
+<p class="answer-label short">▶ Short answer</p>
+<p>Connected account KYC data and bank tokens live in Stripe and can't be bulk-exported. That's real lock-in — be honest about it. But the business logic lives in Custom Ink's systems and is portable. The lock-in is similar to any payment processor relationship.</p>
+
+<p class="answer-label full">▶ Full answer</p>
+<ul>
+  <li><strong>Not portable from Stripe:</strong> Verified KYC data, connected account IDs, bank account tokens, payout history in Stripe's system</li>
+  <li><strong>Portable:</strong> Custom Ink's business logic, org data in Custom Ink's own DB, Sigma data exportable to a data warehouse</li>
+  <li><strong>Migration path if needed:</strong> Orgs would need to re-verify on the new platform — same friction as today's PayPal → Tipalti migration</li>
+</ul>
+<p>The real question: are there better alternatives? Tipalti is already proving painful. PayPal is already at its limits. A custom-built payout system would cost far more. Connect lock-in is real but it's the least bad option, and worth naming directly.</p>
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="part-header">Part 7 — Stakeholder-Specific</div>
+
+<h2 class="q">For Scott (fraud / cross-platform strategy)</h2>
+<p><em>Expected push: "How do we actually enforce a fraud block across all three flows — what's the data model?"</em></p>
+<p>Radar rules run at the <code>PaymentIntent</code> level. All three flows create PaymentIntents on Custom Ink's platform account. The shared signal is the card fingerprint (<code>card.fingerprint</code>) — consistent across all three flows for the same card. A block rule on card fingerprint applies universally.</p>
+<p>For cross-account fraud (different cards, same device): Stripe's <code>ip_address</code> and device fingerprint metadata is also consistent across flows. Build a Radar rule: <code>block if: :ip_risk_score > 85</code> — fires on any of the three flows.</p>
+<p>For org-level fraud (fraudulent org draining donations): Platform Controls + delayed payout window. <code>review if: :charge_amount > 500000 and :metadata['flow'] = 'fundraising'</code> puts high-value fundraising charges in manual review before settlement.</p>
+
+
+<h2 class="q">For Nicole (refunds team)</h2>
+<p><em>Expected push: "What happens to a donor refund when the org has already been paid out?"</em></p>
+<p>This is the most operationally important question for Nicole's team. Three scenarios:</p>
+<ol>
+  <li><strong>Transfer not yet made:</strong> <code>refunds.create({ payment_intent: pi_id })</code> — Custom Ink refunds donor, transfer never happens.</li>
+  <li><strong>Org has been paid but not withdrawn:</strong> <code>refunds.create({ payment_intent: pi_id, refund_application_fee: true, reverse_transfer: true })</code> — Stripe reverses the transfer from the org's connected account back to the platform, then refunds the donor.</li>
+  <li><strong>Org has already withdrawn to their bank:</strong> Custom Ink absorbs the loss (dispute process) or collects from the org directly. Setting <code>debit_negative_balances: true</code> on the connected account means Stripe auto-debits the org's bank account to cover the negative balance.</li>
+</ol>
+<p>Today: returned donor → manual check mailed → weeks of delay. With Connect: API call, same day.</p>
+
+
+<h2 class="q">For engineering ("Is this a 12-month project or a 6-month project?")</h2>
+<p>Phase 1 (fundraising) is shippable in 6–8 weeks with 2 engineers. The Stripe Connect API has official Node.js/Ruby/Python SDKs, a test mode that mirrors production behavior exactly, and a Stripe-hosted test account flow that simulates the full KYC path without real identity docs.</p>
+<p>The risk is not the Stripe integration — it's migrating existing Tipalti payees and getting the webhook infrastructure reliable. Those are the planning items worth investing in upfront.</p>
+<p>Stripe provides a dedicated Solutions Engineer for integrations at this scale, plus a migration playbook specifically for Tipalti → Connect transitions.</p>
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="part-header">Quick Reference — Objection Card</div>
+
+<table class="obj-table">
+  <tr><th>Objection</th><th>Response</th></tr>
+  <tr>
+    <td>"We already have Tipalti, why rip it out?"</td>
+    <td>Tipalti handles payables, not payments. It doesn't touch the donor charge, fraud layer, or reconciliation. You'd still need Braintree/PayPal plus Tipalti. Connect replaces all of it with one API.</td>
+  </tr>
+  <tr>
+    <td>"Orgs are used to PayPal"</td>
+    <td>Org experience with Connect is actually better — instant bank verification via Financial Connections vs. PayPal micro-deposits. And orgs don't interact with "Stripe" directly — they see Custom Ink's UI.</td>
+  </tr>
+  <tr>
+    <td>"What if Stripe goes down?"</td>
+    <td>Stripe's SLA is 99.99% uptime. More importantly: your current system has a PayPal CSV upload that runs once a week. If PayPal is down Tuesday, you wait until next Tuesday. Connect has real-time retry logic.</td>
+  </tr>
+  <tr>
+    <td>"We have net-terms for GOF — does Stripe support that?"</td>
+    <td>Yes. Stripe Invoicing supports net-30/60 terms with ACH debit collection. The invoice is created in Stripe, sent to the buyer, and auto-collected on the due date. No manual follow-up.</td>
+  </tr>
+  <tr>
+    <td>"We're not ready for a full migration"</td>
+    <td>You don't have to do one. Start with new fundraising campaigns only. Existing Tipalti orgs stay on Tipalti until their next campaign. No big bang.</td>
+  </tr>
+  <tr>
+    <td>"What about international orgs?"</td>
+    <td>Stripe Connect supports 35+ countries. If Custom Ink's fundraising is US-only today, not a blocker for Phase 1. International expansion becomes a configuration change, not a new vendor.</td>
+  </tr>
+  <tr>
+    <td>"Can we keep our fraud team's manual review step?"</td>
+    <td>Yes. Platform Controls + Radar's <code>review</code> action puts charges or payouts in a queue. Custom Ink's fraud team reviews flagged items before funds move. Connect doesn't remove human oversight — it makes it selective instead of universal.</td>
+  </tr>
+  <tr>
+    <td>"We want to own our payout data, not lock it in Stripe"</td>
+    <td>All payout and transfer data is queryable via Stripe Sigma (SQL) and exportable to any data warehouse via Stripe's data pipeline. You own the business logic — Stripe stores the transaction records like any payment processor.</td>
+  </tr>
+</table>
+
+
+<!-- ── FOOTER WARNING ── -->
+<footer>
+  <span class="warning-inline">⚠ Internal Only</span>
+  This document contains unpublished product details, customer-specific context, and internal pricing guidance. Not for forwarding, sharing externally, or use in external-facing materials.
+  &nbsp;·&nbsp; Last updated: June 2026 &nbsp;·&nbsp; Custom Ink × Stripe Solutions Engineering
+</footer>
+
+</body>
+</html>

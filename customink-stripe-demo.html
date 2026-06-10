@@ -862,6 +862,17 @@ html[data-state="future"] .success-close{background:var(--stripe);}
 </style>
 </head>
 <body>
+<!-- ── Viewer role badge ── -->
+<style>
+.viewer-badge{position:fixed;bottom:20px;left:20px;z-index:9999;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.97);border:1.5px solid #e5e7eb;border-radius:24px;padding:6px 14px 6px 6px;box-shadow:0 4px 20px rgba(0,0,0,.15);backdrop-filter:blur(10px);font-family:'Inter',system-ui,sans-serif;user-select:none;pointer-events:none;}
+.vb-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;flex-shrink:0;}
+.vb-name{font-size:11px;font-weight:800;color:#111;letter-spacing:.1px;}
+.vb-role{font-size:10px;font-weight:500;color:#6b7280;}
+</style>
+<div class="viewer-badge">
+  <div class="vb-avatar" style="background:#635BFF">🛒</div>
+  <div><div class="vb-name">Alex M.</div><div class="vb-role">Consumer / Buyer View</div></div>
+</div>
 
 <!-- ═══════ DEMO HUD ═══════ -->
 <div class="demo-hud">
@@ -2166,15 +2177,198 @@ function showScreen(id) {
    BRAINTREE FLOW (simulated)
 ══════════════════════════════════════ */
 function simulatePayPalRedirect() {
-  const btn = document.querySelector('.bt-pp-btn');
-  const orig = btn.innerHTML;
-  btn.innerHTML = '<span>↻</span> Redirecting to PayPal…';
-  btn.disabled = true;
+  // Create and show the redirect overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'pp-redirect-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif;backdrop-filter:blur(4px);';
+
+  overlay.innerHTML = `
+    <div style="width:min(860px,95vw);max-height:90vh;overflow-y:auto;border-radius:16px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.5);">
+      <!-- Fake browser chrome -->
+      <div style="background:#3c4043;padding:8px 14px;display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;gap:5px">
+          <div style="width:12px;height:12px;border-radius:50%;background:#ff5f57;"></div>
+          <div style="width:12px;height:12px;border-radius:50%;background:#febc2e;"></div>
+          <div style="width:12px;height:12px;border-radius:50%;background:#28c840;"></div>
+        </div>
+        <div id="pp-url-bar" style="flex:1;background:#202124;border-radius:20px;padding:5px 14px;font-size:12px;color:#9aa0a6;display:flex;align-items:center;gap:6px;transition:all .4s;">
+          <span style="font-size:10px">🔒</span><span id="pp-url-text">customink.com/checkout</span>
+        </div>
+        <button onclick="closePpOverlay()" style="background:none;border:none;color:#9aa0a6;font-size:18px;cursor:pointer;padding:0 4px;line-height:1">×</button>
+      </div>
+
+      <!-- Content area -->
+      <div style="display:grid;grid-template-columns:260px 1fr;background:#fff;min-height:400px;">
+        <!-- Left: Step tracker -->
+        <div style="background:#f8f9fa;border-right:1px solid #e0e0e0;padding:20px;">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:16px;">PayPal Checkout Flow</div>
+          <div id="pp-steps-list" style="display:flex;flex-direction:column;gap:8px;">
+            <div class="pp-step" data-step="0" style="display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:8px;background:#fff;border:1.5px solid #1a73e8;">
+              <div style="width:22px;height:22px;border-radius:50%;background:#1a73e8;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+              <div><div style="font-size:12px;font-weight:700;color:#111">Click PayPal button</div><div style="font-size:10px;color:#666">On CustomInk checkout</div></div>
+            </div>
+            <div class="pp-step" data-step="1" style="display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:8px;background:#f8f9fa;border:1.5px solid #e0e0e0;opacity:.5">
+              <div style="width:22px;height:22px;border-radius:50%;background:#e0e0e0;color:#666;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+              <div><div style="font-size:12px;font-weight:700;color:#111">Redirect to PayPal</div><div style="font-size:10px;color:#666">Leave customink.com</div></div>
+            </div>
+            <div class="pp-step" data-step="2" style="display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:8px;background:#f8f9fa;border:1.5px solid #e0e0e0;opacity:.5">
+              <div style="width:22px;height:22px;border-radius:50%;background:#e0e0e0;color:#666;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+              <div><div style="font-size:12px;font-weight:700;color:#111">Login to PayPal</div><div style="font-size:10px;color:#666">Email + password</div></div>
+            </div>
+            <div class="pp-step" data-step="3" style="display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:8px;background:#f8f9fa;border:1.5px solid #e0e0e0;opacity:.5">
+              <div style="width:22px;height:22px;border-radius:50%;background:#e0e0e0;color:#666;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
+              <div><div style="font-size:12px;font-weight:700;color:#111">Confirm payment</div><div style="font-size:10px;color:#666">Review on PayPal.com</div></div>
+            </div>
+            <div class="pp-step" data-step="4" style="display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:8px;background:#f8f9fa;border:1.5px solid #e0e0e0;opacity:.5">
+              <div style="width:22px;height:22px;border-radius:50%;background:#e0e0e0;color:#666;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">5</div>
+              <div><div style="font-size:12px;font-weight:700;color:#111">Return to CustomInk</div><div style="font-size:10px;color:#666">If they come back</div></div>
+            </div>
+          </div>
+          <div style="margin-top:16px;padding:10px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;">
+            <div style="font-size:11px;font-weight:800;color:#dc2626">⚠ Abandonment Stats</div>
+            <div style="font-size:11px;color:#7f1d1d;margin-top:4px;line-height:1.5">
+              ~40% of users who click PayPal never return to complete checkout.<br><br>
+              Avg. time: <strong>2m 40s</strong><br>
+              Avg. steps: <strong>5 page loads</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: PayPal page simulation -->
+        <div id="pp-page-content" style="background:#fff;">
+          <!-- Step 1: Redirecting -->
+          <div id="pp-screen-redirect" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:360px;padding:40px;gap:16px;">
+            <div style="width:48px;height:48px;border:4px solid #003087;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></div>
+            <div style="font-size:16px;font-weight:600;color:#003087">Redirecting to PayPal...</div>
+            <div style="font-size:13px;color:#666">Leaving customink.com</div>
+          </div>
+          <!-- Step 2: PayPal Login -->
+          <div id="pp-screen-login" style="display:none;padding:32px;background:#fff;">
+            <div style="text-align:center;margin-bottom:24px;">
+              <span style="font-size:28px;font-weight:800;color:#003087;letter-spacing:-.5px">Pay<span style="color:#009cde">Pal</span></span>
+            </div>
+            <div style="max-width:320px;margin:0 auto;">
+              <div style="font-size:15px;font-weight:600;color:#1d1d1d;margin-bottom:16px;text-align:center">Log in to your account</div>
+              <input style="width:100%;padding:10px 12px;border:1px solid #b0b8c1;border-radius:4px;font-size:14px;margin-bottom:10px;outline:none;" placeholder="Email or mobile number" type="email">
+              <input style="width:100%;padding:10px 12px;border:1px solid #b0b8c1;border-radius:4px;font-size:14px;margin-bottom:14px;outline:none;" placeholder="Password" type="password">
+              <button onclick="ppAdvanceStep()" style="width:100%;padding:12px;background:#003087;color:#fff;border:none;border-radius:24px;font-size:15px;font-weight:600;cursor:pointer;">Log In</button>
+              <div style="text-align:center;margin-top:12px;font-size:13px;color:#0070ba;cursor:pointer;">Having trouble logging in?</div>
+              <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #e8e8e8;">
+                <span style="font-size:13px;color:#666">Don't have a PayPal account? </span>
+                <span style="font-size:13px;color:#0070ba;cursor:pointer;">Sign Up</span>
+              </div>
+              <div style="text-align:center;margin-top:12px;font-size:12px;color:#dc2626;font-weight:600;">← You are on paypal.com, not customink.com</div>
+            </div>
+          </div>
+          <!-- Step 3: PayPal Review -->
+          <div id="pp-screen-review" style="display:none;padding:24px;background:#fff;">
+            <div style="text-align:center;margin-bottom:16px;">
+              <span style="font-size:22px;font-weight:800;color:#003087;letter-spacing:-.5px">Pay<span style="color:#009cde">Pal</span></span>
+            </div>
+            <div style="max-width:360px;margin:0 auto;">
+              <div style="font-size:14px;font-weight:600;color:#1d1d1d;margin-bottom:12px">Review your payment</div>
+              <div style="background:#f5f5f5;border-radius:8px;padding:14px;margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;font-size:13px;color:#333;margin-bottom:6px;"><span>CustomInk</span><span style="font-weight:700">$342.00</span></div>
+                <div style="font-size:12px;color:#666">Paying from: ••••4242 Visa</div>
+              </div>
+              <button onclick="ppAdvanceStep()" style="width:100%;padding:12px;background:#ffc439;color:#111;border:none;border-radius:24px;font-size:15px;font-weight:600;cursor:pointer;">Complete Purchase</button>
+              <div style="text-align:center;margin-top:10px;font-size:13px;color:#0070ba;cursor:pointer;">Cancel and return to merchant</div>
+            </div>
+          </div>
+          <!-- Step 4: Returning -->
+          <div id="pp-screen-return" style="display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:360px;padding:40px;gap:16px;">
+            <div style="width:48px;height:48px;border:4px solid #009cde;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></div>
+            <div style="font-size:16px;font-weight:600;color:#003087">Returning to CustomInk...</div>
+            <div style="font-size:13px;color:#666">Redirecting back from PayPal</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom comparison bar -->
+      <div style="background:#0A2540;padding:14px 20px;display:grid;grid-template-columns:1fr 1px 1fr;gap:16px;align-items:center;">
+        <div style="text-align:center;">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#dc4e41;margin-bottom:4px;">PayPal Redirect (Current)</div>
+          <div style="font-size:18px;font-weight:800;color:#ff6b6b">5 steps &nbsp;·&nbsp; ~2m 40s &nbsp;·&nbsp; 40% abandon</div>
+        </div>
+        <div style="background:rgba(255,255,255,.2);width:1px;height:32px;"></div>
+        <div style="text-align:center;">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#4ade80;margin-bottom:4px;">⚡ Stripe Link (Future)</div>
+          <div style="font-size:18px;font-weight:800;color:#4ade80">2 steps &nbsp;·&nbsp; ~8s &nbsp;·&nbsp; 3% abandon</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px;">Autofills card + address · No redirect · 50M+ users</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Animate the redirect sequence
+  let ppStep = 0;
+  window._ppCurrentStep = 0;
+
+  // Step 1: Show redirect spinner, update URL bar
   setTimeout(() => {
-    btn.innerHTML = orig;
-    btn.disabled = false;
-    showBtError('PayPal redirect failed. Please pay by card.');
-  }, 2000);
+    document.getElementById('pp-url-text').textContent = 'paypal.com/us/signin';
+    document.getElementById('pp-url-bar').style.background = '#fff3cd';
+    ppActivateStep(1);
+  }, 800);
+
+  // Step 2: Show login screen
+  setTimeout(() => {
+    document.getElementById('pp-screen-redirect').style.display = 'none';
+    document.getElementById('pp-screen-login').style.display = 'block';
+    ppActivateStep(2);
+  }, 1800);
+
+  window.ppAdvanceStep = function() {
+    window._ppCurrentStep++;
+    if (window._ppCurrentStep === 1) {
+      document.getElementById('pp-screen-login').style.display = 'none';
+      document.getElementById('pp-screen-review').style.display = 'block';
+      ppActivateStep(3);
+    } else if (window._ppCurrentStep === 2) {
+      document.getElementById('pp-screen-review').style.display = 'none';
+      document.getElementById('pp-screen-return').style.display = 'flex';
+      document.getElementById('pp-url-text').textContent = 'customink.com/checkout?token=EC-...';
+      document.getElementById('pp-url-bar').style.background = '#d4edda';
+      ppActivateStep(4);
+      setTimeout(() => {
+        ppActivateStep(4);
+        closePpOverlay();
+        showBtError('PayPal redirect completed. Note: 40% of users never reach this step.');
+      }, 1800);
+    }
+  };
+}
+
+function ppActivateStep(stepIndex) {
+  const steps = document.querySelectorAll('.pp-step');
+  steps.forEach((s, i) => {
+    const num = s.querySelector('div div');
+    const dot = s.querySelector('div:first-child');
+    if (i < stepIndex) {
+      s.style.opacity = '1';
+      s.style.border = '1.5px solid #22c55e';
+      s.style.background = '#f0fdf4';
+      dot.style.background = '#22c55e';
+    } else if (i === stepIndex) {
+      s.style.opacity = '1';
+      s.style.border = '1.5px solid #1a73e8';
+      s.style.background = '#fff';
+      dot.style.background = '#1a73e8';
+    } else {
+      s.style.opacity = '.4';
+      s.style.border = '1.5px solid #e0e0e0';
+      s.style.background = '#f8f9fa';
+      dot.style.background = '#e0e0e0';
+    }
+  });
+}
+
+function closePpOverlay() {
+  const el = document.getElementById('pp-redirect-overlay');
+  if (el) el.remove();
+  window.ppAdvanceStep = null;
 }
 
 function showBtError(msg) {

@@ -223,6 +223,17 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
 </style>
 </head>
 <body>
+<!-- ── Viewer role badge ── -->
+<style>
+.viewer-badge{position:fixed;bottom:20px;left:20px;z-index:9999;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.97);border:1.5px solid #e5e7eb;border-radius:24px;padding:6px 14px 6px 6px;box-shadow:0 4px 20px rgba(0,0,0,.15);backdrop-filter:blur(10px);font-family:'Inter',system-ui,sans-serif;user-select:none;transition:all .3s;}
+.vb-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;flex-shrink:0;}
+.vb-name{font-size:11px;font-weight:800;color:#111;letter-spacing:.1px;}
+.vb-role{font-size:10px;font-weight:500;color:#6b7280;}
+</style>
+<div class="viewer-badge" id="viewer-badge">
+  <div class="vb-avatar" id="vb-avatar" style="background:#E8212E">🏢</div>
+  <div><div class="vb-name" id="vb-name">CI Platform</div><div class="vb-role" id="vb-role">Custom Ink — Admin View</div></div>
+</div>
 
 <!-- ── HUD ── -->
 <nav class="hud">
@@ -304,6 +315,7 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
       <button class="tab-btn" data-tab="charge" onclick="switchTab('charge')">Destination Charge</button>
       <button class="tab-btn" data-tab="transfer" onclick="switchTab('transfer')">Disburse Funds</button>
       <button class="tab-btn" data-tab="activity" onclick="switchTab('activity')">Activity</button>
+      <button class="tab-btn" data-tab="orgdash" onclick="switchTab('orgdash')">Org Dashboard</button>
     </div>
 
     <!-- ══ OVERVIEW TAB ══ -->
@@ -614,6 +626,100 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
       </div>
     </div>
 
+    <!-- ══ ORG DASHBOARD TAB ══ -->
+    <div class="tab-panel" id="tab-orgdash">
+      <div style="max-width:800px">
+        <!-- Intro card -->
+        <div class="card" style="margin-bottom:16px;border-left:3px solid var(--green);background:linear-gradient(135deg,var(--green-bg),#fff)">
+          <div class="card-head">
+            <div>
+              <div class="card-title" style="color:var(--green)">🏫 Org / Fundraiser View</div>
+              <div class="card-sub">This is what a connected org sees — their own Stripe-hosted dashboard embedded directly into the CI platform. The org sees their payment history and payout schedule without logging into Stripe directly.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account selector -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-head"><div class="card-title">Select Org to View</div></div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">
+              <div>
+                <div class="field-label">Connected Org Account</div>
+                <select class="field-input field-select" id="dash-account-select">
+                  <option value="">— Select an account —</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="form-btn" style="background:var(--stripe);white-space:nowrap" onclick="loadOrgDashboard()">
+                  View Org Dashboard →
+                </button>
+                <button class="form-btn" style="background:#374151;white-space:nowrap" onclick="seedMockData()">
+                  + Seed Mock Data
+                </button>
+              </div>
+            </div>
+            <div class="response-box" id="dash-seed-response" style="margin-top:10px"></div>
+          </div>
+        </div>
+
+        <!-- What the org sees explainer -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-head"><div class="card-title">What the Org Sees</div></div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="padding:12px;background:var(--green-bg);border-radius:8px;border:1px solid var(--green-light)">
+                <div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:6px">💳 Payment History</div>
+                <div style="font-size:12px;color:#374151;line-height:1.6">All transfers received from Custom Ink. Campaign payouts, revenue share disbursements, rebates. Searchable, exportable.</div>
+              </div>
+              <div style="padding:12px;background:var(--fund-bg);border-radius:8px;border:1px solid #a5f3fc">
+                <div style="font-size:12px;font-weight:800;color:var(--fund);margin-bottom:6px">🏦 Payout Schedule</div>
+                <div style="font-size:12px;color:#374151;line-height:1.6">Bank transfer schedule to the org's account. Shows pending, in-transit, and paid out amounts. Automatic based on Stripe schedule.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Embedded components container -->
+        <div id="org-dash-container" style="display:none">
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-head">
+              <div>
+                <div class="card-title">
+                  <span id="org-dash-acct-name">Org</span> — Payment History
+                </div>
+                <div class="card-sub">Transfers received from Custom Ink platform</div>
+              </div>
+              <span class="badge" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-light)">🏫 Org View</span>
+            </div>
+            <div class="card-body" style="padding:0">
+              <div id="stripe-payments-component" style="min-height:200px;padding:16px"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <div class="card-title">
+                  <span id="org-dash-acct-name-2">Org</span> — Payout Schedule
+                </div>
+                <div class="card-sub">Payouts from Stripe to org's bank account</div>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0">
+              <div id="stripe-payouts-component" style="min-height:200px;padding:16px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="org-dash-loading" style="display:none;padding:40px;text-align:center;color:var(--muted)">
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+            <div class="spinner"></div>
+            <span>Loading org dashboard…</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -744,6 +850,7 @@ function populateAccountSelects() {
     const el = document.getElementById(id);
     el.innerHTML = `<option value="">— select connected account —</option>${opts}`;
   });
+  populateOrgDashSelect(accounts);
 }
 
 // ── Load transfers ────────────────────────────────────────────────
@@ -882,6 +989,150 @@ async function getOnboardingLink(accountId) {
     window.open(url, '_blank');
     toast('Onboarding URL opened in new tab — click "Use test data" to complete instantly', 'success');
   } catch(e) {
+    toast(`Error: ${e.message}`, 'error');
+  }
+}
+
+// ── Populate Org Dashboard account selector ───────────────────────
+function populateOrgDashSelect(accounts) {
+  const sel = document.getElementById('dash-account-select');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Select an account —</option>';
+  accounts.forEach(a => {
+    const name = a.metadata?.org_name || a.id;
+    const ready = a.charges_enabled;
+    sel.innerHTML += `<option value="${a.id}" data-name="${name}">${ready ? '✓' : '⚠'} ${name}</option>`;
+  });
+}
+
+// ── Load org dashboard via embedded components ────────────────────
+let stripeConnectInstance = null;
+
+async function loadOrgDashboard() {
+  const sel = document.getElementById('dash-account-select');
+  const accountId = sel.value;
+  if (!accountId) { toast('Select an org account first', 'error'); return; }
+
+  const orgName = sel.options[sel.selectedIndex].dataset.name || accountId;
+  document.getElementById('org-dash-acct-name').textContent = orgName;
+  document.getElementById('org-dash-acct-name-2').textContent = orgName;
+
+  document.getElementById('org-dash-loading').style.display = 'block';
+  document.getElementById('org-dash-container').style.display = 'none';
+
+  // Update the viewer badge
+  const badge = document.getElementById('viewer-badge');
+  const avatar = document.getElementById('vb-avatar');
+  const nameEl = document.getElementById('vb-name');
+  const roleEl = document.getElementById('vb-role');
+  if (badge && avatar && nameEl && roleEl) {
+    avatar.style.background = '#00875A';
+    avatar.textContent = '🏫';
+    nameEl.textContent = orgName;
+    roleEl.textContent = 'Org / Fundraiser — Recipient View';
+  }
+
+  try {
+    // Get publishable key
+    const cfgRes = await fetch('/api/config');
+    const { publishableKey } = await cfgRes.json();
+
+    // Destroy previous instance if any
+    if (stripeConnectInstance) {
+      const paymentsEl = document.getElementById('stripe-payments-component');
+      const payoutsEl = document.getElementById('stripe-payouts-component');
+      if (paymentsEl) paymentsEl.innerHTML = '';
+      if (payoutsEl) payoutsEl.innerHTML = '';
+      stripeConnectInstance = null;
+    }
+
+    // Load Connect JS if not already loaded
+    if (!window.StripeConnect) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://connect-js.stripe.com/v1/connect.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    // Initialize with AccountSession
+    stripeConnectInstance = StripeConnect.loadConnectAndInitialize({
+      publishableKey,
+      fetchClientSecret: async () => {
+        const res = await fetch('/api/connect/account-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ account_id: accountId, components: ['payments', 'payouts'] }),
+        });
+        const { client_secret, error } = await res.json();
+        if (error) throw new Error(error);
+        return client_secret;
+      },
+      appearance: {
+        overlays: 'dialog',
+        variables: {
+          colorPrimary: '#635BFF',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          borderRadius: '8px',
+          spacingUnit: '10px',
+          colorBackground: '#ffffff',
+        },
+      },
+    });
+
+    // Mount payments component
+    const paymentsComponent = stripeConnectInstance.create('payments');
+    const paymentsEl = document.getElementById('stripe-payments-component');
+    paymentsEl.innerHTML = '';
+    paymentsEl.appendChild(paymentsComponent);
+
+    // Mount payouts component
+    const payoutsComponent = stripeConnectInstance.create('payouts');
+    const payoutsEl = document.getElementById('stripe-payouts-component');
+    payoutsEl.innerHTML = '';
+    payoutsEl.appendChild(payoutsComponent);
+
+    document.getElementById('org-dash-loading').style.display = 'none';
+    document.getElementById('org-dash-container').style.display = 'block';
+    toast(`✓ Dashboard loaded for ${orgName}`, 'success');
+  } catch (e) {
+    document.getElementById('org-dash-loading').style.display = 'none';
+    toast(`Error loading dashboard: ${e.message}`, 'error');
+  }
+}
+
+// ── Seed mock transfer data to a connected account ────────────────
+async function seedMockData() {
+  const sel = document.getElementById('dash-account-select');
+  const accountId = sel.value;
+  if (!accountId) { toast('Select an org account first', 'error'); return; }
+
+  const resp = document.getElementById('dash-seed-response');
+  resp.textContent = 'Seeding mock transfers…';
+  resp.classList.add('visible');
+  resp.classList.remove('error');
+
+  try {
+    const r = await fetch('/api/connect/seed-mock-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account_id: accountId }),
+    });
+    const { transfers, error } = await r.json();
+    if (error) throw new Error(error);
+
+    const succeeded = transfers.filter(t => t.id).length;
+    const failed = transfers.filter(t => t.error).length;
+    resp.textContent = `✓ ${succeeded} mock transfers created${failed ? ` (${failed} failed — account may need completed onboarding)` : ''}`;
+    toast(`✓ Seeded ${succeeded} mock transfers`, 'success');
+    if (succeeded > 0) {
+      resp.textContent += '\n\nNow click "View Org Dashboard" to see them in the embedded component.';
+    }
+  } catch (e) {
+    resp.textContent = `✗ Error: ${e.message}`;
+    resp.classList.add('error');
     toast(`Error: ${e.message}`, 'error');
   }
 }

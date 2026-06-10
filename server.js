@@ -191,6 +191,54 @@ app.post('/api/connect/payout', async (req, res) => {
   }
 });
 
+// ── Connect: Account session for embedded components ─────────────
+app.post('/api/connect/account-session', async (req, res) => {
+  try {
+    const { account_id, components = ['payments', 'payouts'] } = req.body;
+    const accountSession = await stripe.accountSessions.create({
+      account: account_id,
+      components: {
+        payments: { enabled: components.includes('payments'), features: { refund_management: false, dispute_management: false } },
+        payouts: { enabled: components.includes('payouts'), features: { instant_payouts: false, standard_payouts: true, edit_payout_schedule: false } },
+      },
+    });
+    res.json({ client_secret: accountSession.client_secret });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Connect: Seed mock transfer data to a connected account ───────
+app.post('/api/connect/seed-mock-data', async (req, res) => {
+  try {
+    const { account_id } = req.body;
+    const mockTransfers = [
+      { amount: 24750, description: 'Campaign payout — Fall Spirit Tees (127 orders)', metadata: { campaign: 'fall-spirit-2024', orders: '127' } },
+      { amount: 18320, description: 'Campaign payout — Winter Fundraiser (94 orders)', metadata: { campaign: 'winter-fundraiser-2024', orders: '94' } },
+      { amount: 9650, description: 'Revenue share — Q3 2024', metadata: { type: 'revenue_share', period: 'Q3-2024' } },
+    ];
+    const results = [];
+    for (const t of mockTransfers) {
+      try {
+        const transfer = await stripe.transfers.create({ amount: t.amount, currency: 'usd', destination: account_id, description: t.description, metadata: t.metadata });
+        results.push({ id: transfer.id, amount: transfer.amount });
+      } catch (e) {
+        results.push({ error: e.message, description: t.description });
+      }
+    }
+    res.json({ transfers: results });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Config: Return publishable key ────────────────────────────────
+app.get('/api/config', (req, res) => {
+  res.json({ publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_51TdyxbQ9wb5pYzAEqN0CkU0hUkd8FX24KBPoAMeJCARPLy0kJLjwgvH3903dk5VnFzcLFiyYzC3kDCTyDP13HGno00CEBtozwn' });
+});
+
 // ── Page routes ───────────────────────────────────────────────────
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'customink-stripe-demo.html'));
