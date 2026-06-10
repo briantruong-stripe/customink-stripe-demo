@@ -36,22 +36,44 @@ app.post('/create-payment-intent', async (req, res) => {
 // ── Connect: Create Express connected account ────────────────────
 app.post('/api/connect/create-account', async (req, res) => {
   try {
-    const { org_name, email, org_type = 'non_profit', account_type = 'express', country = 'US' } = req.body;
-    const isCustom = account_type === 'custom';
+    // V2 Connect controller model — all CI connected accounts are "recipient" type:
+    // they receive transfers, never process payments on behalf of buyers.
+    // The two meaningful dimensions are WHO collects KYC and WHAT dashboard the org gets.
+    const {
+      org_name,
+      email,
+      org_type = 'non_profit',
+      collector = 'stripe',   // 'stripe' | 'application' (requirement_collection)
+      dashboard = 'express',  // 'express' | 'none' (stripe_dashboard.type)
+      country = 'US',
+    } = req.body;
+
+    const isAppCollected = collector === 'application';
+
     const accountParams = {
-      type: isCustom ? 'custom' : 'express',
       country,
       email: email || `demo-${Date.now()}@customink-demo.com`,
-      capabilities: isCustom
-        ? { transfers: { requested: true } }
-        : { transfers: { requested: true }, card_payments: { requested: true } },
+      controller: {
+        requirement_collection: collector,
+        stripe_dashboard: { type: dashboard },
+        fees: { payer: 'application' },                            // CI always pays Stripe fees
+        losses: { payments: isAppCollected ? 'application' : 'stripe' },
+      },
+      capabilities: { transfers: { requested: true } },           // recipient — transfers only
       business_type: org_type,
-      metadata: { org_name: org_name || 'Demo Org', demo: 'customink_connect' },
+      metadata: {
+        org_name: org_name || 'Demo Org',
+        collector,
+        dashboard,
+        demo: 'customink_connect',
+      },
     };
-    // Custom accounts require tos_acceptance for direct creation
-    if (isCustom) {
+
+    // Application-collected accounts require tos_acceptance with recipient service agreement
+    if (isAppCollected) {
       accountParams.tos_acceptance = { service_agreement: 'recipient' };
     }
+
     const account = await stripe.accounts.create(accountParams);
     res.json({ account });
   } catch (err) {

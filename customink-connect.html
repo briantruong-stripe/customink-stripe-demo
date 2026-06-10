@@ -1225,27 +1225,93 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
     <div class="sc" style="margin-bottom:56px">
       <div class="fs-sub-head">
         <span class="fs-sub-eyebrow" style="color:var(--stripe)">Recommended Integration Spec</span>
-        <h3>Connect Integration Shape — Fundraising &amp; For Profit Stores</h3>
-        <p>The specific Connect configuration for flows where <strong>buyer money funds the payout</strong>. These are deliberate choices, not defaults.</p>
+        <h3>Connect Integration Shape — CI Payout Architecture</h3>
+        <p>All CI connected accounts are <code style="font-size:12px;background:rgba(99,91,255,.1);padding:1px 5px;border-radius:4px">recipient</code> type with <code style="font-size:12px;background:rgba(99,91,255,.1);padding:1px 5px;border-radius:4px">transfers</code> capability — they receive money, never process buyer payments. The meaningful dimensions are <strong>who collects KYC</strong> and <strong>what dashboard the org gets</strong>.</p>
+      </div>
+
+      <!-- V2 architecture summary table -->
+      <div style="margin-bottom:24px;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:rgba(99,91,255,.08)">
+              <th style="padding:10px 12px;text-align:left;font-weight:800;color:var(--stripe);border-bottom:2px solid rgba(99,91,255,.2)">Use Case</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:800;color:var(--stripe);border-bottom:2px solid rgba(99,91,255,.2)">requirement_collection</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:800;color:var(--stripe);border-bottom:2px solid rgba(99,91,255,.2)">stripe_dashboard.type</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:800;color:var(--stripe);border-bottom:2px solid rgba(99,91,255,.2)">Transfer model</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:800;color:var(--stripe);border-bottom:2px solid rgba(99,91,255,.2)">Global?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:9px 12px;font-weight:700">Fundraising (buyer-funded)</td>
+              <td style="padding:9px 12px"><span style="background:var(--stripe-bg);color:var(--stripe);padding:2px 7px;border-radius:10px;font-weight:700">stripe</span></td>
+              <td style="padding:9px 12px"><span style="background:var(--stripe-bg);color:var(--stripe);padding:2px 7px;border-radius:10px;font-weight:700">express</span></td>
+              <td style="padding:9px 12px;color:var(--muted)">Destination charge → transfer</td>
+              <td style="padding:9px 12px;color:var(--muted)">US primary</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:9px 12px;font-weight:700">For Profit stores (buyer-funded)</td>
+              <td style="padding:9px 12px"><span style="background:var(--stripe-bg);color:var(--stripe);padding:2px 7px;border-radius:10px;font-weight:700">stripe</span></td>
+              <td style="padding:9px 12px"><span style="background:var(--stripe-bg);color:var(--stripe);padding:2px 7px;border-radius:10px;font-weight:700">express</span></td>
+              <td style="padding:9px 12px;color:var(--muted)">Destination charge → period-close transfer</td>
+              <td style="padding:9px 12px;color:var(--muted)">US primary</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);background:rgba(34,197,94,.03)">
+              <td style="padding:9px 12px;font-weight:700">Revenue Share (CI-funded)</td>
+              <td style="padding:9px 12px"><span style="background:rgba(34,197,94,.12);color:var(--green);padding:2px 7px;border-radius:10px;font-weight:700">application</span></td>
+              <td style="padding:9px 12px"><span style="background:rgba(34,197,94,.12);color:var(--green);padding:2px 7px;border-radius:10px;font-weight:700">none</span></td>
+              <td style="padding:9px 12px;color:var(--muted)">Platform-funded transfer from CI balance</td>
+              <td style="padding:9px 12px"><span style="color:var(--green);font-weight:700">✓ 40+ countries</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);background:rgba(34,197,94,.03)">
+              <td style="padding:9px 12px;font-weight:700">Rebate (CI-funded)</td>
+              <td style="padding:9px 12px"><span style="background:rgba(34,197,94,.12);color:var(--green);padding:2px 7px;border-radius:10px;font-weight:700">application</span></td>
+              <td style="padding:9px 12px"><span style="background:rgba(34,197,94,.12);color:var(--green);padding:2px 7px;border-radius:10px;font-weight:700">none</span></td>
+              <td style="padding:9px 12px;color:var(--muted)">Platform-funded transfer on threshold event</td>
+              <td style="padding:9px 12px"><span style="color:var(--green);font-weight:700">✓ 40+ countries</span></td>
+            </tr>
+            <tr style="background:rgba(34,197,94,.03)">
+              <td style="padding:9px 12px;font-weight:700">Sponsorship cash (CI-funded)</td>
+              <td style="padding:9px 12px"><span style="background:rgba(34,197,94,.12);color:var(--green);padding:2px 7px;border-radius:10px;font-weight:700">application</span></td>
+              <td style="padding:9px 12px"><span style="background:rgba(34,197,94,.12);color:var(--green);padding:2px 7px;border-radius:10px;font-weight:700">none</span></td>
+              <td style="padding:9px 12px;color:var(--muted)">Platform-funded transfer in local currency</td>
+              <td style="padding:9px 12px"><span style="color:var(--green);font-weight:700">✓ EUR, GBP, CAD, AUD</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
 
         <div style="border-radius:14px;border:2px solid var(--stripe);background:var(--stripe-bg);padding:20px">
-          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--stripe);margin-bottom:8px">Account Type</div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-            <div style="font-size:20px;font-weight:900;color:var(--stripe)">Express</div>
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--stripe);margin-bottom:8px">Account Config (V2 Controller)</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <div style="font-size:18px;font-weight:900;color:var(--stripe)">recipient</div>
             <div style="background:var(--stripe);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:100px">Fundraising + For Profit</div>
           </div>
-          <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Stripe hosts the dashboard and KYC. Custom Ink controls payout timing and fee structure. Orgs see a lightweight Stripe Express portal — not a full Stripe account.</div>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Stripe hosts dashboard — Custom Ink owns experience</div>
-            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Stripe handles all KYC + identity verification</div>
-            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Custom Ink never stores PII</div>
-            <div style="display:flex;gap:8px;font-size:12px"><span style="color:#D97706;font-weight:700">⚠</span> Use for nonprofits, PTOs, schools — not B2B corporate</div>
-            <div style="display:flex;gap:8px;font-size:12px"><span style="color:#DC2626;font-weight:700">≠</span> Standard: org owns full Stripe account (too much access)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+            <div style="padding:6px 10px;background:#fff;border-radius:6px;font-size:11px"><span style="font-weight:700;color:var(--muted)">requirement_collection</span><br><span style="color:var(--stripe);font-weight:800">stripe</span></div>
+            <div style="padding:6px 10px;background:#fff;border-radius:6px;font-size:11px"><span style="font-weight:700;color:var(--muted)">stripe_dashboard.type</span><br><span style="color:var(--stripe);font-weight:800">express</span></div>
+            <div style="padding:6px 10px;background:#fff;border-radius:6px;font-size:11px"><span style="font-weight:700;color:var(--muted)">fees.payer</span><br><span style="color:var(--stripe);font-weight:800">application (CI)</span></div>
+            <div style="padding:6px 10px;background:#fff;border-radius:6px;font-size:11px"><span style="font-weight:700;color:var(--muted)">losses.payments</span><br><span style="color:var(--stripe);font-weight:800">stripe</span></div>
           </div>
-          <div style="margin-top:10px;padding:8px 10px;background:#fff;border-radius:8px;font-family:monospace;font-size:11px;color:var(--stripe)">stripe.accounts.create({ type: 'express' })</div>
+          <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Stripe collects KYC — CI never stores PII</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Org sees Stripe Express portal (transfers, payouts, tax docs)</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Stripe handles W-9, 1099-K, bank verification</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:#D97706;font-weight:700">⚠</span> Use for nonprofits, PTOs, schools — not B2B corporate</div>
+          </div>
+          <div style="padding:8px 10px;background:#fff;border-radius:8px;font-family:monospace;font-size:10px;color:var(--stripe)">
+            stripe.accounts.create({<br>
+            &nbsp;&nbsp;controller: {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;requirement_collection: <strong>'stripe'</strong>,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;stripe_dashboard: { type: <strong>'express'</strong> },<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;fees: { payer: 'application' },<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;losses: { payments: 'stripe' },<br>
+            &nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;capabilities: { transfers: { requested: true } },<br>
+            })
+          </div>
         </div>
 
         <div style="border-radius:14px;border:2px solid var(--fund);background:var(--fund-bg);padding:20px">
@@ -1331,20 +1397,36 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
 
           <div style="border-radius:14px;border:2px solid var(--store);background:var(--store-bg);padding:20px">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--store);margin-bottom:8px">Account Type</div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-              <div style="font-size:20px;font-weight:900;color:var(--store)">Custom</div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--store);margin-bottom:8px">Account Config (V2 Controller)</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+              <div style="font-size:18px;font-weight:900;color:var(--store)">recipient</div>
               <div style="background:var(--store);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:100px">Rev Share · Rebate · Sponsorship</div>
             </div>
-            <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Custom Ink fully owns onboarding — no Stripe-hosted portal. Corporate recipients (Blackstone, Klaviyo, etc.) enter bank details in Custom Ink's UI. Recipient never interacts with Stripe; it appears as a standard ACH deposit.</div>
-            <div style="display:flex;flex-direction:column;gap:6px">
-              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> No Stripe portal friction for B2B corporate partners</div>
-              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> CI collects bank info in its own UI (Stripe tokenizes)</div>
-              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> 1099 / W-9 compliance handled by Stripe</div>
-              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Global payouts — 40+ countries, local currency</div>
-              <div style="display:flex;gap:8px;font-size:12px"><span style="color:#DC2626;font-weight:700">≠</span> Express: wrong for corporate accounts expecting vendor ACH</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+              <div style="padding:6px 10px;background:#fff;border-radius:6px;font-size:11px"><span style="font-weight:700;color:var(--muted)">requirement_collection</span><br><span style="color:var(--store);font-weight:800">application (CI)</span></div>
+              <div style="padding:6px 10px;background:#fff;border-radius:6px;font-size:11px"><span style="font-weight:700;color:var(--muted)">stripe_dashboard.type</span><br><span style="color:var(--store);font-weight:800">none</span></div>
+              <div style="padding:6px 10px;background:#fff;border-radius:6px;font-size:11px"><span style="font-weight:700;color:var(--muted)">fees.payer</span><br><span style="color:var(--store);font-weight:800">application (CI)</span></div>
+              <div style="padding:6px 10px;background:#fff;border-radius:6px;font-size:11px"><span style="font-weight:700;color:var(--muted)">losses.payments</span><br><span style="color:var(--store);font-weight:800">application (CI)</span></div>
             </div>
-            <div style="margin-top:10px;padding:8px 10px;background:#fff;border-radius:8px;font-family:monospace;font-size:11px;color:var(--store)">stripe.accounts.create({ type: 'custom', capabilities: { transfers: { requested: true } } })</div>
+            <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> CI owns onboarding — no Stripe portal for B2B recipients</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Recipient sees only ACH deposit, no Stripe branding</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Stripe tokenizes bank info; CI never stores raw account numbers</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Global: 40+ countries, local currency (EUR, GBP, CAD, AUD)</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> W-8 BEN / W-8 BEN-E for international; W-9 + 1099 for US</div>
+            </div>
+            <div style="padding:8px 10px;background:#fff;border-radius:8px;font-family:monospace;font-size:10px;color:var(--store)">
+              stripe.accounts.create({<br>
+              &nbsp;&nbsp;controller: {<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;requirement_collection: <strong>'application'</strong>,<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;stripe_dashboard: { type: <strong>'none'</strong> },<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;fees: { payer: 'application' },<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;losses: { payments: 'application' },<br>
+              &nbsp;&nbsp;},<br>
+              &nbsp;&nbsp;capabilities: { transfers: { requested: true } },<br>
+              &nbsp;&nbsp;tos_acceptance: { service_agreement: 'recipient' },<br>
+              })
+            </div>
           </div>
 
           <div style="border-radius:14px;border:2px solid var(--gof);background:var(--gof-bg);padding:20px">
@@ -1388,13 +1470,22 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
 
           <div style="border-radius:14px;border:2px solid var(--green);background:var(--green-bg);padding:20px">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--green);margin-bottom:8px">Global Payouts</div>
-            <div style="font-size:20px;font-weight:900;color:var(--green);margin-bottom:10px">40+ Countries</div>
-            <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Custom accounts support global disbursements — relevant for international sponsorship partners and revenue share agreements. Recipients receive in local currency; no USD wire conversion fees.</div>
+            <div style="font-size:20px;font-weight:900;color:var(--green);margin-bottom:10px">40+ Countries · Local Currency</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Application-collected recipient accounts support global disbursements. Set <code style="font-size:11px">country</code> at account creation; transfer in the recipient's local currency — Stripe handles FX.</div>
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
-              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Pay EUR, GBP, CAD, AUD — not just USD wires</div>
-              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> W-8 for international + W-9 for US — Stripe handles both</div>
-              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Escheatment queryable via API across all accounts</div>
-              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> One bank integration for all countries vs. per-country ACH setup</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> EUR, GBP, CAD, AUD — specify <code style="font-size:10px">currency</code> on the transfer</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> W-8 BEN / W-8 BEN-E for international; W-9 + 1099 for US</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> 1042-S (US-source income to foreign recipients) via Stripe</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> One integration covers all countries — no per-region ACH setup</div>
+            </div>
+            <div style="padding:8px 10px;background:#fff;border-radius:8px;font-family:monospace;font-size:10px;color:var(--green)">
+              // Account in Germany:<br>
+              stripe.accounts.create({ country: <strong>'DE'</strong>,<br>
+              &nbsp;&nbsp;controller: { requirement_collection: 'application',<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;stripe_dashboard: { type: 'none' } } })<br>
+              // Transfer in EUR:<br>
+              stripe.transfers.create({ destination: acctId,<br>
+              &nbsp;&nbsp;amount: 50000, currency: <strong>'eur'</strong> })
             </div>
           </div>
 
@@ -1744,10 +1835,10 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
           <div class="tl-phase">Phase 2 · Weeks 6–14</div>
           <h3>Online Stores → Stripe Connect (resolves payout compliance + replaces Tipalti/PayPal)</h3>
           <p>Stripe Connect's built-in KYC, 1099-K generation, and bank verification resolves the compliance blockers that currently prevent Fulfill Engine stores from distributing profits. Replaces: legacy monthly PayPal mass-pay (with $60K batch limits), Tipalti Net60 ACH migration, and manual STS→Finance→Tipalti approval chains.</p>
-          <p style="margin-top:10px"><strong>Two account types, four payout flows:</strong></p>
+          <p style="margin-top:10px"><strong>All connected accounts are <code style="font-size:13px">recipient</code> type — differentiated by controller config, not account type label:</strong></p>
           <ul style="margin-top:6px;padding-left:20px;font-size:14px;line-height:1.8">
-            <li><strong>Express</strong> — For Profit stores: buyer-funded destination charges split net profit to org via period-close transfer. Stripe hosts KYC, dashboard, and 1099-K. Right for nonprofits, PTOs, schools.</li>
-            <li><strong>Custom</strong> — Revenue Share, Rebate, Sponsorship: CI-funded platform transfers from CI's Stripe balance. CI owns the onboarding UI; recipient only sees an ACH deposit — no Stripe branding. Right for B2B corporate entities. Supports 40+ countries and local currency disbursement.</li>
+            <li><strong>requirement_collection: 'stripe' + stripe_dashboard: 'express'</strong> — For Profit stores: buyer-funded destination charges split net profit to org via period-close transfer. Stripe hosts KYC, 1099-K, and Express portal. Right for nonprofits, PTOs, schools.</li>
+            <li><strong>requirement_collection: 'application' + stripe_dashboard: 'none'</strong> — Revenue Share, Rebate, Sponsorship: CI-funded platform transfers from CI's Stripe balance. CI owns onboarding; recipient sees only an ACH deposit. Right for B2B corporate entities. Supports 40+ countries and local currency (EUR, GBP, CAD, AUD).</li>
           </ul>
           <div class="tl-tags">
             <span class="tl-tag tt-store">🏪 Online Stores</span>

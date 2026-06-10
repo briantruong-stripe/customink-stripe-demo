@@ -407,21 +407,49 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
             </div>
           </div>
           <div class="card-body">
+            <!-- V2 controller config -->
             <div style="margin-bottom:16px">
-              <div class="field-label">Account Type</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
-                <label id="ob-type-express-label" onclick="setAccountType('express')" style="padding:12px 14px;border:2px solid var(--stripe);border-radius:8px;cursor:pointer;background:var(--stripe-bg)">
-                  <input type="radio" name="ob-account-type" id="ob-type-express" value="express" checked style="margin-right:6px">
-                  <strong>Express</strong>
-                  <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4">Fundraising &amp; For Profit stores. Stripe-hosted KYC + dashboard. Buyer-funded destination charges.</div>
-                  <div style="font-size:11px;color:#7c8a99;margin-top:4px">Nonprofits · PTOs · Schools</div>
-                </label>
-                <label id="ob-type-custom-label" onclick="setAccountType('custom')" style="padding:12px 14px;border:2px solid var(--border);border-radius:8px;cursor:pointer">
-                  <input type="radio" name="ob-account-type" id="ob-type-custom" value="custom" style="margin-right:6px">
-                  <strong>Custom</strong>
-                  <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4">Rev Share, Rebate &amp; Sponsorship. CI-owned onboarding. CI-funded platform transfers.</div>
-                  <div style="font-size:11px;color:#7c8a99;margin-top:4px">B2B Corporate · Global 40+ countries</div>
-                </label>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <div class="field-label" style="margin:0">Account Configuration <span style="font-size:10px;font-weight:500;color:var(--muted)">(Connect V2 controller model)</span></div>
+                <span style="font-size:10px;font-weight:700;background:var(--stripe-bg);color:var(--stripe);padding:2px 9px;border-radius:10px;white-space:nowrap">recipient · transfers</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+                <!-- Collector dimension -->
+                <div>
+                  <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Collector <span style="font-weight:500;text-transform:none">(requirement_collection)</span></div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <label id="ob-col-stripe-label" onclick="setControllerConfig('stripe', null)" style="padding:10px 12px;border:2px solid var(--stripe);border-radius:8px;cursor:pointer;background:var(--stripe-bg)">
+                      <input type="radio" name="ob-collector" id="ob-col-stripe" value="stripe" checked style="margin-right:5px">
+                      <strong style="font-size:12px">Stripe</strong>
+                      <div style="font-size:10px;color:var(--muted);margin-top:2px">Stripe collects KYC, W-9, bank info</div>
+                    </label>
+                    <label id="ob-col-application-label" onclick="setControllerConfig('application', null)" style="padding:10px 12px;border:2px solid var(--border);border-radius:8px;cursor:pointer">
+                      <input type="radio" name="ob-collector" id="ob-col-application" value="application" style="margin-right:5px">
+                      <strong style="font-size:12px">CI Platform</strong>
+                      <div style="font-size:10px;color:var(--muted);margin-top:2px">CI collects via hosted link or own UI</div>
+                    </label>
+                  </div>
+                </div>
+                <!-- Dashboard dimension -->
+                <div>
+                  <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Dashboard <span style="font-weight:500;text-transform:none">(stripe_dashboard.type)</span></div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <label id="ob-dash-express-label" onclick="setControllerConfig(null, 'express')" style="padding:10px 12px;border:2px solid var(--stripe);border-radius:8px;cursor:pointer;background:var(--stripe-bg)">
+                      <input type="radio" name="ob-dashboard" id="ob-dash-express" value="express" checked style="margin-right:5px">
+                      <strong style="font-size:12px">Express</strong>
+                      <div style="font-size:10px;color:var(--muted);margin-top:2px">Stripe Express portal for org</div>
+                    </label>
+                    <label id="ob-dash-none-label" onclick="setControllerConfig(null, 'none')" style="padding:10px 12px;border:2px solid var(--border);border-radius:8px;cursor:pointer">
+                      <input type="radio" name="ob-dashboard" id="ob-dash-none" value="none" style="margin-right:5px">
+                      <strong style="font-size:12px">None</strong>
+                      <div style="font-size:10px;color:var(--muted);margin-top:2px">Embedded components or no portal</div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <!-- Dynamic use case hint -->
+              <div id="ob-usecase-hint" style="padding:10px 14px;border-radius:8px;font-size:12px;line-height:1.5;background:var(--stripe-bg);color:var(--stripe)">
+                💡 <strong>Fundraising / For Profit:</strong> Stripe collects KYC and provides Express portal. Right for nonprofits, PTOs, schools. Buyer-funded via destination charges. Replaces PayPal mass-pay.
               </div>
             </div>
             <div class="form-grid">
@@ -887,34 +915,84 @@ async function loadTransfers() {
   }
 }
 
-// ── Account type selector ─────────────────────────────────────────
-function setAccountType(type) {
-  document.getElementById('ob-type-' + type).checked = true;
-  const expressLabel = document.getElementById('ob-type-express-label');
-  const customLabel = document.getElementById('ob-type-custom-label');
+// ── V2 Controller config selector ────────────────────────────────
+function setControllerConfig(collector, dashboard) {
+  const curCollector = collector || document.querySelector('input[name="ob-collector"]:checked')?.value || 'stripe';
+  const curDashboard = dashboard || document.querySelector('input[name="ob-dashboard"]:checked')?.value || 'express';
+
+  // Sync radio inputs
+  const colEl = document.getElementById('ob-col-' + curCollector);
+  if (colEl) colEl.checked = true;
+  const dashEl = document.getElementById('ob-dash-' + curDashboard);
+  if (dashEl) dashEl.checked = true;
+
+  // Update collector label styles
+  ['stripe', 'application'].forEach(c => {
+    const lbl = document.getElementById('ob-col-' + c + '-label');
+    if (!lbl) return;
+    const active = c === curCollector;
+    lbl.style.border = active ? '2px solid var(--stripe)' : '2px solid var(--border)';
+    lbl.style.background = active ? 'var(--stripe-bg)' : '';
+  });
+  // Update dashboard label styles
+  ['express', 'none'].forEach(d => {
+    const lbl = document.getElementById('ob-dash-' + d + '-label');
+    if (!lbl) return;
+    const active = d === curDashboard;
+    lbl.style.border = active ? '2px solid var(--stripe)' : '2px solid var(--border)';
+    lbl.style.background = active ? 'var(--stripe-bg)' : '';
+  });
+
+  const hint = document.getElementById('ob-usecase-hint');
   const btnText = document.getElementById('ob-btn-text');
   const cardSub = document.getElementById('ob-card-sub');
   const infoBanner = document.getElementById('ob-info-banner');
-  if (type === 'express') {
-    expressLabel.style.border = '2px solid var(--stripe)';
-    expressLabel.style.background = 'var(--stripe-bg)';
-    customLabel.style.border = '2px solid var(--border)';
-    customLabel.style.background = '';
-    btnText.textContent = 'Create Express Account';
-    cardSub.textContent = 'Creates a Stripe Express connected account. Stripe hosts KYC + dashboard. Right for nonprofits, PTOs, and schools receiving buyer-funded payouts.';
-    infoBanner.style.color = 'var(--stripe)';
-    infoBanner.style.background = 'var(--stripe-bg)';
-    infoBanner.innerHTML = '🔒 Stripe creates the Express account. Custom Ink sends the onboarding URL — Stripe handles all KYC, EIN/SSN verification, and bank account validation.';
-  } else {
-    customLabel.style.border = '2px solid var(--green)';
-    customLabel.style.background = 'rgba(34,197,94,.07)';
-    expressLabel.style.border = '2px solid var(--border)';
-    expressLabel.style.background = '';
-    btnText.textContent = 'Create Custom Account';
-    cardSub.textContent = 'Creates a Stripe Custom connected account. CI owns the onboarding experience — the recipient never sees Stripe branding. Right for B2B corporate entities receiving CI-funded payouts.';
-    infoBanner.style.color = 'var(--green)';
-    infoBanner.style.background = 'rgba(34,197,94,.07)';
-    infoBanner.innerHTML = '🌍 Custom accounts support 40+ countries and local currency disbursement. Recipients only see an ACH deposit — no Stripe-hosted portal required.';
+
+  const configs = {
+    'stripe:express': {
+      hint: '💡 <strong>Fundraising / For Profit:</strong> Stripe collects KYC and provides Express portal for the org. Right for nonprofits, PTOs, schools receiving buyer-funded payouts. Replaces PayPal mass-pay.',
+      hintBg: 'var(--stripe-bg)', hintColor: 'var(--stripe)',
+      btn: 'Create Account — Stripe collector · Express dashboard',
+      sub: 'Recipient account · Stripe collects KYC · Express portal for org',
+      banner: '🔒 Stripe sends onboarding URL — handles all KYC, EIN/SSN verification, and bank validation. Org sees Stripe Express portal.',
+      bannerBg: 'var(--stripe-bg)', bannerColor: 'var(--stripe)',
+    },
+    'stripe:none': {
+      hint: '💡 <strong>Fundraising with CI Embedded Dashboard:</strong> Stripe collects KYC but org views history in CI\'s embedded components. Best of both: zero KYC build + CI-branded experience.',
+      hintBg: '#F0F9FF', hintColor: '#0369A1',
+      btn: 'Create Account — Stripe collector · Embedded (no portal)',
+      sub: 'Recipient account · Stripe collects KYC · No Stripe portal — use embedded components',
+      banner: '🔒 Stripe collects KYC via account link. Org views payment history and payouts in the "Org Dashboard" tab — CI-branded, Stripe-embedded.',
+      bannerBg: '#F0F9FF', bannerColor: '#0369A1',
+    },
+    'application:none': {
+      hint: '💡 <strong>Rev Share / Rebate / Sponsorship:</strong> CI collects bank details in its own UI. Recipient never sees Stripe — only receives an ACH deposit. Supports global (EUR, GBP, CAD, AUD). Right for B2B corporate partners.',
+      hintBg: 'rgba(34,197,94,.07)', hintColor: 'var(--green)',
+      btn: 'Create Account — CI collector · No portal (white-label)',
+      sub: 'Recipient account · CI collects requirements · No dashboard — white-label / global payouts',
+      banner: '🌍 CI owns onboarding. Collect bank details via hosted bank-entry link or your own UI. Recipient sees only ACH deposit. 40+ countries, local currency (EUR, GBP, CAD, AUD).',
+      bannerBg: 'rgba(34,197,94,.07)', bannerColor: 'var(--green)',
+    },
+    'application:express': {
+      hint: '⚠️ <strong>Uncommon config:</strong> CI collects requirements but Stripe provides Express portal. Rarely needed — if CI collects, embedded components give a better CI-branded experience.',
+      hintBg: 'var(--amber-bg)', hintColor: 'var(--amber)',
+      btn: 'Create Account — CI collector · Express (unusual)',
+      sub: 'Recipient account · CI collects requirements · Express dashboard (atypical)',
+      banner: '⚠️ This combination is rarely used. Consider "CI collector + None" with embedded components instead.',
+      bannerBg: 'var(--amber-bg)', bannerColor: 'var(--amber)',
+    },
+  };
+
+  const cfg = configs[`${curCollector}:${curDashboard}`] || configs['stripe:express'];
+  hint.innerHTML = cfg.hint;
+  hint.style.background = cfg.hintBg;
+  hint.style.color = cfg.hintColor;
+  if (btnText) btnText.textContent = cfg.btn;
+  if (cardSub) cardSub.textContent = cfg.sub;
+  if (infoBanner) {
+    infoBanner.innerHTML = cfg.banner;
+    infoBanner.style.background = cfg.bannerBg;
+    infoBanner.style.color = cfg.bannerColor;
   }
 }
 
@@ -928,7 +1006,8 @@ async function createAccount() {
   resp.classList.remove('visible','error');
 
   try {
-    const selectedType = document.querySelector('input[name="ob-account-type"]:checked')?.value || 'express';
+    const selectedCollector = document.querySelector('input[name="ob-collector"]:checked')?.value || 'stripe';
+    const selectedDashboard = document.querySelector('input[name="ob-dashboard"]:checked')?.value || 'express';
     const r = await fetch('/api/connect/create-account', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
@@ -936,7 +1015,8 @@ async function createAccount() {
         org_name: document.getElementById('ob-org-name').value,
         email: document.getElementById('ob-email').value,
         org_type: document.getElementById('ob-org-type').value,
-        account_type: selectedType,
+        collector: selectedCollector,
+        dashboard: selectedDashboard,
         country: document.getElementById('ob-country').value,
       })
     });
@@ -948,19 +1028,28 @@ async function createAccount() {
     document.getElementById('created-acct-id').textContent = account.id;
     document.getElementById('created-status').innerHTML = `<span class="badge badge-amber">Onboarding required</span>`;
     document.getElementById('created-org').textContent = account.metadata?.org_name || '—';
-    const caps = selectedType === 'custom' ? 'transfers' : 'transfers, card_payments';
-    document.getElementById('created-caps').textContent = caps;
+    document.getElementById('created-caps').textContent = 'transfers (recipient)';
     document.getElementById('ob-acct-json').textContent = JSON.stringify(account, null, 2);
     document.getElementById('ob-link-btn').style.display = 'flex';
 
-    resp.textContent = `✓ account.id: ${account.id}\n✓ type: ${account.type}\n✓ country: ${account.country}\n✓ charges_enabled: ${account.charges_enabled}\n✓ payouts_enabled: ${account.payouts_enabled}`;
+    const ctrlReq = account.controller?.requirement_collection || selectedCollector;
+    const ctrlDash = account.controller?.stripe_dashboard?.type || selectedDashboard;
+    resp.textContent = `✓ account.id: ${account.id}\n✓ controller.requirement_collection: ${ctrlReq}\n✓ controller.stripe_dashboard.type: ${ctrlDash}\n✓ controller.fees.payer: application\n✓ country: ${account.country}\n✓ charges_enabled: ${account.charges_enabled}\n✓ payouts_enabled: ${account.payouts_enabled}`;
     resp.classList.add('visible');
-    toast(`✓ ${account.type.charAt(0).toUpperCase() + account.type.slice(1)} account created: ${account.id}`, 'success');
+    toast(`✓ Account created (${ctrlReq} collector · ${ctrlDash} dashboard): ${account.id}`, 'success');
     const resultNote = document.getElementById('ob-result-note');
-    if (account.type === 'custom') {
+    if (selectedCollector === 'application') {
       resultNote.style.background = 'rgba(34,197,94,.07)';
       resultNote.style.color = 'var(--green)';
-      resultNote.innerHTML = '🌍 Custom account: CI owns the onboarding flow. Collect bank details in your UI, or use <code>stripe.accountLinks.create</code> to generate a one-time link for recipient bank entry. No Stripe branding shown to recipient.';
+      resultNote.innerHTML = '🌍 Application-collected account: CI owns the onboarding flow. Use <code>stripe.accountLinks.create</code> to generate a one-time bank entry link, or collect bank details in your own UI. Recipient never sees Stripe branding — only receives ACH deposit.';
+    } else if (selectedDashboard === 'none') {
+      resultNote.style.background = '#F0F9FF';
+      resultNote.style.color = '#0369A1';
+      resultNote.innerHTML = '🔒 Stripe collects KYC, but no Express portal — use the "Org Dashboard" tab to embed payment history and payout schedule directly in the CI platform.';
+    } else {
+      resultNote.style.background = 'var(--amber-bg)';
+      resultNote.style.color = 'var(--amber)';
+      resultNote.innerHTML = '⚡ Stripe collector + Express dashboard: redirect the org to the Stripe-hosted onboarding URL to complete KYC. Use "Use test data" in the hosted flow for instant test completion.';
     }
     loadAccounts();
     // Auto-open onboarding so the account is immediately usable
