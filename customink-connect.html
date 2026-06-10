@@ -1214,8 +1214,8 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
     <div class="sc" style="margin-bottom:56px">
       <div class="fs-sub-head">
         <span class="fs-sub-eyebrow" style="color:var(--stripe)">Recommended Integration Spec</span>
-        <h3>Connect Integration Shape — Fundraising</h3>
-        <p>The specific Connect configuration Custom Ink should implement for fundraising orgs. These are deliberate choices, not defaults.</p>
+        <h3>Connect Integration Shape — Fundraising &amp; For Profit Stores</h3>
+        <p>The specific Connect configuration for flows where <strong>buyer money funds the payout</strong>. These are deliberate choices, not defaults.</p>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
@@ -1224,15 +1224,15 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--stripe);margin-bottom:8px">Account Type</div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
             <div style="font-size:20px;font-weight:900;color:var(--stripe)">Express</div>
-            <div style="background:var(--stripe);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:100px">Recommended</div>
+            <div style="background:var(--stripe);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:100px">Fundraising + For Profit</div>
           </div>
           <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Stripe hosts the dashboard and KYC. Custom Ink controls payout timing and fee structure. Orgs see a lightweight Stripe Express portal — not a full Stripe account.</div>
           <div style="display:flex;flex-direction:column;gap:6px">
             <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Stripe hosts dashboard — Custom Ink owns experience</div>
             <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Stripe handles all KYC + identity verification</div>
             <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Custom Ink never stores PII</div>
+            <div style="display:flex;gap:8px;font-size:12px"><span style="color:#D97706;font-weight:700">⚠</span> Use for nonprofits, PTOs, schools — not B2B corporate</div>
             <div style="display:flex;gap:8px;font-size:12px"><span style="color:#DC2626;font-weight:700">≠</span> Standard: org owns full Stripe account (too much access)</div>
-            <div style="display:flex;gap:8px;font-size:12px"><span style="color:#DC2626;font-weight:700">≠</span> Custom: Custom Ink builds all UX (too much work)</div>
           </div>
           <div style="margin-top:10px;padding:8px 10px;background:#fff;border-radius:8px;font-family:monospace;font-size:11px;color:var(--stripe)">stripe.accounts.create({ type: 'express' })</div>
         </div>
@@ -1305,6 +1305,103 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
             <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">Escheatment tracking</span>
             <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">Fraud rules on transfers</span>
             <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">Express org portal</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECOND INTEGRATION SHAPE: CI-funded payouts ── -->
+      <div style="margin-top:40px;padding-top:32px;border-top:2px solid var(--border)">
+        <div class="fs-sub-head" style="margin-bottom:20px">
+          <span class="fs-sub-eyebrow" style="color:var(--store)">Recommended Integration Spec</span>
+          <h3>Connect Integration Shape — Revenue Share, Rebate &amp; Sponsorship</h3>
+          <p>For flows where <strong>Custom Ink is the payer</strong> — contractual disbursements to B2B corporate organizers. Different account type, same compliance benefits.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+
+          <div style="border-radius:14px;border:2px solid var(--store);background:var(--store-bg);padding:20px">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--store);margin-bottom:8px">Account Type</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div style="font-size:20px;font-weight:900;color:var(--store)">Custom</div>
+              <div style="background:var(--store);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:100px">Rev Share · Rebate · Sponsorship</div>
+            </div>
+            <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Custom Ink fully owns onboarding — no Stripe-hosted portal. Corporate recipients (Blackstone, Klaviyo, etc.) enter bank details in Custom Ink's UI. Recipient never interacts with Stripe; it appears as a standard ACH deposit.</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> No Stripe portal friction for B2B corporate partners</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> CI collects bank info in its own UI (Stripe tokenizes)</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> 1099 / W-9 compliance handled by Stripe</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Global payouts — 40+ countries, local currency</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:#DC2626;font-weight:700">≠</span> Express: wrong for corporate accounts expecting vendor ACH</div>
+            </div>
+            <div style="margin-top:10px;padding:8px 10px;background:#fff;border-radius:8px;font-family:monospace;font-size:11px;color:var(--store)">stripe.accounts.create({ type: 'custom', capabilities: { transfers: { requested: true } } })</div>
+          </div>
+
+          <div style="border-radius:14px;border:2px solid var(--gof);background:var(--gof-bg);padding:20px">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--gof);margin-bottom:8px">Disbursement Model</div>
+            <div style="font-size:20px;font-weight:900;color:var(--gof);margin-bottom:10px">Platform-Funded Transfers</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Custom Ink calculates the amount owed (period revenue %, spend threshold, or contract value), then calls <code style="font-size:11px">transfers.create</code> from its Stripe balance. No buyer charge flows through — CI is the source of funds.</div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Revenue Share: transfer at end of each reporting period</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Rebate: transfer when spend threshold is hit</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Sponsorship: transfer at contract execution or on schedule</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:#D97706;font-weight:700">⚠</span> CI must maintain Stripe balance to fund outbound payouts</div>
+            </div>
+            <div style="padding:8px 10px;background:#fff;border-radius:8px;font-family:monospace;font-size:11px;color:var(--gof)">
+              transfers.create({<br>
+              &nbsp;&nbsp;amount: calculatedAmountCents,<br>
+              &nbsp;&nbsp;currency: 'usd',<br>
+              &nbsp;&nbsp;destination: customAccountId<br>
+              })
+            </div>
+          </div>
+
+          <div style="border-radius:14px;border:2px solid var(--fund);background:var(--fund-bg);padding:20px">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--fund);margin-bottom:8px">Payout Triggers</div>
+            <div style="font-size:20px;font-weight:900;color:var(--fund);margin-bottom:10px">Schedule-Driven</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Each payout type has a different trigger — all handled via the same <code style="font-size:11px">transfers.create</code> call from Custom Ink's systems.</div>
+            <div style="display:grid;gap:6px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fff;border-radius:6px;font-size:12px">
+                <span style="font-weight:600">Revenue Share</span><span style="color:var(--fund);font-weight:700">Monthly / period close</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fff;border-radius:6px;font-size:12px">
+                <span style="font-weight:600">Rebate</span><span style="color:var(--fund);font-weight:700">Threshold hit event</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fff;border-radius:6px;font-size:12px">
+                <span style="font-weight:600">Sponsorship (cash)</span><span style="color:var(--fund);font-weight:700">Contract date / schedule</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fff;border-radius:6px;font-size:12px">
+                <span style="font-weight:600">Payout schedule</span><span style="color:var(--muted);font-weight:600">Net60 → T+2 (configurable)</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="border-radius:14px;border:2px solid var(--green);background:var(--green-bg);padding:20px">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--green);margin-bottom:8px">Global Payouts</div>
+            <div style="font-size:20px;font-weight:900;color:var(--green);margin-bottom:10px">40+ Countries</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.55;margin-bottom:10px">Custom accounts support global disbursements — relevant for international sponsorship partners and revenue share agreements. Recipients receive in local currency; no USD wire conversion fees.</div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Pay EUR, GBP, CAD, AUD — not just USD wires</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> W-8 for international + W-9 for US — Stripe handles both</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> Escheatment queryable via API across all accounts</div>
+              <div style="display:flex;gap:8px;font-size:12px"><span style="color:var(--green);font-weight:700">✓</span> One bank integration for all countries vs. per-country ACH setup</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="background:linear-gradient(135deg,var(--store-bg),var(--gof-bg));border-radius:14px;border:1.5px solid rgba(217,119,6,.2);padding:20px;display:flex;align-items:center;gap:16px">
+          <div style="font-size:32px">🔒</div>
+          <div>
+            <div style="font-size:14px;font-weight:800;margin-bottom:4px">What Custom Ink never has to build — for either account type</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+              <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">W-9 / W-8 collection</span>
+              <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">IRS TIN validation</span>
+              <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">1099-K generation</span>
+              <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">Bank account tokenization</span>
+              <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">Escheatment tracking</span>
+              <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">International currency conversion</span>
+              <span style="padding:4px 10px;background:#fff;border-radius:100px;font-size:11px;font-weight:600;color:var(--text)">OFAC / sanctions screening</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1519,25 +1616,25 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
 
       <!-- Stores row -->
       <div class="cap-tile ct-store">
-        <div class="cap-tile-icon">🔄</div>
-        <div class="cap-tile-flow">Online Stores</div>
-        <h3>Rolling Payout Schedules</h3>
-        <p>Each store's payout frequency (daily / weekly / monthly) configured via API. Replaces Tipalti for scheduled org payments — same API, fraction of the complexity.</p>
-        <div class="cap-api">stripe.accounts.update(orgId, { settings: { payouts: { schedule: { interval: 'weekly' } } } })</div>
+        <div class="cap-tile-icon">💰</div>
+        <div class="cap-tile-flow">Online Stores — For Profit</div>
+        <h3>Express + Period-Close Transfer</h3>
+        <p>Buyer markup accumulates across orders. At period close, Custom Ink calls transfers.create to move net profit to the organizer's Express account. 1099-K handled for nonprofits and school orgs.</p>
+        <div class="cap-api">transfers.create({ destination: expressAcctId, amount: periodProfitCents })</div>
       </div>
       <div class="cap-tile ct-store">
-        <div class="cap-tile-icon">🤝</div>
-        <div class="cap-tile-flow">Online Stores</div>
-        <h3>POD Partner Revenue Split</h3>
-        <p>Custom Ink's print-on-demand pilot: one charge splits between Custom Ink (platform fee) + POD fulfillment partner (connected account). Separate Charges & Transfers makes this clean.</p>
-        <div class="cap-api">stripe.transfers.create({ destination: podPartnerAcct, amount: fulfillmentCost })</div>
+        <div class="cap-tile-icon">📈</div>
+        <div class="cap-tile-flow">Online Stores — Rev Share &amp; Rebate</div>
+        <h3>Custom Account + Platform-Funded Transfer</h3>
+        <p>Custom Ink pays from its own balance — no buyer charge split. Corporate organizers receive ACH to their bank. CI collects bank info in its own UI; recipient never interacts with Stripe.</p>
+        <div class="cap-api">stripe.accounts.create({ type: 'custom' }) → transfers.create({ destination: customAcctId })</div>
       </div>
       <div class="cap-tile ct-store">
-        <div class="cap-tile-icon">📊</div>
-        <div class="cap-tile-flow">Online Stores</div>
-        <h3>Tipalti Replacement + Compliance Built-In</h3>
-        <p>Connect handles KYC, bank verification, payout scheduling, and 1099-K generation — resolving the compliance blockers (W-9 collection, IRS validation, escheatment tracking) that currently prevent Fulfill Engine stores from legally distributing profits.</p>
-        <div class="cap-api">1099: stripe.tax.forms.list({ type: '1099-K', connected_account: orgId })</div>
+        <div class="cap-tile-icon">🌍</div>
+        <div class="cap-tile-flow">Online Stores — Sponsorship</div>
+        <h3>Custom Account + Global Payouts</h3>
+        <p>Cash sponsorship disbursed via platform-funded transfer. W-8 for international partners. 40+ countries in local currency — no USD wire conversion fees. W-9 / 1099 compliance handled regardless of country.</p>
+        <div class="cap-api">transfers.create({ destination: customAcctId, currency: 'eur' }) // global</div>
       </div>
 
       <!-- Shared row -->
@@ -1635,7 +1732,12 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
         <div class="tl-content">
           <div class="tl-phase">Phase 2 · Weeks 6–14</div>
           <h3>Online Stores → Stripe Connect (resolves payout compliance + replaces Tipalti/PayPal)</h3>
-          <p>Stripe Connect's built-in KYC, 1099-K generation, and bank verification resolves the compliance blockers that currently prevent Fulfill Engine stores from distributing profits. Replaces: legacy monthly PayPal mass-pay (with $60K batch limits), Tipalti Net60 ACH migration, and manual STS→Finance→Tipalti approval chains. All 4 payout types (For Profit, Revenue Share, Rebate, Sponsorship) handled via one API.</p>
+          <p>Stripe Connect's built-in KYC, 1099-K generation, and bank verification resolves the compliance blockers that currently prevent Fulfill Engine stores from distributing profits. Replaces: legacy monthly PayPal mass-pay (with $60K batch limits), Tipalti Net60 ACH migration, and manual STS→Finance→Tipalti approval chains.</p>
+          <p style="margin-top:10px"><strong>Two account types, four payout flows:</strong></p>
+          <ul style="margin-top:6px;padding-left:20px;font-size:14px;line-height:1.8">
+            <li><strong>Express</strong> — For Profit stores: buyer-funded destination charges split net profit to org via period-close transfer. Stripe hosts KYC, dashboard, and 1099-K. Right for nonprofits, PTOs, schools.</li>
+            <li><strong>Custom</strong> — Revenue Share, Rebate, Sponsorship: CI-funded platform transfers from CI's Stripe balance. CI owns the onboarding UI; recipient only sees an ACH deposit — no Stripe branding. Right for B2B corporate entities. Supports 40+ countries and local currency disbursement.</li>
+          </ul>
           <div class="tl-tags">
             <span class="tl-tag tt-store">🏪 Online Stores</span>
             <span class="tl-tag tt-stripe">Payout Schedules</span>

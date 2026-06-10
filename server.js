@@ -36,18 +36,23 @@ app.post('/create-payment-intent', async (req, res) => {
 // ── Connect: Create Express connected account ────────────────────
 app.post('/api/connect/create-account', async (req, res) => {
   try {
-    const { org_name, email, org_type = 'non_profit' } = req.body;
-    const account = await stripe.accounts.create({
-      type: 'express',
-      country: 'US',
+    const { org_name, email, org_type = 'non_profit', account_type = 'express', country = 'US' } = req.body;
+    const isCustom = account_type === 'custom';
+    const accountParams = {
+      type: isCustom ? 'custom' : 'express',
+      country,
       email: email || `demo-${Date.now()}@customink-demo.com`,
-      capabilities: {
-        transfers: { requested: true },
-        card_payments: { requested: true },
-      },
+      capabilities: isCustom
+        ? { transfers: { requested: true } }
+        : { transfers: { requested: true }, card_payments: { requested: true } },
       business_type: org_type,
       metadata: { org_name: org_name || 'Demo Org', demo: 'customink_connect' },
-    });
+    };
+    // Custom accounts require tos_acceptance for direct creation
+    if (isCustom) {
+      accountParams.tos_acceptance = { service_agreement: 'recipient' };
+    }
+    const account = await stripe.accounts.create(accountParams);
     res.json({ account });
   } catch (err) {
     console.error(err.message);

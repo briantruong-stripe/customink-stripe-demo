@@ -391,10 +391,27 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
           <div class="card-head">
             <div>
               <div class="card-title">⚡ Onboard a New Org</div>
-              <div class="card-sub">Creates a Stripe Express connected account. In production, send the org to the hosted onboarding URL to complete KYC.</div>
+              <div class="card-sub" id="ob-card-sub">Select account type below to determine the right payout flow.</div>
             </div>
           </div>
           <div class="card-body">
+            <div style="margin-bottom:16px">
+              <div class="field-label">Account Type</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
+                <label id="ob-type-express-label" onclick="setAccountType('express')" style="padding:12px 14px;border:2px solid var(--stripe);border-radius:8px;cursor:pointer;background:var(--stripe-bg)">
+                  <input type="radio" name="ob-account-type" id="ob-type-express" value="express" checked style="margin-right:6px">
+                  <strong>Express</strong>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4">Fundraising &amp; For Profit stores. Stripe-hosted KYC + dashboard. Buyer-funded destination charges.</div>
+                  <div style="font-size:11px;color:#7c8a99;margin-top:4px">Nonprofits · PTOs · Schools</div>
+                </label>
+                <label id="ob-type-custom-label" onclick="setAccountType('custom')" style="padding:12px 14px;border:2px solid var(--border);border-radius:8px;cursor:pointer">
+                  <input type="radio" name="ob-account-type" id="ob-type-custom" value="custom" style="margin-right:6px">
+                  <strong>Custom</strong>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4">Rev Share, Rebate &amp; Sponsorship. CI-owned onboarding. CI-funded platform transfers.</div>
+                  <div style="font-size:11px;color:#7c8a99;margin-top:4px">B2B Corporate · Global 40+ countries</div>
+                </label>
+              </div>
+            </div>
             <div class="form-grid">
               <div>
                 <div class="field-label">Organization Name</div>
@@ -408,7 +425,7 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
                 <div class="field-label">Org Type</div>
                 <select class="field-input field-select" id="ob-org-type">
                   <option value="non_profit">Non-Profit / 501(c)(3)</option>
-                  <option value="company">School / Booster Club</option>
+                  <option value="company">Company / Corporate Entity</option>
                   <option value="individual">Individual Organizer</option>
                 </select>
               </div>
@@ -419,10 +436,12 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
                   <option value="CA">Canada</option>
                   <option value="GB">United Kingdom</option>
                   <option value="AU">Australia</option>
+                  <option value="DE">Germany</option>
+                  <option value="FR">France</option>
                 </select>
               </div>
             </div>
-            <div style="margin-top:16px;padding:12px 14px;background:var(--stripe-bg);border-radius:8px;font-size:12px;color:var(--stripe)">
+            <div id="ob-info-banner" style="margin-top:16px;padding:12px 14px;background:var(--stripe-bg);border-radius:8px;font-size:12px;color:var(--stripe)">
               🔒 Stripe creates the Express account. Custom Ink sends the onboarding URL — Stripe handles all KYC, EIN/SSN verification, and bank account validation.
             </div>
             <div style="margin-top:14px;display:flex;gap:10px">
@@ -449,8 +468,8 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
               <div class="od-cell"><div class="od-cell-label">Org Name</div><div class="od-cell-val" id="created-org">—</div></div>
               <div class="od-cell"><div class="od-cell-label">Capabilities</div><div class="od-cell-val" id="created-caps">—</div></div>
             </div>
-            <div style="margin-top:12px;padding:12px 14px;background:var(--amber-bg);border-radius:8px;font-size:12px;color:var(--amber)">
-              ⚡ In production, redirect the org to the Stripe Express onboarding URL to complete KYC before payouts are enabled.
+            <div id="ob-result-note" style="margin-top:12px;padding:12px 14px;background:var(--amber-bg);border-radius:8px;font-size:12px;color:var(--amber)">
+              ⚡ In production, redirect the org to the Stripe-hosted onboarding URL to complete KYC before payouts are enabled.
             </div>
             <div class="response-box visible" id="ob-acct-json" style="margin-top:12px"></div>
           </div>
@@ -761,7 +780,38 @@ async function loadTransfers() {
   }
 }
 
-// ── Create Express account ────────────────────────────────────────
+// ── Account type selector ─────────────────────────────────────────
+function setAccountType(type) {
+  document.getElementById('ob-type-' + type).checked = true;
+  const expressLabel = document.getElementById('ob-type-express-label');
+  const customLabel = document.getElementById('ob-type-custom-label');
+  const btnText = document.getElementById('ob-btn-text');
+  const cardSub = document.getElementById('ob-card-sub');
+  const infoBanner = document.getElementById('ob-info-banner');
+  if (type === 'express') {
+    expressLabel.style.border = '2px solid var(--stripe)';
+    expressLabel.style.background = 'var(--stripe-bg)';
+    customLabel.style.border = '2px solid var(--border)';
+    customLabel.style.background = '';
+    btnText.textContent = 'Create Express Account';
+    cardSub.textContent = 'Creates a Stripe Express connected account. Stripe hosts KYC + dashboard. Right for nonprofits, PTOs, and schools receiving buyer-funded payouts.';
+    infoBanner.style.color = 'var(--stripe)';
+    infoBanner.style.background = 'var(--stripe-bg)';
+    infoBanner.innerHTML = '🔒 Stripe creates the Express account. Custom Ink sends the onboarding URL — Stripe handles all KYC, EIN/SSN verification, and bank account validation.';
+  } else {
+    customLabel.style.border = '2px solid var(--green)';
+    customLabel.style.background = 'rgba(34,197,94,.07)';
+    expressLabel.style.border = '2px solid var(--border)';
+    expressLabel.style.background = '';
+    btnText.textContent = 'Create Custom Account';
+    cardSub.textContent = 'Creates a Stripe Custom connected account. CI owns the onboarding experience — the recipient never sees Stripe branding. Right for B2B corporate entities receiving CI-funded payouts.';
+    infoBanner.style.color = 'var(--green)';
+    infoBanner.style.background = 'rgba(34,197,94,.07)';
+    infoBanner.innerHTML = '🌍 Custom accounts support 40+ countries and local currency disbursement. Recipients only see an ACH deposit — no Stripe-hosted portal required.';
+  }
+}
+
+// ── Create account (Express or Custom) ───────────────────────────
 async function createAccount() {
   const btn = document.getElementById('ob-btn');
   const txt = document.getElementById('ob-btn-text');
@@ -771,6 +821,7 @@ async function createAccount() {
   resp.classList.remove('visible','error');
 
   try {
+    const selectedType = document.querySelector('input[name="ob-account-type"]:checked')?.value || 'express';
     const r = await fetch('/api/connect/create-account', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
@@ -778,6 +829,8 @@ async function createAccount() {
         org_name: document.getElementById('ob-org-name').value,
         email: document.getElementById('ob-email').value,
         org_type: document.getElementById('ob-org-type').value,
+        account_type: selectedType,
+        country: document.getElementById('ob-country').value,
       })
     });
     const { account, error } = await r.json();
@@ -788,13 +841,20 @@ async function createAccount() {
     document.getElementById('created-acct-id').textContent = account.id;
     document.getElementById('created-status').innerHTML = `<span class="badge badge-amber">Onboarding required</span>`;
     document.getElementById('created-org').textContent = account.metadata?.org_name || '—';
-    document.getElementById('created-caps').textContent = 'transfers, card_payments';
+    const caps = selectedType === 'custom' ? 'transfers' : 'transfers, card_payments';
+    document.getElementById('created-caps').textContent = caps;
     document.getElementById('ob-acct-json').textContent = JSON.stringify(account, null, 2);
     document.getElementById('ob-link-btn').style.display = 'flex';
 
-    resp.textContent = `✓ account.id: ${account.id}\n✓ type: express\n✓ country: ${account.country}\n✓ charges_enabled: ${account.charges_enabled}\n✓ payouts_enabled: ${account.payouts_enabled}`;
+    resp.textContent = `✓ account.id: ${account.id}\n✓ type: ${account.type}\n✓ country: ${account.country}\n✓ charges_enabled: ${account.charges_enabled}\n✓ payouts_enabled: ${account.payouts_enabled}`;
     resp.classList.add('visible');
-    toast(`✓ Express account created: ${account.id}`, 'success');
+    toast(`✓ ${account.type.charAt(0).toUpperCase() + account.type.slice(1)} account created: ${account.id}`, 'success');
+    const resultNote = document.getElementById('ob-result-note');
+    if (account.type === 'custom') {
+      resultNote.style.background = 'rgba(34,197,94,.07)';
+      resultNote.style.color = 'var(--green)';
+      resultNote.innerHTML = '🌍 Custom account: CI owns the onboarding flow. Collect bank details in your UI, or use <code>stripe.accountLinks.create</code> to generate a one-time link for recipient bank entry. No Stripe branding shown to recipient.';
+    }
     loadAccounts();
     // Auto-open onboarding so the account is immediately usable
     getOnboardingLink(account.id);
