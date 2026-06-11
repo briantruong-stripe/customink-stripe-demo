@@ -310,17 +310,30 @@ app.post('/api/connect/payout', async (req, res) => {
 });
 
 // ── Connect: Account session for embedded components ─────────────
+// CI accounts are transfers-only recipients — they don't have card_payments,
+// so the 'payments' embedded component is not available. Use payouts + account_management.
 app.post('/api/connect/account-session', async (req, res) => {
   try {
-    const { account_id, components = ['payments', 'payouts'] } = req.body;
+    const { account_id } = req.body;
     const accountSession = await stripe.accountSessions.create({
       account: account_id,
       components: {
-        payments: { enabled: components.includes('payments'), features: { refund_management: false, dispute_management: false } },
-        payouts: { enabled: components.includes('payouts'), features: { instant_payouts: false, standard_payouts: true, edit_payout_schedule: false } },
+        payouts: { enabled: true, features: { instant_payouts: false, standard_payouts: true, edit_payout_schedule: false } },
+        account_management: { enabled: true, features: { external_account_collection: true } },
       },
     });
     res.json({ client_secret: accountSession.client_secret });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Connect: Delete connected account ────────────────────────────
+app.delete('/api/connect/account/:id', async (req, res) => {
+  try {
+    const deleted = await stripe.accounts.del(req.params.id);
+    res.json({ deleted });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: err.message });

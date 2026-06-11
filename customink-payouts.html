@@ -859,20 +859,21 @@ function renderAccountsTable() {
   }
   wrap.innerHTML = `<table class="data-table">
     <thead><tr>
-      <th>Organization</th><th>Account ID</th><th>Charges</th><th>Payouts</th><th>KYC</th><th>Created</th>
+      <th>Organization</th><th>Account ID</th><th>Transfers</th><th>KYC</th><th>Created</th><th></th>
     </tr></thead>
     <tbody>${accounts.map(a => {
       const name = a.metadata?.org_name || a.business_profile?.name || a.email || '—';
-      const charges = a.charges_enabled ? '<span class="badge badge-green">✓ Enabled</span>' : '<span class="badge badge-amber">Pending</span>';
-      const payouts = a.payouts_enabled ? '<span class="badge badge-green">✓ Enabled</span>' : '<span class="badge badge-amber">Pending</span>';
+      const transfers = a.capabilities?.transfers === 'active'
+        ? '<span class="badge badge-green">✓ Active</span>'
+        : '<span class="badge badge-amber">Pending</span>';
       const kyc = a.details_submitted ? '<span class="badge badge-green">Complete</span>' : '<span class="badge badge-red">Required</span>';
-      return `<tr>
+      return `<tr id="acct-row-${a.id}">
         <td><div style="font-weight:700;font-size:13px">${name}</div></td>
         <td><span class="mono">${a.id}</span></td>
-        <td>${charges}</td>
-        <td>${payouts}</td>
+        <td>${transfers}</td>
         <td>${kyc}</td>
         <td style="font-size:12px;color:var(--muted)">${fmtDate(a.created)}</td>
+        <td><button onclick="deleteAccount('${a.id}','${name.replace(/'/g,"\\'")}',this)" style="padding:4px 10px;border:1px solid #fca5a5;border-radius:6px;background:#fef2f2;color:#dc2626;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✕ Delete</button></td>
       </tr>`;
     }).join('')}</tbody>
   </table>`;
@@ -1138,6 +1139,29 @@ async function getOnboardingLink(accountId) {
   }
 }
 
+// ── Delete connected account ──────────────────────────────────────
+async function deleteAccount(id, name, btn) {
+  if (!confirm(`Delete "${name}" (${id})?\n\nThis cannot be undone.`)) return;
+  btn.disabled = true;
+  btn.textContent = '…';
+  try {
+    const r = await fetch(`/api/connect/account/${id}`, { method: 'DELETE' });
+    const { deleted, error } = await r.json();
+    if (error) throw new Error(error);
+    document.getElementById(`acct-row-${id}`)?.remove();
+    accounts = accounts.filter(a => a.id !== id);
+    document.getElementById('org-count').textContent = `(${accounts.length})`;
+    document.getElementById('ov-orgs').textContent = accounts.length;
+    renderOrgList();
+    populateAccountSelects();
+    toast(`✓ Deleted ${name}`, 'success');
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✕ Delete';
+    toast(`Error: ${e.message}`, 'error');
+  }
+}
+
 // ── Populate Org Dashboard account selector ───────────────────────
 function populateOrgDashSelect(accounts) {
   const sel = document.getElementById('dash-account-select');
@@ -1209,11 +1233,11 @@ async function loadOrgDashboard() {
         const res = await fetch('/api/connect/account-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ account_id: accountId, components: ['payments', 'payouts'] }),
+          body: JSON.stringify({ account_id: accountId }),
         });
-        const { client_secret, error } = await res.json();
-        if (error) throw new Error(error);
-        return client_secret;
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        return data.client_secret;
       },
       appearance: {
         overlays: 'dialog',
@@ -1227,24 +1251,25 @@ async function loadOrgDashboard() {
       },
     });
 
-    // Mount payments component
-    const paymentsComponent = stripeConnectInstance.create('payments');
-    const paymentsEl = document.getElementById('stripe-payments-component');
-    paymentsEl.innerHTML = '';
-    paymentsEl.appendChild(paymentsComponent);
-
-    // Mount payouts component
+    // Recipient accounts only have transfers capability — mount payouts + account management.
+    // The 'payments' component requires card_payments which these accounts don't have.
     const payoutsComponent = stripeConnectInstance.create('payouts');
     const payoutsEl = document.getElementById('stripe-payouts-component');
     payoutsEl.innerHTML = '';
     payoutsEl.appendChild(payoutsComponent);
+
+    const acctMgmtComponent = stripeConnectInstance.create('account-management');
+    const acctMgmtEl = document.getElementById('stripe-payments-component');
+    acctMgmtEl.innerHTML = '';
+    acctMgmtEl.appendChild(acctMgmtComponent);
 
     document.getElementById('org-dash-loading').style.display = 'none';
     document.getElementById('org-dash-container').style.display = 'block';
     toast(`✓ Dashboard loaded for ${orgName}`, 'success');
   } catch (e) {
     document.getElementById('org-dash-loading').style.display = 'none';
-    toast(`Error loading dashboard: ${e.message}`, 'error');
+    const msg = e?.message || (typeof e === 'string' ? e : JSON.stringify(e)) || 'Unknown error';
+    toast(`Error loading dashboard: ${msg}`, 'error');
   }
 }
 
