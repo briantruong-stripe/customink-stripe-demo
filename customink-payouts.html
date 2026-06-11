@@ -675,6 +675,73 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
     <!-- ══ ORG DASHBOARD TAB ══ -->
     <div class="tab-panel" id="tab-orgdash">
       <div style="max-width:800px">
+
+        <!-- Build options explainer -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-head">
+            <div>
+              <div class="card-title">How Much Does Custom Ink Need to Build?</div>
+              <div class="card-sub">Four options — from zero engineering to full custom. Most platforms land on Option 2 or 3.</div>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;border-top:1px solid var(--border)">
+
+              <!-- Option 1 -->
+              <div style="padding:18px 20px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <span style="font-size:18px">🖥️</span>
+                  <div style="font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Option 1</div>
+                </div>
+                <div style="font-size:13px;font-weight:800;margin-bottom:4px">Stripe Dashboard</div>
+                <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px">Zero engineering</div>
+                <div style="font-size:12px;color:#4b5563;line-height:1.6">Finance team manages transfers, accounts, and payouts directly from stripe.com. No code, no portal. Good for a pilot or low volume.</div>
+                <div style="margin-top:10px;padding:8px;background:var(--bg);border-radius:6px;font-size:11px;color:var(--muted)">⚠️ Doesn't scale — manual per org</div>
+              </div>
+
+              <!-- Option 2 -->
+              <div style="padding:18px 20px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);background:linear-gradient(160deg,#f6f5ff 0%,#fff 60%)">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <span style="font-size:18px">🧩</span>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <div style="font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Option 2</div>
+                    <span style="font-size:9px;font-weight:800;background:var(--stripe);color:#fff;padding:2px 6px;border-radius:4px;letter-spacing:.06em">RECOMMENDED</span>
+                  </div>
+                </div>
+                <div style="font-size:13px;font-weight:800;margin-bottom:4px">Connect Embedded Components</div>
+                <div style="font-size:11px;font-weight:700;color:var(--stripe);margin-bottom:8px">~1 day of engineering</div>
+                <div style="font-size:12px;color:#4b5563;line-height:1.6">Drop Stripe's pre-built UI components into the CI portal. One server endpoint, one script tag. Stripe renders and maintains the org's payout view, bank account management, and onboarding.</div>
+                <div style="margin-top:10px;padding:8px;background:var(--stripe-bg);border-radius:6px;font-size:11px;color:var(--stripe);font-weight:600">Components: payouts · account-management · account-onboarding</div>
+              </div>
+
+              <!-- Option 3 -->
+              <div style="padding:18px 20px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <span style="font-size:18px">🔗</span>
+                  <div style="font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Option 3</div>
+                </div>
+                <div style="font-size:13px;font-weight:800;margin-bottom:4px">Stripe-Hosted Links</div>
+                <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:8px">Hours of engineering</div>
+                <div style="font-size:12px;color:#4b5563;line-height:1.6">Send orgs a link to Stripe's hosted onboarding or Express dashboard. The org completes setup and views their payouts on Stripe's domain — no embedding needed.</div>
+                <div style="margin-top:10px;padding:8px;background:var(--amber-bg);border-radius:6px;font-size:11px;color:var(--amber);font-weight:600">account_links (onboarding) · login_links (Express dashboard)</div>
+              </div>
+
+              <!-- Option 4 -->
+              <div style="padding:18px 20px;border-bottom:1px solid var(--border)">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <span style="font-size:18px">⚙️</span>
+                  <div style="font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Option 4</div>
+                </div>
+                <div style="font-size:13px;font-weight:800;margin-bottom:4px">Full Custom API Build</div>
+                <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:8px">Weeks of engineering</div>
+                <div style="font-size:12px;color:#4b5563;line-height:1.6">Build everything via API — transfers, payouts, account management. Full control over UX. This is what you're seeing in the demo below.</div>
+                <div style="margin-top:10px;padding:8px;background:var(--red-bg);border-radius:6px;font-size:11px;color:var(--muted);font-weight:600">Only choose this if CI needs UX control Options 2+3 can't provide</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
         <!-- Intro card -->
         <div class="card" style="margin-bottom:16px;border-left:3px solid var(--green);background:linear-gradient(135deg,var(--green-bg),#fff)">
           <div class="card-head">
