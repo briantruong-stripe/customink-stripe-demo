@@ -340,6 +340,17 @@ app.post('/api/connect/account-session', async (req, res) => {
   }
 });
 
+// ── Connect: Express dashboard login link for connected account ───
+app.post('/api/connect/login-link/:id', async (req, res) => {
+  try {
+    const link = await stripe.accounts.createLoginLink(req.params.id);
+    res.json({ url: link.url });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Connect: Delete connected account ────────────────────────────
 app.delete('/api/connect/account/:id', async (req, res) => {
   try {

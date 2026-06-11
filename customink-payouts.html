@@ -679,8 +679,11 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
         <div class="card" style="margin-bottom:16px;border-left:3px solid var(--green);background:linear-gradient(135deg,var(--green-bg),#fff)">
           <div class="card-head">
             <div>
-              <div class="card-title" style="color:var(--green)">🏫 Org / Fundraiser View</div>
-              <div class="card-sub">This is what a connected org sees — their own Stripe-hosted dashboard embedded directly into the CI platform. The org sees their payment history and payout schedule without logging into Stripe directly.</div>
+              <div class="card-title" style="color:var(--green)">🏫 Two Views: Platform Admin + Org Self-Serve</div>
+              <div class="card-sub" style="margin-top:6px;line-height:1.7">
+                <strong>Platform Admin View</strong> (below) — what Custom Ink's team sees: transfers sent to an org, payout history, account status. Built with the Stripe API.<br>
+                <strong>Org's Stripe Dashboard</strong> — what the fundraiser/school sees when they log in: their own balance, payout schedule, bank account settings. Stripe-hosted. Click "Open Org's Stripe Dashboard →" after loading to open it.
+              </div>
             </div>
           </div>
         </div>
@@ -696,9 +699,12 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
                   <option value="">— Select an account —</option>
                 </select>
               </div>
-              <div style="display:flex;gap:8px">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button class="form-btn" style="background:var(--stripe);white-space:nowrap" onclick="loadOrgDashboard()">
-                  View Org Dashboard →
+                  🏢 Platform Admin View →
+                </button>
+                <button class="form-btn" style="background:var(--green);white-space:nowrap" onclick="openOrgStripeDashboard()" id="btn-stripe-dash" disabled>
+                  🏫 Open Org's Stripe Dashboard →
                 </button>
                 <button class="form-btn" style="background:#374151;white-space:nowrap" onclick="seedMockData()">
                   + Seed Mock Data
@@ -733,9 +739,14 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
             <div class="card-head">
               <div>
                 <div class="card-title"><span id="org-dash-acct-name">Org</span> — Account Summary</div>
-                <div class="card-sub">Connected account status and bank info</div>
+                <div class="card-sub">Platform admin view · Connected account status and bank info</div>
               </div>
-              <span class="badge" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-light)">🏫 Org View</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="badge" style="background:#f3f4f6;color:#374151;border:1px solid var(--border)">🏢 CI Admin</span>
+                <button onclick="openOrgStripeDashboard()" id="btn-stripe-dash-2" style="padding:6px 12px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">
+                  🏫 Org's Stripe Dashboard →
+                </button>
+              </div>
             </div>
             <div class="card-body" id="org-acct-summary"></div>
           </div>
@@ -1185,6 +1196,25 @@ function populateOrgDashSelect(accounts) {
 
 // ── Load org dashboard via embedded components ────────────────────
 
+let currentDashAccountId = null;
+
+async function openOrgStripeDashboard() {
+  if (!currentDashAccountId) { toast('Load an org dashboard first', 'error'); return; }
+  const btn = document.getElementById('btn-stripe-dash');
+  const btn2 = document.getElementById('btn-stripe-dash-2');
+  [btn, btn2].forEach(b => { if (b) { b.disabled = true; b.textContent = 'Opening…'; } });
+  try {
+    const r = await fetch(`/api/connect/login-link/${currentDashAccountId}`, { method: 'POST' });
+    const { url, error } = await r.json();
+    if (error) throw new Error(error);
+    window.open(url, '_blank');
+  } catch (e) {
+    toast(`Error: ${e.message}`, 'error');
+  } finally {
+    [btn, btn2].forEach(b => { if (b) { b.disabled = false; b.textContent = b === btn ? '🏫 Open Org\'s Stripe Dashboard →' : '🏫 Org\'s Stripe Dashboard →'; } });
+  }
+}
+
 async function loadOrgDashboard() {
   const sel = document.getElementById('dash-account-select');
   const accountId = sel.value;
@@ -1288,6 +1318,9 @@ async function loadOrgDashboard() {
           </tbody>
         </table>`;
 
+    currentDashAccountId = accountId;
+    const stripeDashBtn = document.getElementById('btn-stripe-dash');
+    if (stripeDashBtn) stripeDashBtn.disabled = false;
     document.getElementById('org-dash-loading').style.display = 'none';
     document.getElementById('org-dash-container').style.display = 'block';
     toast(`✓ Dashboard loaded for ${orgName}`, 'success');
