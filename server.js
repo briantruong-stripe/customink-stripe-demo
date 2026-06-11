@@ -99,17 +99,24 @@ app.post('/api/connect/skip-onboarding', async (req, res) => {
     const biz = account.business_type || 'non_profit';
     const isCompany = biz !== 'individual';
 
+    const isAppCollected = account.controller?.requirement_collection === 'application';
+
     const updateParams = {
       business_profile: {
         mcc: '5699',                          // apparel / custom merchandise
         url: 'https://demo.customink.com',
         product_description: 'Custom apparel and merchandise',
       },
-      tos_acceptance: {
+    };
+
+    // ToS can only be accepted programmatically for application-collected accounts.
+    // Stripe-collected (Express) accounts must accept ToS through the hosted onboarding UI.
+    if (isAppCollected) {
+      updateParams.tos_acceptance = {
         date: Math.floor(Date.now() / 1000),
         ip: '127.0.0.1',
-      },
-    };
+      };
+    }
 
     if (isCompany) {
       updateParams.company = {

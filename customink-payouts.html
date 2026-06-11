@@ -1107,7 +1107,11 @@ async function skipOnboarding() {
     document.getElementById('ob-result-note').style.color = transfersActive ? 'var(--green)' : 'var(--amber)';
 
     loadAccounts();
-    toast(`✓ Test KYC submitted for ${account.metadata?.org_name || id}`, 'success');
+    const stripeCollected = account.controller?.requirement_collection !== 'application';
+    const msg = stripeCollected
+      ? `✓ Test data prefilled — open Onboarding to accept ToS (1 click)`
+      : `✓ Onboarding complete for ${account.metadata?.org_name || id}`;
+    toast(msg, 'success');
   } catch(e) {
     toast(`Error: ${e.message}`, 'error');
   } finally {
