@@ -1221,24 +1221,28 @@ async function loadOrgDashboard() {
         const script = document.createElement('script');
         script.src = 'https://connect-js.stripe.com/v1/connect.js';
         script.onload = resolve;
-        script.onerror = reject;
+        script.onerror = () => reject(new Error('Failed to load Stripe Connect JS from connect-js.stripe.com — check network'));
         document.head.appendChild(script);
       });
     }
+    if (typeof StripeConnect === 'undefined') {
+      throw new Error('StripeConnect SDK unavailable after load');
+    }
+
+    // Verify account session can be created before initializing Connect
+    const sessRes = await fetch('/api/connect/account-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account_id: accountId }),
+    });
+    const sessData = await sessRes.json();
+    if (sessData.error) throw new Error(`Account session error: ${sessData.error}`);
+    const clientSecret = sessData.client_secret;
 
     // Initialize with AccountSession
     stripeConnectInstance = StripeConnect.loadConnectAndInitialize({
       publishableKey,
-      fetchClientSecret: async () => {
-        const res = await fetch('/api/connect/account-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ account_id: accountId }),
-        });
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
-        return data.client_secret;
-      },
+      fetchClientSecret: async () => clientSecret,
       appearance: {
         overlays: 'dialog',
         variables: {
@@ -1267,8 +1271,9 @@ async function loadOrgDashboard() {
     document.getElementById('org-dash-container').style.display = 'block';
     toast(`✓ Dashboard loaded for ${orgName}`, 'success');
   } catch (e) {
+    console.error('[loadOrgDashboard] error:', e);
     document.getElementById('org-dash-loading').style.display = 'none';
-    const msg = e?.message || (typeof e === 'string' ? e : JSON.stringify(e)) || 'Unknown error';
+    const msg = e instanceof Error ? e.message : (typeof e === 'string' ? e : JSON.stringify(e)) || 'Unknown error';
     toast(`Error loading dashboard: ${msg}`, 'error');
   }
 }
