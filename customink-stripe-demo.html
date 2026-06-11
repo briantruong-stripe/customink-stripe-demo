@@ -648,6 +648,82 @@ html[data-state="future"] .spinner{border-top-color:var(--stripe);}
 }
 html[data-state="future"] .success-close{background:var(--stripe);}
 
+/* ── REVENUE RECOGNITION ── */
+.rr-section { background: #fafafa; border-top: 1px solid var(--border); }
+.rr-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+.rr-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--stripe); margin-bottom: 6px; }
+.rr-title { font-size: 20px; font-weight: 800; color: var(--dark); margin-bottom: 4px; }
+.rr-sub { font-size: 13px; color: var(--muted); }
+.rr-toggle-btn { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 100px; border: 2px solid var(--border); background: #fff; font-size: 13px; font-weight: 700; color: var(--dark); cursor: pointer; transition: all .25s; white-space: nowrap; flex-shrink: 0; font-family: inherit; }
+.rr-toggle-btn:hover { border-color: var(--stripe); color: var(--stripe); }
+.rr-toggle-btn.active { background: var(--stripe); border-color: var(--stripe); color: #fff; }
+.rr-toggle-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: background .25s; flex-shrink: 0; }
+.rr-toggle-btn.active .rr-toggle-dot { background: rgba(255,255,255,.8); }
+.rr-panel { display: none; animation: rrSlideIn .3s ease; }
+.rr-panel.open { display: block; }
+@keyframes rrSlideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.rr-migration-bar { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; flex-wrap: wrap; font-size: 13px; }
+.rr-mig-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.rr-mig-item { display: flex; align-items: center; }
+.rr-mig-item span { color: var(--muted); }
+.rr-mig-arrow { color: var(--muted); font-weight: 700; font-size: 16px; }
+.rr-mig-becomes { color: var(--stripe); font-size: 13px; font-weight: 700; }
+.rr-mig-target strong { color: #00875A; }
+.rr-body { display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .rr-body { grid-template-columns: 1fr; } }
+.rr-ledger { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.rr-ledger-head { display: flex; gap: 12px; padding: 10px 16px; background: var(--bg); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--border); }
+.rr-row { display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #f5f5f5; font-size: 13px; align-items: center; transition: background .15s; }
+.rr-row:last-child { border-bottom: none; }
+.rr-row:hover { background: #fafafa; }
+.rr-order-id { flex: 0 0 92px; font-family: monospace; font-size: 12px; color: var(--dark); font-weight: 600; }
+.rr-proc { flex: 0 0 70px; }
+.rr-proc-chip { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+.rr-proc-auth { background: #FFF7ED; color: #D97706; }
+.rr-proc-bt { background: #FEF3C7; color: #B45309; }
+.rr-proc-stripe { background: #F5F3FF; color: var(--stripe); }
+.rr-items { flex: 1; color: var(--muted); font-size: 12px; }
+.rr-amount { flex: 0 0 80px; text-align: right; font-weight: 700; color: var(--dark); }
+.rr-fulfillment { flex: 0 0 130px; }
+.rr-ful-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+.rr-ful-shipped { background: #ECFDF5; color: #00875A; }
+.rr-ful-pending { background: #FFFBEB; color: #D97706; }
+.rr-treatment { flex: 0 0 130px; }
+.rr-treat-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+.rr-treat-revenue { background: #ECFDF5; color: #00875A; }
+.rr-treat-deferred { background: #EFF6FF; color: #1D4ED8; }
+.rr-ledger-foot { display: flex; align-items: center; padding: 10px 16px; background: var(--bg); font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); }
+.rr-summary { display: flex; flex-direction: column; gap: 12px; }
+.rr-sum-title { font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+.rr-sum-box { border-radius: 10px; padding: 16px; border: 1px solid; }
+.rr-sum-revenue { background: #ECFDF5; border-color: #A7F3D0; }
+.rr-sum-deferred { background: #EFF6FF; border-color: #BFDBFE; }
+.rr-sum-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; color: var(--muted); }
+.rr-sum-revenue .rr-sum-label { color: #065F46; }
+.rr-sum-deferred .rr-sum-label { color: #1D4ED8; }
+.rr-sum-amount { font-size: 26px; font-weight: 900; margin-bottom: 2px; }
+.rr-sum-revenue .rr-sum-amount { color: #00875A; }
+.rr-sum-deferred .rr-sum-amount { color: #1D4ED8; }
+.rr-sum-note { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+.rr-sum-je { background: rgba(0,0,0,.04); border-radius: 6px; padding: 8px 10px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 10px; line-height: 1.8; color: var(--muted); }
+.rr-je-label { display: block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 3px; }
+.rr-sum-stripe-note { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.rr-stripe-tag { display: inline-flex; padding: 3px 9px; border-radius: 100px; background: #F5F3FF; color: var(--stripe); font-size: 10px; font-weight: 600; }
+.rr-value-section { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 24px; }
+.rr-billing-toggle { display: inline-flex; background: var(--bg); border: 1px solid var(--border); border-radius: 100px; padding: 3px; gap: 2px; margin-bottom: 20px; }
+.rr-bt-btn { padding: 7px 18px; border-radius: 100px; border: none; background: none; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; transition: all .2s; font-family: inherit; white-space: nowrap; }
+.rr-bt-btn:hover { color: var(--dark); }
+.rr-bt-btn.rr-bt-active { background: #fff; color: var(--stripe); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.rr-billing-panel { display: none; }
+.rr-billing-panel.rr-billing-active { display: block; animation: rrSlideIn .25s ease; }
+.rr-vp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.rr-vp-card { display: flex; gap: 14px; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 18px; transition: box-shadow .2s; }
+.rr-vp-card:hover { box-shadow: var(--shadow); }
+.rr-vp-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.rr-vp-title { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+.rr-vp-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+.rr-vp-api { background: #111827; color: #A78BFA; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 10px; line-height: 1.7; padding: 8px 12px; border-radius: 7px; white-space: pre-line; }
+
 /* Error message */
 .co-error{background:var(--red-bg);border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--red);display:none;}
 .co-error.visible{display:block;}
@@ -1187,6 +1263,225 @@ html[data-state="future"] .success-close{background:var(--stripe);}
         <div class="rev-org">People Ops Lead, Startup Inc.</div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ═══════ REVENUE RECOGNITION ═══════ -->
+<section class="section rr-section" id="rr-section">
+  <div class="section-inner">
+    <div class="rr-header">
+      <div>
+        <div class="rr-eyebrow">Finance · Month-End Close</div>
+        <div class="rr-title">Revenue Recognition</div>
+        <div class="rr-sub">Shipped = Revenue &nbsp;·&nbsp; Unshipped = Credit Card Deposit (Deferred Revenue)</div>
+      </div>
+      <button class="rr-toggle-btn" id="rrToggle" onclick="toggleRR()">
+        <span class="rr-toggle-dot" id="rrDot"></span>
+        <span id="rrToggleLabel">Show Finance View</span>
+      </button>
+    </div>
+
+    <div class="rr-panel" id="rrPanel">
+
+      <!-- Migration context banner -->
+      <div class="rr-migration-bar">
+        <div class="rr-mig-item">
+          <span class="rr-mig-dot" style="background:#FFB74D"></span>
+          <strong>Authorize.net</strong> <span>· Credit cards (CI Core)</span>
+        </div>
+        <div class="rr-mig-arrow">+ </div>
+        <div class="rr-mig-item">
+          <span class="rr-mig-dot" style="background:#FB923C"></span>
+          <strong>Braintree</strong> <span>· Credit cards (Enterprise)</span>
+        </div>
+        <div class="rr-mig-arrow">+ </div>
+        <div class="rr-mig-item">
+          <span class="rr-mig-dot" style="background:#635BFF"></span>
+          <strong>Stripe</strong> <span>· Swag.com &amp; SwagPro</span>
+        </div>
+        <div class="rr-mig-arrow rr-mig-becomes">→ Consolidate to Stripe</div>
+        <div class="rr-mig-item rr-mig-target">
+          <span class="rr-mig-dot" style="background:#00875A"></span>
+          <strong>Stripe Revenue Recognition</strong> <span>· Automated</span>
+        </div>
+      </div>
+
+      <!-- Order ledger + summary side by side -->
+      <div class="rr-body">
+
+        <!-- Left: order ledger -->
+        <div class="rr-ledger">
+          <div class="rr-ledger-head">
+            <div style="flex:0 0 92px">Order</div>
+            <div style="flex:0 0 70px">Processor</div>
+            <div style="flex:1">Items</div>
+            <div style="flex:0 0 80px;text-align:right">Amount</div>
+            <div style="flex:0 0 130px">Fulfillment</div>
+            <div style="flex:0 0 130px">Treatment</div>
+          </div>
+          <div class="rr-rows" id="rrRows"></div>
+          <div class="rr-ledger-foot">
+            <span>8 orders · <span id="rrShippedCount">4</span> shipped · <span id="rrPendingCount">4</span> pending</span>
+            <span style="margin-left:auto">Total collected: <strong id="rrTotal">$6,410.50</strong></span>
+          </div>
+        </div>
+
+        <!-- Right: month-end summary -->
+        <div class="rr-summary">
+          <div class="rr-sum-title">Month-End Close · June 2026</div>
+
+          <div class="rr-sum-box rr-sum-revenue">
+            <div class="rr-sum-label">Recognized Revenue</div>
+            <div class="rr-sum-amount" id="rrRecognized">$1,139.50</div>
+            <div class="rr-sum-note">Shipped · hit P&amp;L this month</div>
+            <div class="rr-sum-je">
+              <span class="rr-je-label">Journal Entry</span>
+              Dr. Accounts Receivable &nbsp;$1,139.50<br>
+              &nbsp;&nbsp;Cr. Revenue &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$1,139.50
+            </div>
+          </div>
+
+          <div class="rr-sum-box rr-sum-deferred">
+            <div class="rr-sum-label">Deferred Revenue</div>
+            <div class="rr-sum-amount" id="rrDeferred">$5,271.00</div>
+            <div class="rr-sum-note">Unshipped · Balance Sheet liability</div>
+            <div class="rr-sum-je">
+              <span class="rr-je-label">Journal Entry</span>
+              Dr. Cash / CC Deposit &nbsp;&nbsp;&nbsp;$5,271.00<br>
+              &nbsp;&nbsp;Cr. Deferred Revenue &nbsp;$5,271.00
+            </div>
+          </div>
+
+          <div class="rr-sum-stripe-note">
+            <div style="font-size:12px;font-weight:700;color:var(--stripe);margin-bottom:6px">⚡ Stripe Revenue Recognition</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">Fulfillment events trigger automatic revenue recognition. Replaces manual QuickBooks exports → NetSuite journal entries. Works across Stripe, Authorize.net, and Braintree in a unified data model.</div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+              <span class="rr-stripe-tag">Stripe Revenue Recognition</span>
+              <span class="rr-stripe-tag">Stripe Data Pipeline</span>
+              <span class="rr-stripe-tag">NetSuite Connector</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- How Stripe enables this — value props below the ledger -->
+      <div class="rr-value-section">
+
+        <!-- With / Without Billing toggle -->
+        <div class="rr-billing-toggle">
+          <button class="rr-bt-btn rr-bt-active" id="rrBtWithout" onclick="setRRBilling('without')">Without Stripe Billing</button>
+          <button class="rr-bt-btn" id="rrBtWith" onclick="setRRBilling('with')">With Stripe Billing</button>
+        </div>
+
+        <div id="rrWithout" class="rr-billing-panel rr-billing-active">
+          <div class="rr-vp-grid">
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#F5F3FF">📦</div>
+              <div>
+                <div class="rr-vp-title">Fulfillment-Triggered Recognition</div>
+                <div class="rr-vp-desc">CI fires a webhook when an order ships. Stripe Revenue Recognition listens to that event and automatically moves the charge from Deferred Revenue to Recognized Revenue — no manual journal entries.</div>
+                <div class="rr-vp-api">POST /v1/revenue_recognition_reporting_items<br>{ recognition_date: ship_date, amount: order_total }</div>
+              </div>
+            </div>
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#ECFDF5">🔌</div>
+              <div>
+                <div class="rr-vp-title">Works Without Stripe Billing</div>
+                <div class="rr-vp-desc">Stripe Revenue Recognition ingests any PaymentIntent — whether processed on Stripe, imported from Authorize.net, or migrated from Braintree. No need to run subscriptions or invoices through Stripe Billing to get automated rev rec.</div>
+                <div class="rr-vp-api">stripe.charges.create + metadata.fulfillment_date<br>→ Recognition rule: recognize on fulfillment_date</div>
+              </div>
+            </div>
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#EFF6FF">🔄</div>
+              <div>
+                <div class="rr-vp-title">Import from Auth.net &amp; Braintree</div>
+                <div class="rr-vp-desc">Stripe Data Pipeline can ingest historical and live transaction data from Authorize.net and Braintree via CSV import or direct connector. Revenue Recognition rules apply uniformly across all processors in one model.</div>
+                <div class="rr-vp-api">Stripe Data Pipeline → unified transaction table<br>→ same recognition rules applied across all processors</div>
+              </div>
+            </div>
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#FFF7ED">🏦</div>
+              <div>
+                <div class="rr-vp-title">NetSuite &amp; QuickBooks Sync</div>
+                <div class="rr-vp-desc">Stripe's native NetSuite connector pushes recognized revenue, deferred revenue, and journal entries directly into NetSuite GL accounts on a configurable schedule. Eliminates manual QuickBooks exports and the human reconciliation step.</div>
+                <div class="rr-vp-api">Stripe → NetSuite Connector (native)<br>Recognized entries → GL account mapping → auto-post</div>
+              </div>
+            </div>
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#F0FDF4">📊</div>
+              <div>
+                <div class="rr-vp-title">Waterfall Reports Out of the Box</div>
+                <div class="rr-vp-desc">Stripe Revenue Recognition generates ASC 606 / IFRS 15 compliant waterfall reports showing exactly how much revenue was recognized vs. deferred each month — the exact report your finance team builds manually today.</div>
+                <div class="rr-vp-api">Stripe Dashboard → Revenue Recognition → Reports<br>Monthly waterfall: Deferred → Recognized by cohort</div>
+              </div>
+            </div>
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#FEF3C7">⚡</div>
+              <div>
+                <div class="rr-vp-title">Pilot Path: Start With Stripe-Only</div>
+                <div class="rr-vp-desc">CI can pilot with just Stripe transactions (Swag.com, SwagPro) — no Auth.net or Braintree migration required. Configure recognition rules, validate against QuickBooks, then expand to other processors once finance signs off.</div>
+                <div class="rr-vp-api">Phase 1: Stripe transactions only (existing Swag volume)<br>Phase 2: Import Auth.net + Braintree history</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="rrWith" class="rr-billing-panel">
+          <div class="rr-vp-grid">
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#F5F3FF">📅</div>
+              <div>
+                <div class="rr-vp-title">Invoice = Revenue Event</div>
+                <div class="rr-vp-desc">When CI issues a Stripe Invoice for a fulfilled order, Revenue Recognition automatically treats invoice finalization as the recognition trigger — no separate metadata or webhooks needed. The invoice <em>is</em> the revenue event.</div>
+                <div class="rr-vp-api">Invoice.finalized → auto-recognize<br>Invoice.voided → auto-reverse recognition</div>
+              </div>
+            </div>
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#ECFDF5">🔁</div>
+              <div>
+                <div class="rr-vp-title">Subscription Revenue Spread</div>
+                <div class="rr-vp-desc">For SwagPro and Swag.com subscription tiers, Stripe Billing + Revenue Recognition automatically spreads annual prepay across 12 months. A $1,200/yr subscription recognizes $100/month — fully automated, no spreadsheet tracking.</div>
+                <div class="rr-vp-api">Subscription period_start → period_end<br>→ Revenue spread evenly across billing period</div>
+              </div>
+            </div>
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#EFF6FF">🔃</div>
+              <div>
+                <div class="rr-vp-title">Prorations &amp; Upgrades Handled</div>
+                <div class="rr-vp-desc">Mid-cycle plan changes (upgrade, downgrade, cancel) generate prorated invoice line items. Revenue Recognition adjusts the deferred schedule automatically — the correct amount is recognized for exactly the days service was delivered.</div>
+                <div class="rr-vp-api">Proration line items → partial recognition<br>Credit notes → recognition reversal</div>
+              </div>
+            </div>
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#FFF7ED">📦</div>
+              <div>
+                <div class="rr-vp-title">One-Time + Recurring in One Model</div>
+                <div class="rr-vp-desc">A customer can buy a custom order (one-time, recognize on ship) and a SwagPro subscription (recurring, recognize monthly) in the same Stripe account. Revenue Recognition applies the correct rule per line item — mixed models, zero manual work.</div>
+                <div class="rr-vp-api">Line item recognition rules: ship_date vs. period<br>Applied per SKU type on the same invoice</div>
+              </div>
+            </div>
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#F0FDF4">🏦</div>
+              <div>
+                <div class="rr-vp-title">Unified NetSuite GL Mapping</div>
+                <div class="rr-vp-desc">Stripe Billing invoices map cleanly to NetSuite revenue accounts by product type (apparel, subscription, donation). The NetSuite connector pushes finalized invoices as AR transactions with the correct GL codes — no manual coding by the finance team.</div>
+                <div class="rr-vp-api">Invoice line item → GL account mapping<br>Stripe NetSuite Connector → auto-post to GL</div>
+              </div>
+            </div>
+            <div class="rr-vp-card">
+              <div class="rr-vp-icon" style="background:#FEF3C7">📈</div>
+              <div>
+                <div class="rr-vp-title">MRR &amp; ARR Metrics Built-In</div>
+                <div class="rr-vp-desc">Stripe Billing surfaces MRR, ARR, churn rate, and cohort retention alongside Revenue Recognition waterfall reports — giving CI finance a single dashboard for both compliance reporting and SaaS-style business metrics for SwagPro.</div>
+                <div class="rr-vp-api">Stripe Dashboard → Billing → Revenue metrics<br>MRR, ARR, churn, cohort LTV in one view</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /rr-value-section -->
+
+    </div><!-- /rr-panel -->
   </div>
 </section>
 
@@ -2553,6 +2848,81 @@ function closeInsights() {
 }
 // stop click inside panel from closing
 document.getElementById('insightsPanel').addEventListener('click', e => e.stopPropagation());
+
+/* ══════════════════════════════════════
+   REVENUE RECOGNITION DEMO
+══════════════════════════════════════ */
+(function() {
+  const ORDERS = [
+    { id: 'CI-7821', proc: 'auth',   items: 'Custom Tees (24)',          amount: 342.00,  shipped: true,  date: 'Jun 5'  },
+    { id: 'CI-7822', proc: 'auth',   items: 'Hoodies (8)',               amount: 189.50,  shipped: true,  date: 'Jun 7'  },
+    { id: 'CI-7823', proc: 'bt',     items: 'Spirit Wear Bundle',        amount: 520.00,  shipped: true,  date: 'Jun 9'  },
+    { id: 'CI-7824', proc: 'bt',     items: 'Custom Hats (12)',          amount: 275.00,  shipped: false, status: 'In Production'    },
+    { id: 'CI-7825', proc: 'bt',     items: 'Corporate Swag (SwagPro)',  amount: 1240.00, shipped: false, status: 'In Production'    },
+    { id: 'CI-7826', proc: 'stripe', items: 'Tote Bags (6)',             amount: 88.00,   shipped: true,  date: 'Jun 10' },
+    { id: 'CI-7827', proc: 'stripe', items: "Swag.com Merch Drop",       amount: 3600.00, shipped: false, status: 'Awaiting Fulfillment' },
+    { id: 'CI-7828', proc: 'stripe', items: 'Custom Mugs (20)',          amount: 156.00,  shipped: false, status: 'Design Approval'  },
+  ];
+  const PROC_LABEL = { auth: 'Auth.net', bt: 'Braintree', stripe: 'Stripe' };
+  const PROC_CLASS = { auth: 'rr-proc-auth', bt: 'rr-proc-bt', stripe: 'rr-proc-stripe' };
+  const fmt = n => '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  function renderRows() {
+    const container = document.getElementById('rrRows');
+    if (!container) return;
+    container.innerHTML = ORDERS.map(o => `
+      <div class="rr-row">
+        <div class="rr-order-id">#${o.id}</div>
+        <div class="rr-proc"><span class="rr-proc-chip ${PROC_CLASS[o.proc]}">${PROC_LABEL[o.proc]}</span></div>
+        <div class="rr-items">${o.items}</div>
+        <div class="rr-amount">${fmt(o.amount)}</div>
+        <div class="rr-fulfillment">
+          ${o.shipped
+            ? `<span class="rr-ful-chip rr-ful-shipped">✓ Shipped ${o.date}</span>`
+            : `<span class="rr-ful-chip rr-ful-pending">⏳ ${o.status}</span>`}
+        </div>
+        <div class="rr-treatment">
+          ${o.shipped
+            ? `<span class="rr-treat-chip rr-treat-revenue">Revenue</span>`
+            : `<span class="rr-treat-chip rr-treat-deferred">CC Deposit</span>`}
+        </div>
+      </div>`).join('');
+    const recognized = ORDERS.filter(o => o.shipped).reduce((s, o) => s + o.amount, 0);
+    const deferred   = ORDERS.filter(o => !o.shipped).reduce((s, o) => s + o.amount, 0);
+    const total      = recognized + deferred;
+    document.getElementById('rrRecognized').textContent  = fmt(recognized);
+    document.getElementById('rrDeferred').textContent    = fmt(deferred);
+    document.getElementById('rrTotal').textContent       = fmt(total);
+    document.getElementById('rrShippedCount').textContent = ORDERS.filter(o => o.shipped).length;
+    document.getElementById('rrPendingCount').textContent = ORDERS.filter(o => !o.shipped).length;
+  }
+
+  window.setRRBilling = function(mode) {
+    const withEl    = document.getElementById('rrWith');
+    const withoutEl = document.getElementById('rrWithout');
+    const btnWith    = document.getElementById('rrBtWith');
+    const btnWithout = document.getElementById('rrBtWithout');
+    const isWith = mode === 'with';
+    withEl.classList.toggle('rr-billing-active', isWith);
+    withoutEl.classList.toggle('rr-billing-active', !isWith);
+    btnWith.classList.toggle('rr-bt-active', isWith);
+    btnWithout.classList.toggle('rr-bt-active', !isWith);
+  };
+
+  window.toggleRR = function() {
+    const panel  = document.getElementById('rrPanel');
+    const btn    = document.getElementById('rrToggle');
+    const label  = document.getElementById('rrToggleLabel');
+    const isOpen = panel.classList.contains('open');
+    panel.classList.toggle('open', !isOpen);
+    btn.classList.toggle('active', !isOpen);
+    label.textContent = isOpen ? 'Show Finance View' : 'Hide Finance View';
+    if (!isOpen) {
+      renderRows();
+      document.getElementById('rr-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+})();
 </script>
 </body>
 </html>

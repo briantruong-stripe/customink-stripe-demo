@@ -473,6 +473,148 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
   box-shadow: var(--shadow-lg); z-index: 998; white-space: nowrap;
 }
 .pd-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── CONTENT TABS ── */
+.ct-nav { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 52px; z-index: 800; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.ct-nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: center; padding: 0 24px; overflow-x: auto; }
+.ct-btn { display: flex; align-items: center; gap: 8px; padding: 15px 18px; border: none; background: none; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; transition: all .2s; white-space: nowrap; font-family: inherit; }
+.ct-btn:hover { color: var(--text); }
+.ct-btn.ct-active-arch { color: var(--stripe); border-bottom-color: var(--stripe); }
+.ct-btn.ct-active-donor { color: #0070F3; border-bottom-color: #0070F3; }
+.ct-btn.ct-active-org { color: #00A67E; border-bottom-color: #00A67E; }
+.ct-btn.ct-active-platform { color: #FF6B35; border-bottom-color: #FF6B35; }
+.ct-btn.ct-active-flow { color: var(--stripe); border-bottom-color: var(--stripe); }
+.ct-icon { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.ct-panel { display: none; }
+.ct-panel.active { display: block; }
+.ct-inner { max-width: 1100px; margin: 0 auto; padding: 48px 24px; }
+.ct-sh { margin-bottom: 40px; }
+.ct-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+.ct-eyebrow-donor { color: #0070F3; }
+.ct-eyebrow-org { color: #00A67E; }
+.ct-eyebrow-platform { color: #FF6B35; }
+.ct-eyebrow-flow { color: var(--stripe); }
+.ct-sh h2 { font-size: clamp(24px, 3vw, 34px); font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+.ct-sh p { font-size: 16px; color: var(--muted); max-width: 600px; }
+.ct-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
+.ct-card { background: #fff; border-radius: var(--r); border: 1px solid var(--border); padding: 24px; box-shadow: var(--shadow); transition: box-shadow .2s, transform .2s; }
+.ct-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.ct-card-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px; }
+.ct-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.ct-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+.ct-stag { display: inline-flex; align-items: center; gap: 4px; margin-top: 12px; padding: 4px 10px; background: var(--stripe-bg); border-radius: 100px; font-size: 11px; font-weight: 600; color: var(--stripe); }
+.ct-steps { display: flex; flex-direction: column; gap: 0; margin-bottom: 40px; position: relative; }
+.ct-step { display: flex; gap: 20px; align-items: flex-start; padding: 28px 0; position: relative; }
+.ct-step:not(:last-child)::after { content: ''; position: absolute; left: 21px; top: 68px; bottom: 0; width: 2px; background: var(--border); }
+.ct-snum { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; flex-shrink: 0; position: relative; z-index: 1; }
+.ct-snum-donor { background: #EFF6FF; color: #0070F3; }
+.ct-snum-org { background: #ECFDF5; color: #00A67E; }
+.ct-snum-platform { background: #FFF7ED; color: #FF6B35; }
+.ct-scon { flex: 1; }
+.ct-scon h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.ct-scon p { font-size: 14px; color: var(--muted); }
+.ct-tech { margin-top: 10px; padding: 10px 14px; background: var(--stripe-bg); border-radius: 8px; border-left: 3px solid var(--stripe); font-size: 12px; color: var(--stripe); font-family: 'SF Mono', 'Fira Code', monospace; }
+.ct-ctable { background: #fff; border-radius: var(--r); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); margin-bottom: 40px; overflow-x: auto; }
+.ct-ctable table { width: 100%; border-collapse: collapse; }
+.ct-ctable th { padding: 14px 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; text-align: left; background: var(--bg); border-bottom: 1px solid var(--border); }
+.ct-ctable td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+.ct-ctable tr:last-child td { border-bottom: none; }
+.ct-ctable tr:hover td { background: var(--bg); }
+.ct-chk { color: #00875A; font-weight: 700; }
+.ct-crs { color: var(--red); }
+.ct-prt { color: var(--amber); }
+.ct-mflow { background: #fff; border-radius: var(--r); border: 1px solid var(--border); padding: 32px; box-shadow: var(--shadow); margin-bottom: 40px; overflow-x: auto; }
+.ct-mflow h3 { font-size: 18px; font-weight: 700; margin-bottom: 24px; }
+.ct-fdiag { display: flex; align-items: center; gap: 0; min-width: 700px; justify-content: space-between; }
+.ct-fnode { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 1; text-align: center; }
+.ct-fbox { width: 100%; max-width: 140px; padding: 16px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; line-height: 1.3; }
+.ct-fbox-donor { background: #EFF6FF; color: #0070F3; border: 2px solid #BFDBFE; }
+.ct-fbox-stripe { background: var(--stripe-bg); color: var(--stripe); border: 2px solid #C4B5FD; }
+.ct-fbox-platform { background: #FFF7ED; color: #FF6B35; border: 2px solid #FED7AA; }
+.ct-fbox-org { background: #ECFDF5; color: #00A67E; border: 2px solid #A7F3D0; }
+.ct-fnode-lbl { font-size: 11px; color: var(--muted); font-weight: 500; }
+.ct-farrow { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; padding: 0 8px; }
+.ct-farrow-line { width: 60px; height: 2px; background: #D1D5DB; position: relative; }
+.ct-farrow-line::after { content: '▶'; position: absolute; right: -8px; top: -7px; color: #D1D5DB; font-size: 10px; }
+.ct-farrow-lbl { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.ct-hl { border-radius: var(--r); padding: 24px 28px; border-left: 4px solid; margin-bottom: 24px; }
+.ct-hl-donor { background: #EFF6FF; border-color: #0070F3; }
+.ct-hl-org { background: #ECFDF5; border-color: #00A67E; }
+.ct-hl-platform { background: #FFF7ED; border-color: #FF6B35; }
+.ct-hl-stripe { background: var(--stripe-bg); border-color: var(--stripe); }
+.ct-hl h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.ct-hl p { font-size: 14px; line-height: 1.7; }
+.ct-mframe { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-lg); margin-bottom: 32px; }
+.ct-mtbar { background: var(--bg); padding: 10px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); }
+.ct-mdot { width: 10px; height: 10px; border-radius: 50%; }
+.ct-murl { background: #fff; border-radius: 6px; padding: 4px 12px; font-size: 11px; color: var(--muted); flex: 1; max-width: 320px; border: 1px solid var(--border); }
+.ct-mbody { padding: 24px; }
+.ct-mdash { display: grid; grid-template-columns: 200px 1fr; min-height: 400px; }
+.ct-mside { background: #111827; padding: 20px 0; }
+.ct-mside-item { padding: 10px 20px; font-size: 13px; color: rgba(255,255,255,.6); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.ct-mside-item.act { background: rgba(255,255,255,.1); color: #fff; font-weight: 600; }
+.ct-mmain { padding: 20px; background: var(--bg); }
+.ct-kpi-row { display: flex; gap: 12px; margin-bottom: 20px; }
+.ct-kpi { flex: 1; background: #fff; border-radius: 10px; padding: 16px; border: 1px solid var(--border); }
+.ct-kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+.ct-kpi-value { font-size: 22px; font-weight: 800; }
+.ct-kpi-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.ct-kpi-up { color: #00875A; }
+.ct-mchart { background: #fff; border-radius: 10px; padding: 16px; border: 1px solid var(--border); margin-bottom: 12px; }
+.ct-mchart-title { font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+.ct-mbars { display: flex; align-items: flex-end; gap: 8px; height: 80px; }
+.ct-mbar { flex: 1; background: linear-gradient(to top, var(--stripe), var(--stripe-light)); border-radius: 4px 4px 0 0; opacity: .8; }
+.ct-mpo-row { display: flex; gap: 12px; }
+.ct-mpo-item { flex: 1; background: #fff; border-radius: 10px; padding: 14px; border: 1px solid var(--border); }
+.ct-pst { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+.ct-pst-paid { background: #ECFDF5; color: #00875A; }
+.ct-pst-pending { background: var(--amber-bg); color: var(--amber); }
+.ct-pst-transit { background: var(--blue-bg); color: var(--blue); }
+.ct-camp-hdr { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.ct-camp-img { width: 80px; height: 80px; border-radius: 12px; background: linear-gradient(135deg, #E8212E, #FF8A65); display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0; }
+.ct-camp-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.ct-camp-org { font-size: 13px; color: var(--muted); }
+.ct-pbar { background: var(--bg); border-radius: 100px; height: 8px; margin-bottom: 8px; overflow: hidden; }
+.ct-pfill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, #00A67E, #34D399); }
+.ct-mstats { display: flex; gap: 24px; margin-bottom: 20px; }
+.ct-mstat { font-size: 13px; }
+.ct-mstat strong { font-size: 18px; font-weight: 800; display: block; }
+.ct-mprods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.ct-mprod { border: 2px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; transition: border-color .2s; }
+.ct-mprod:hover { border-color: #E8212E; }
+.ct-mprod-img { font-size: 28px; margin-bottom: 6px; }
+.ct-mprod-name { font-size: 12px; font-weight: 600; }
+.ct-mprod-price { font-size: 13px; color: #E8212E; font-weight: 700; }
+.ct-donatebox { background: var(--bg); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.ct-donatebox h4 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.ct-damts { display: flex; gap: 8px; flex-wrap: wrap; }
+.ct-damt { padding: 8px 16px; border-radius: 8px; border: 2px solid var(--border); background: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: inherit; }
+.ct-damt:hover, .ct-damt.sel { border-color: #00A67E; background: #ECFDF5; color: #00A67E; }
+.ct-ckbtn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: #E8212E; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity .2s; font-family: inherit; }
+.ct-ckbtn:hover { opacity: .9; }
+.ct-spowered { text-align: center; font-size: 11px; color: var(--muted); margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.ct-flist { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ct-fbadge { padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+.ct-fb-blue { background: #EFF6FF; color: #0070F3; }
+.ct-fb-green { background: #ECFDF5; color: #00A67E; }
+.ct-codeblk { background: #111827; border-radius: 10px; padding: 20px; font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 12px; line-height: 1.8; overflow-x: auto; margin-bottom: 16px; position: relative; }
+.ct-codeblk .c-comment { color: #6B7280; }
+.ct-codeblk .c-key { color: #A78BFA; }
+.ct-codeblk .c-string { color: #34D399; }
+.ct-codeblk .c-num { color: #FB923C; }
+.ct-codeblk .c-fn { color: #60A5FA; }
+.ct-codeblk .c-op { color: #F9FAFB; }
+.ct-clang { position: absolute; top: 12px; right: 16px; font-size: 10px; color: #6B7280; letter-spacing: .08em; text-transform: uppercase; }
+.ct-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px; }
+.ct-collabel { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+@media (max-width: 700px) {
+  .ct-2col { grid-template-columns: 1fr; }
+  .ct-mprods { grid-template-columns: repeat(2, 1fr); }
+  .ct-mdash { grid-template-columns: 1fr; }
+  .ct-mside { display: none; }
+  .ct-kpi-row { flex-wrap: wrap; }
+  .ct-fdiag { min-width: 500px; }
+}
 </style>
 </head>
 <body>
@@ -519,6 +661,30 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
     <div class="hero-pill pill-store">🏪 Online Stores</div>
   </div>
 </div>
+
+<!-- ══ TAB NAVIGATION ══ -->
+<nav class="ct-nav">
+  <div class="ct-nav-inner">
+    <button class="ct-btn ct-active-arch" id="ctbtn-arch" onclick="showCtTab('arch')">
+      <span class="ct-icon" style="background:#f1f5f9">🏗️</span> Architecture
+    </button>
+    <button class="ct-btn" id="ctbtn-donor" onclick="showCtTab('donor')">
+      <span class="ct-icon" style="background:#EFF6FF">💙</span> Donor Experience
+    </button>
+    <button class="ct-btn" id="ctbtn-org" onclick="showCtTab('org')">
+      <span class="ct-icon" style="background:#ECFDF5">🏫</span> Org Dashboard
+    </button>
+    <button class="ct-btn" id="ctbtn-platform" onclick="showCtTab('platform')">
+      <span class="ct-icon" style="background:#FFF7ED">🎽</span> CI Platform
+    </button>
+    <button class="ct-btn" id="ctbtn-flow" onclick="showCtTab('flow')">
+      <span class="ct-icon" style="background:var(--stripe-bg)">⚡</span> How It Ties Together
+    </button>
+  </div>
+</nav>
+
+<!-- ══ PANEL: ARCHITECTURE ══ -->
+<div class="ct-panel active" id="ct-arch">
 
 <!-- ══ SILO VISUALIZATION ══ -->
 <div class="silo-section">
@@ -1910,10 +2076,641 @@ footer { text-align: center; padding: 28px 24px; color: var(--muted); font-size:
 </div>
 
 </div><!-- /sc wrapper -->
+</div><!-- /ct-arch -->
+
+<!-- ══ PANEL: DONOR EXPERIENCE ══ -->
+<div class="ct-panel" id="ct-donor">
+<div class="ct-inner">
+  <div class="ct-sh">
+    <div class="ct-eyebrow ct-eyebrow-donor">Consumer-Facing Donor</div>
+    <h2>The Donor Experience</h2>
+    <p>What a supporter sees — from discovering a campaign to buying a shirt and adding a donation, powered invisibly by Stripe.</p>
+  </div>
+
+  <div class="ct-mframe">
+    <div class="ct-mtbar">
+      <div class="ct-mdot" style="background:#FF5F57"></div>
+      <div class="ct-mdot" style="background:#FFBD2E"></div>
+      <div class="ct-mdot" style="background:#28CA41"></div>
+      <div class="ct-murl">customink.com/fundraising/riverside-pto-2025</div>
+    </div>
+    <div class="ct-mbody">
+      <div class="ct-camp-hdr">
+        <div class="ct-camp-img">👕</div>
+        <div>
+          <div class="ct-camp-title">Riverside Elementary PTO — Spirit Wear 2025</div>
+          <div class="ct-camp-org">Organized by Riverside PTO · Verified Nonprofit 501(c)(3)</div>
+          <div class="ct-flist">
+            <span class="ct-fbadge ct-fb-green">✓ Verified Organization</span>
+            <span class="ct-fbadge ct-fb-blue">Secure Checkout</span>
+          </div>
+        </div>
+      </div>
+      <div class="ct-pbar"><div class="ct-pfill" style="width:73%"></div></div>
+      <div class="ct-mstats">
+        <div class="ct-mstat"><strong>$7,320</strong> raised</div>
+        <div class="ct-mstat"><strong>183</strong> supporters</div>
+        <div class="ct-mstat"><strong>12 days</strong> left</div>
+        <div class="ct-mstat"><strong>$10,000</strong> goal</div>
+      </div>
+      <div class="ct-mprods">
+        <div class="ct-mprod"><div class="ct-mprod-img">👕</div><div class="ct-mprod-name">Classic Tee</div><div class="ct-mprod-price">$28</div></div>
+        <div class="ct-mprod" style="border-color:#E8212E"><div class="ct-mprod-img">🧢</div><div class="ct-mprod-name">Snapback Hat</div><div class="ct-mprod-price">$24</div></div>
+        <div class="ct-mprod"><div class="ct-mprod-img">🧥</div><div class="ct-mprod-name">Hoodie</div><div class="ct-mprod-price">$42</div></div>
+      </div>
+      <div class="ct-donatebox">
+        <h4>Add an extra donation to Riverside PTO</h4>
+        <div class="ct-damts">
+          <button class="ct-damt">$5</button>
+          <button class="ct-damt sel">$10</button>
+          <button class="ct-damt">$25</button>
+          <button class="ct-damt">$50</button>
+          <button class="ct-damt">Custom</button>
+        </div>
+      </div>
+      <button class="ct-ckbtn">Checkout — $34.00 + shipping</button>
+      <div class="ct-spowered">🔒 Secure checkout powered by <strong>Stripe</strong></div>
+    </div>
+  </div>
+
+  <div class="ct-sh" style="margin-top:8px">
+    <h2 style="font-size:22px">Donor Journey — Step by Step</h2>
+  </div>
+  <div class="ct-steps">
+    <div class="ct-step">
+      <div class="ct-snum ct-snum-donor">1</div>
+      <div class="ct-scon">
+        <h3>Discover a Campaign</h3>
+        <p>Donor follows a shared link from a teacher, coach, or social media post. Campaign page shows verified org badge, real-time progress bar, and product options.</p>
+        <div class="ct-tech">Stripe → account.updated webhook surfaces "verified" flag to campaign page in real-time</div>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum ct-snum-donor">2</div>
+      <div class="ct-scon">
+        <h3>Browse &amp; Choose Products</h3>
+        <p>Donor browses up to 6 apparel items set by the organizer with custom pricing. Each item's margin above Custom Ink's base cost goes to the fundraiser.</p>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum ct-snum-donor">3</div>
+      <div class="ct-scon">
+        <h3>Add a Standalone Donation</h3>
+        <p>Optional donation add-on (separate from product purchase) sent 100% to the nonprofit's connected account. Donor chooses a preset or custom amount.</p>
+        <div class="ct-tech">Separate charge + transfer → donation routes to nonprofit's Stripe connected account; product revenue routes differently</div>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum ct-snum-donor">4</div>
+      <div class="ct-scon">
+        <h3>Checkout — Stripe Payment Sheet</h3>
+        <p>Stripe's payment element surfaces: cards, Apple Pay, Google Pay, Link (1-click return checkout). The nonprofit's name appears on the donor's card statement via <code>on_behalf_of</code>.</p>
+        <div class="ct-tech">PaymentIntent with on_behalf_of: acct_xyz → "RIVERSIDE PTO" on bank statement, not "Custom Ink"</div>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum ct-snum-donor">5</div>
+      <div class="ct-scon">
+        <h3>Instant Confirmation &amp; Tax Receipt</h3>
+        <p>Email receipt with donation amount, org name, and EIN for tax purposes. Recurring donors see next billing date. Link saves payment method for future campaigns.</p>
+        <div class="ct-tech">payment_intent.succeeded → trigger receipt email; Stripe auto-generates 1099 data for org at year-end</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ct-cards">
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#EFF6FF">💳</div>
+      <h3>Every Payment Method, Zero Friction</h3>
+      <p>Apple Pay, Google Pay, Link (saved cards), buy-now-pay-later via Affirm — all available in the same Stripe Payment Element. No redirects.</p>
+      <span class="ct-stag">🔷 Stripe Payment Element</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#ECFDF5">🏦</div>
+      <h3>Org Name on Bank Statement</h3>
+      <p>Via Stripe's <code>on_behalf_of</code>, donors see "RIVERSIDE PTO" on their credit card statement — not "CUSTOM INK" — building trust and reducing chargebacks.</p>
+      <span class="ct-stag">🔷 Destination Charges</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#FFF7ED">🔄</div>
+      <h3>Recurring Monthly Donations</h3>
+      <p>Donors can opt into a monthly recurring gift during checkout. Stripe manages billing, retries failed payments, and sends renewal receipts automatically.</p>
+      <span class="ct-stag">🔷 Stripe Subscriptions</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:var(--stripe-bg)">🛡️</div>
+      <h3>3D Secure &amp; Radar Fraud Protection</h3>
+      <p>Stripe Radar scores every transaction in real-time. Suspicious donations trigger 3DS authentication. No chargebacks for fraudulent "donations" hit the org.</p>
+      <span class="ct-stag">🔷 Stripe Radar</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#FEF3C7">📧</div>
+      <h3>Donor-Managed Receipts</h3>
+      <p>Donors access a self-serve portal to download receipts, update payment methods, pause or cancel recurring gifts — all without calling Custom Ink support.</p>
+      <span class="ct-stag">🔷 Customer Portal</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#FCE7F3">✅</div>
+      <h3>Nonprofit Verification Badge</h3>
+      <p>Only orgs who complete Stripe Connect KYC (EIN, 501(c)(3) docs) show the verified badge on their campaign page — donors instantly know funds reach a real org.</p>
+      <span class="ct-stag">🔷 Connect Onboarding</span>
+    </div>
+  </div>
+</div>
+</div><!-- /ct-donor -->
+
+<!-- ══ PANEL: ORG DASHBOARD ══ -->
+<div class="ct-panel" id="ct-org">
+<div class="ct-inner">
+  <div class="ct-sh">
+    <div class="ct-eyebrow ct-eyebrow-org">Donee / Organization Backend</div>
+    <h2>The Nonprofit &amp; Organizer Dashboard</h2>
+    <p>What a school PTO, charity, or team sees — from account setup to live campaign tracking to instant payouts.</p>
+  </div>
+
+  <div class="ct-mframe">
+    <div class="ct-mtbar">
+      <div class="ct-mdot" style="background:#FF5F57"></div>
+      <div class="ct-mdot" style="background:#FFBD2E"></div>
+      <div class="ct-mdot" style="background:#28CA41"></div>
+      <div class="ct-murl">fundraising.customink.com/org/riverside-pto/dashboard</div>
+    </div>
+    <div class="ct-mdash">
+      <div class="ct-mside">
+        <div class="ct-mside-item" style="color:rgba(255,255,255,.4);font-size:11px;padding-bottom:4px">Riverside PTO</div>
+        <div class="ct-mside-item act">📊 Overview</div>
+        <div class="ct-mside-item">🎽 Campaigns</div>
+        <div class="ct-mside-item">💸 Payouts</div>
+        <div class="ct-mside-item">👥 Donors</div>
+        <div class="ct-mside-item">📄 Tax Reports</div>
+        <div class="ct-mside-item">⚙️ Account</div>
+      </div>
+      <div class="ct-mmain">
+        <div class="ct-kpi-row">
+          <div class="ct-kpi">
+            <div class="ct-kpi-label">Total Raised</div>
+            <div class="ct-kpi-value">$7,320</div>
+            <div class="ct-kpi-sub ct-kpi-up">↑ 23% vs last campaign</div>
+          </div>
+          <div class="ct-kpi">
+            <div class="ct-kpi-label">Next Payout</div>
+            <div class="ct-kpi-value">$5,840</div>
+            <div class="ct-kpi-sub">Est. Jun 18 · ACH</div>
+          </div>
+          <div class="ct-kpi">
+            <div class="ct-kpi-label">Supporters</div>
+            <div class="ct-kpi-value">183</div>
+            <div class="ct-kpi-sub">34 recurring donors</div>
+          </div>
+        </div>
+        <div class="ct-mchart">
+          <div class="ct-mchart-title">Daily Donations — Last 14 Days</div>
+          <div class="ct-mbars">
+            <div class="ct-mbar" style="height:30%"></div>
+            <div class="ct-mbar" style="height:45%"></div>
+            <div class="ct-mbar" style="height:60%"></div>
+            <div class="ct-mbar" style="height:40%"></div>
+            <div class="ct-mbar" style="height:80%"></div>
+            <div class="ct-mbar" style="height:55%"></div>
+            <div class="ct-mbar" style="height:70%"></div>
+            <div class="ct-mbar" style="height:90%"></div>
+            <div class="ct-mbar" style="height:65%"></div>
+            <div class="ct-mbar" style="height:100%"></div>
+            <div class="ct-mbar" style="height:85%"></div>
+            <div class="ct-mbar" style="height:75%"></div>
+            <div class="ct-mbar" style="height:60%"></div>
+            <div class="ct-mbar" style="height:50%"></div>
+          </div>
+        </div>
+        <div class="ct-mpo-row">
+          <div class="ct-mpo-item">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Last Payout</div>
+            <div style="font-weight:700">$3,200.00</div>
+            <div><span class="ct-pst ct-pst-paid">Paid</span> · May 21</div>
+          </div>
+          <div class="ct-mpo-item">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Pending</div>
+            <div style="font-weight:700">$5,840.00</div>
+            <div><span class="ct-pst ct-pst-pending">Processing</span></div>
+          </div>
+          <div class="ct-mpo-item">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">In Transit</div>
+            <div style="font-weight:700">$0.00</div>
+            <div><span class="ct-pst ct-pst-transit">None</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ct-sh" style="margin-top:16px">
+    <h2 style="font-size:22px">Org Onboarding → Payout Lifecycle</h2>
+  </div>
+  <div class="ct-steps">
+    <div class="ct-step">
+      <div class="ct-snum ct-snum-org">1</div>
+      <div class="ct-scon">
+        <h3>Express Onboarding (15 min, no PDFs)</h3>
+        <p>Org creates account on Custom Ink. Stripe's hosted Connect Onboarding collects EIN, 501(c)(3) classification, legal name, address, and a beneficial owner. Stripe handles all KYC — no custom compliance code.</p>
+        <div class="ct-tech">stripe.accountLinks.create({ type: 'account_onboarding', account: acct_xyz, business_type: 'non_profit' })</div>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum ct-snum-org">2</div>
+      <div class="ct-scon">
+        <h3>Bank Account Verified via Financial Connections</h3>
+        <p>During onboarding, the org connects their bank account with Stripe Financial Connections — instant ownership verification, no micro-deposit wait. Prevents payout fraud.</p>
+        <div class="ct-tech">financial_connections.sessions.create → bank ownership verified before first payout</div>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum ct-snum-org">3</div>
+      <div class="ct-scon">
+        <h3>Launch Campaign &amp; Watch Funds Flow In</h3>
+        <p>Embedded Stripe components in the org dashboard show real-time payment status, individual donor amounts, and product vs. donation breakdown — without logging into a separate Stripe Dashboard.</p>
+        <div class="ct-tech">Stripe Embedded Components: &lt;stripe-payments&gt; &lt;stripe-payouts&gt; embedded in org portal</div>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum ct-snum-org">4</div>
+      <div class="ct-scon">
+        <h3>Campaign Closes → Funds Available</h3>
+        <p>Custom Ink triggers payout after orders are processed and shipped. Org sees exact payout amount, date, and bank account destination. Instant Payouts optionally available for an additional fee.</p>
+        <div class="ct-tech">stripe.payouts.create({ amount, currency: 'usd' }, { stripeAccount: acct_xyz })</div>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum ct-snum-org">5</div>
+      <div class="ct-scon">
+        <h3>1099-K &amp; Tax Reporting — Automated</h3>
+        <p>Stripe generates 1099 forms for orgs exceeding IRS thresholds. Orgs download year-end reports directly from their dashboard for Form 990 filings — no manual reconciliation.</p>
+        <div class="ct-tech">Stripe auto-generates 1099-K; reporting API → org annual summary CSV</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ct-cards">
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#ECFDF5">🔗</div>
+      <h3>One-Click Connect Onboarding</h3>
+      <p>Stripe's hosted onboarding adjusts dynamically for nonprofits — collects EIN, officer details, and banking info. No paper forms, no email attachments.</p>
+      <span class="ct-stag">🔷 Connect Express Accounts</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#EFF6FF">⚡</div>
+      <h3>Instant Payouts Available</h3>
+      <p>After campaign close, orgs can choose instant payout to a debit card (funds in ~30 min) vs. standard ACH (1-2 business days). Platform controls availability.</p>
+      <span class="ct-stag">🔷 Stripe Instant Payouts</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:var(--stripe-bg)">📊</div>
+      <h3>Embedded Financial Dashboard</h3>
+      <p>Custom Ink embeds Stripe's pre-built UI components directly — org sees payouts, balance, and disputes all inside the Custom Ink portal. No separate login.</p>
+      <span class="ct-stag">🔷 Embedded Components</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#FEF3C7">📬</div>
+      <h3>Automated Donor Acknowledgment</h3>
+      <p>Stripe webhooks trigger donation receipts in real-time. Orgs can customize receipt templates with their logo and EIN for IRS-compliant donor acknowledgments.</p>
+      <span class="ct-stag">🔷 Stripe Webhooks</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#FCE7F3">🔄</div>
+      <h3>Recurring Donor Management</h3>
+      <p>Org dashboard shows all monthly donors, giving amounts, renewal dates, and churn risk. Stripe Billing handles failed payment retries and sends donor dunning emails automatically.</p>
+      <span class="ct-stag">🔷 Stripe Billing</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#FFF7ED">🌎</div>
+      <h3>Multi-Currency for Global Orgs</h3>
+      <p>International nonprofits and alumni groups receive payouts in their local currency. Stripe handles FX at competitive rates — Hyperwallet's core advantage, now built-in.</p>
+      <span class="ct-stag">🔷 Multi-Currency Payouts</span>
+    </div>
+  </div>
+</div>
+</div><!-- /ct-org -->
+
+<!-- ══ PANEL: CI PLATFORM ══ -->
+<div class="ct-panel" id="ct-platform">
+<div class="ct-inner">
+  <div class="ct-sh">
+    <div class="ct-eyebrow ct-eyebrow-platform">Custom Ink Platform Layer</div>
+    <h2>Custom Ink's Command Center</h2>
+    <p>What the Custom Ink team controls — risk, compliance, fees, payouts, and cross-platform analytics across thousands of campaigns.</p>
+  </div>
+
+  <div class="ct-sh" style="margin-top:8px">
+    <h2 style="font-size:22px">Migration: Hyperwallet → Stripe Connect</h2>
+  </div>
+  <div class="ct-ctable">
+    <table>
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th class="ct-th-hyper">Hyperwallet (Current)</th>
+          <th class="ct-th-stripe">Stripe Connect (Target)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Payout Methods</strong></td><td>PayPal, Check, Bank, Prepaid Card, Cash Pickup</td><td class="ct-chk">Bank (ACH/Wire), Debit Card, Instant Payout, International Wire</td></tr>
+        <tr><td><strong>KYC / Onboarding</strong></td><td>Manual portal, API-driven, separate PayPal account needed</td><td class="ct-chk">Fully hosted, no separate account needed, embedded option</td></tr>
+        <tr><td><strong>Platform Dashboard</strong></td><td class="ct-prt">Separate Hyperwallet admin portal</td><td class="ct-chk">Unified Stripe Dashboard + Sigma SQL analytics</td></tr>
+        <tr><td><strong>Donor Checkout</strong></td><td class="ct-crs">Separate payment processor required for checkout</td><td class="ct-chk">Single stack: checkout + payouts in one platform</td></tr>
+        <tr><td><strong>Fraud Tooling</strong></td><td class="ct-prt">Basic PayPal seller protection</td><td class="ct-chk">Stripe Radar with ML scoring, rules engine, 3DS</td></tr>
+        <tr><td><strong>Recurring Donations</strong></td><td class="ct-crs">Not natively supported — requires separate billing system</td><td class="ct-chk">Native Stripe Billing with subscription management</td></tr>
+        <tr><td><strong>Embedded UI for Orgs</strong></td><td class="ct-prt">Branded "Pay Portal" (white-label redirect)</td><td class="ct-chk">Fully embedded components, no redirect, platform-branded</td></tr>
+        <tr><td><strong>Payout Scheduling</strong></td><td class="ct-prt">Platform controls, but separate API paradigm</td><td class="ct-chk">Full programmatic control, manual triggers, campaign-close hooks</td></tr>
+        <tr><td><strong>Tax Reporting (1099)</strong></td><td class="ct-chk">Yes — core Hyperwallet feature</td><td class="ct-chk">Yes — Stripe auto-generates 1099-K</td></tr>
+        <tr><td><strong>Multi-Currency</strong></td><td class="ct-chk">240+ countries, 50+ currencies (core advantage)</td><td class="ct-chk">135+ currencies, 46+ countries (sufficient for most US-based)</td></tr>
+        <tr><td><strong>Reserve / Hold Management</strong></td><td class="ct-prt">Platform can hold payouts</td><td class="ct-chk">Granular reserve management per connected account</td></tr>
+        <tr><td><strong>Statement Descriptor</strong></td><td class="ct-crs">Platform name shown to donors</td><td class="ct-chk">Org name shown via on_behalf_of</td></tr>
+        <tr><td><strong>Nonprofit Specific</strong></td><td class="ct-crs">No nonprofit-specific features</td><td class="ct-chk">business_type=non_profit, EIN collection, 501(c)(3) flow</td></tr>
+        <tr><td><strong>Developer Support</strong></td><td class="ct-crs"><strong>Known pain point.</strong> Slow response times, sparse documentation, limited self-serve troubleshooting.</td><td class="ct-chk">24/7 support, 500k+ developer community, exhaustive docs, dedicated Stripe Partnerships team.</td></tr>
+        <tr><td><strong>Standard Reporting</strong></td><td class="ct-crs">Basic CSV exports only. No cross-account aggregation, no SQL access. Finance teams stitch reports manually.</td><td class="ct-chk">Stripe Sigma: full SQL across all connected accounts. Auto 1099-K. Real-time webhooks. Pre-built reconciliation reports.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="ct-sh">
+    <h2 style="font-size:22px">Platform Superpowers with Stripe</h2>
+  </div>
+  <div class="ct-cards">
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#FFF7ED">💰</div>
+      <h3>Flexible Platform Fee Models</h3>
+      <p>Custom Ink takes <code>application_fee_amount</code> on each charge. Zero fee for nonprofits, small % for individual organizers. Configurable per campaign type without code changes.</p>
+      <span class="ct-stag">🔷 Application Fees</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:var(--stripe-bg)">🔍</div>
+      <h3>Sigma — Cross-Campaign Analytics</h3>
+      <p>SQL queries across all connected accounts: campaign ROI, payout reconciliation, fee revenue by org tier, donor LTV. No data warehouse needed for core reporting.</p>
+      <span class="ct-stag">🔷 Stripe Sigma</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#ECFDF5">⏸️</div>
+      <h3>Payout Pause &amp; Reserve Holds</h3>
+      <p>If a campaign shows fraud signals, Custom Ink can pause payouts to that connected account instantly via API. Holds a reserve before funds are disbursed. Critical for "charity scam" prevention.</p>
+      <span class="ct-stag">🔷 Platform Controls</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#EFF6FF">📅</div>
+      <h3>Campaign-Close Triggered Payouts</h3>
+      <p>Rather than daily automatic payouts, Custom Ink triggers payouts programmatically after campaign close + order fulfillment confirmation — matching their business logic exactly.</p>
+      <span class="ct-stag">🔷 Manual Payouts API</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#FCE7F3">🔀</div>
+      <h3>Split Payments: Product + Donation</h3>
+      <p>One donor payment → two transfers: apparel margin to Custom Ink's account, donation to the nonprofit's connected account. Separate Charges &amp; Transfers makes this clean.</p>
+      <span class="ct-stag">🔷 Separate Charges &amp; Transfers</span>
+    </div>
+    <div class="ct-card">
+      <div class="ct-card-icon" style="background:#FEF3C7">🤖</div>
+      <h3>Radar Rules for Fundraising Fraud</h3>
+      <p>Block donations from high-risk IPs, flag velocity spikes (common in charity fraud), require 3DS on first-time donors above $200. All configurable without engineering.</p>
+      <span class="ct-stag">🔷 Radar for Teams</span>
+    </div>
+  </div>
+
+  <div class="ct-sh">
+    <h2 style="font-size:22px">Key API Architecture</h2>
+  </div>
+  <div class="ct-2col">
+    <div>
+      <div class="ct-collabel">Creating a Connected Org Account (V2)</div>
+      <div class="ct-codeblk">
+        <span class="ct-clang">node.js</span>
+<span class="c-comment">// Stripe Connect v2 — recipient account</span>
+<span class="c-key">const</span> account = <span class="c-key">await</span> stripe.<span class="c-fn">accounts</span>.<span class="c-fn">create</span>({
+  <span class="c-key">controller</span>: {
+    <span class="c-key">requirement_collection</span>: <span class="c-string">'stripe'</span>,
+    <span class="c-key">stripe_dashboard</span>: { <span class="c-key">type</span>: <span class="c-string">'express'</span> },
+    <span class="c-key">fees</span>: { <span class="c-key">payer</span>: <span class="c-string">'application'</span> },
+    <span class="c-key">losses</span>: { <span class="c-key">payments</span>: <span class="c-string">'stripe'</span> }
+  },
+  <span class="c-key">capabilities</span>: {
+    <span class="c-key">transfers</span>: { <span class="c-key">requested</span>: <span class="c-num">true</span> }
+  },
+  <span class="c-key">business_type</span>: <span class="c-string">'non_profit'</span>,
+  <span class="c-key">metadata</span>: { <span class="c-key">org_id</span>: <span class="c-string">'riverside_pto'</span> }
+});
+      </div>
+    </div>
+    <div>
+      <div class="ct-collabel">Destination Charge with Fee Split</div>
+      <div class="ct-codeblk">
+        <span class="ct-clang">node.js</span>
+<span class="c-comment">// Donor pays $34: $24 shirt + $10 donation</span>
+<span class="c-key">const</span> intent = <span class="c-key">await</span> stripe.<span class="c-fn">paymentIntents</span>.<span class="c-fn">create</span>({
+  <span class="c-key">amount</span>: <span class="c-num">3400</span>,
+  <span class="c-key">currency</span>: <span class="c-string">'usd'</span>,
+  <span class="c-key">on_behalf_of</span>: <span class="c-string">'acct_riverside_pto'</span>,
+  <span class="c-key">transfer_data</span>: {
+    <span class="c-key">destination</span>: <span class="c-string">'acct_riverside_pto'</span>,
+    <span class="c-key">amount</span>: <span class="c-num">1000</span>  <span class="c-comment">// $10 donation only</span>
+  },
+  <span class="c-key">application_fee_amount</span>: <span class="c-num">0</span>
+});
+      </div>
+    </div>
+  </div>
+  <div class="ct-2col">
+    <div>
+      <div class="ct-collabel">Campaign-Close Payout Trigger</div>
+      <div class="ct-codeblk">
+        <span class="ct-clang">node.js</span>
+<span class="c-comment">// After campaign close + fulfillment confirmed</span>
+<span class="c-key">async function</span> <span class="c-fn">disburseCampaign</span>(campaign) {
+  <span class="c-key">const</span> balance = <span class="c-key">await</span> stripe.<span class="c-fn">balance</span>.<span class="c-fn">retrieve</span>(
+    {}, { stripeAccount: campaign.stripeAccountId }
+  );
+  <span class="c-key">const</span> available = balance.available[<span class="c-num">0</span>].amount;
+  <span class="c-key">await</span> stripe.<span class="c-fn">payouts</span>.<span class="c-fn">create</span>(
+    { <span class="c-key">amount</span>: available, <span class="c-key">currency</span>: <span class="c-string">'usd'</span> },
+    { <span class="c-key">stripeAccount</span>: campaign.stripeAccountId }
+  );
+}
+      </div>
+    </div>
+    <div>
+      <div class="ct-collabel">Fraud Payout Pause</div>
+      <div class="ct-codeblk">
+        <span class="ct-clang">node.js</span>
+<span class="c-comment">// Flag suspicious org — hold payouts</span>
+<span class="c-key">await</span> stripe.<span class="c-fn">accounts</span>.<span class="c-fn">update</span>(
+  <span class="c-string">'acct_suspicious_org'</span>,
+  {
+    <span class="c-key">settings</span>: {
+      <span class="c-key">payouts</span>: {
+        <span class="c-key">schedule</span>: { <span class="c-key">delay_days</span>: <span class="c-num">14</span> }
+      }
+    }
+  }
+);
+<span class="c-comment">// account.updated → internal Slack alert</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- /ct-platform -->
+
+<!-- ══ PANEL: HOW IT TIES TOGETHER ══ -->
+<div class="ct-panel" id="ct-flow">
+<div class="ct-inner">
+  <div class="ct-sh">
+    <div class="ct-eyebrow ct-eyebrow-flow">End-to-End Architecture</div>
+    <h2>How It All Ties Together</h2>
+    <p>The complete money and data flow — from donor credit card to nonprofit bank account — with Custom Ink as the Stripe Connect platform in the middle.</p>
+  </div>
+
+  <div class="ct-mflow">
+    <h3>Money Flow: One Donor Payment</h3>
+    <div class="ct-fdiag">
+      <div class="ct-fnode">
+        <div class="ct-fbox ct-fbox-donor">💳 Donor<br><small>$34 total</small></div>
+        <div class="ct-fnode-lbl">pays via Stripe</div>
+      </div>
+      <div class="ct-farrow"><div class="ct-farrow-line"></div><div class="ct-farrow-lbl">PaymentIntent</div></div>
+      <div class="ct-fnode">
+        <div class="ct-fbox ct-fbox-stripe">⚡ Stripe<br><small>Processes &amp; routes</small></div>
+        <div class="ct-fnode-lbl">payment network</div>
+      </div>
+      <div class="ct-farrow"><div class="ct-farrow-line"></div><div class="ct-farrow-lbl">Transfer $10</div></div>
+      <div class="ct-fnode">
+        <div class="ct-fbox ct-fbox-org">🏫 Org Account<br><small>+$10 donation</small></div>
+        <div class="ct-fnode-lbl">connected account</div>
+      </div>
+      <div class="ct-farrow"><div class="ct-farrow-line"></div><div class="ct-farrow-lbl">Payout (ACH)</div></div>
+      <div class="ct-fnode">
+        <div class="ct-fbox ct-fbox-org">🏦 Org Bank<br><small>funds arrive</small></div>
+        <div class="ct-fnode-lbl">1–2 business days</div>
+      </div>
+    </div>
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px">Platform Revenue Split on Same Transaction</div>
+      <div class="ct-fdiag">
+        <div class="ct-fnode">
+          <div class="ct-fbox ct-fbox-donor">💳 Donor<br><small>$34</small></div>
+          <div class="ct-fnode-lbl">total charge</div>
+        </div>
+        <div class="ct-farrow"><div class="ct-farrow-line"></div><div class="ct-farrow-lbl">$34 charge</div></div>
+        <div class="ct-fnode">
+          <div class="ct-fbox ct-fbox-platform">🎽 Custom Ink<br><small>$24 product margin</small></div>
+          <div class="ct-fnode-lbl">platform account</div>
+        </div>
+        <div class="ct-farrow"><div class="ct-farrow-line"></div><div class="ct-farrow-lbl">$10 transfer</div></div>
+        <div class="ct-fnode">
+          <div class="ct-fbox ct-fbox-org">🏫 Org<br><small>$10 donation</small></div>
+          <div class="ct-fnode-lbl">connected acct</div>
+        </div>
+        <div class="ct-farrow"><div class="ct-farrow-line"></div><div class="ct-farrow-lbl">post-campaign</div></div>
+        <div class="ct-fnode">
+          <div class="ct-fbox ct-fbox-org">🏦 Org Bank<br><small>net payout</small></div>
+          <div class="ct-fnode-lbl">ACH or instant</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ct-sh">
+    <h2 style="font-size:22px">Complete Campaign Lifecycle</h2>
+  </div>
+  <div class="ct-steps">
+    <div class="ct-step">
+      <div class="ct-snum" style="background:linear-gradient(135deg,#EFF6FF,#ECFDF5);color:var(--stripe)">①</div>
+      <div class="ct-scon">
+        <h3>Org Onboards (One-Time)</h3>
+        <p>Nonprofit clicks "Create Fundraiser" on Custom Ink. Stripe Connect Onboarding opens in-flow — collects EIN, officer info, bank account (verified via Financial Connections). Custom Ink's backend stores the Stripe Account ID. Org is now a connected account.</p>
+        <div class="ct-tech">POST /v1/accounts → GET account_link → org completes KYC → webhook: account.updated (transfers_enabled: true)</div>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum" style="background:linear-gradient(135deg,#FFF7ED,#FEF3C7);color:#FF6B35">②</div>
+      <div class="ct-scon">
+        <h3>Custom Ink Sets Campaign Parameters</h3>
+        <p>Custom Ink platform team configures: product pricing, campaign duration, whether standalone donations are enabled, payout schedule (manual at campaign close), and whether platform takes an application fee (0% for nonprofits, 2–5% for groups).</p>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum" style="background:linear-gradient(135deg,#EFF6FF,var(--stripe-bg));color:#0070F3">③</div>
+      <div class="ct-scon">
+        <h3>Donors Purchase &amp; Give</h3>
+        <p>Donor loads the campaign page, selects products, optionally adds a donation. Stripe Payment Element shows Apple Pay, Google Pay, Link, cards. PaymentIntent is created with <code>on_behalf_of</code> set to the org's connected account ID.</p>
+        <div class="ct-tech">POST /v1/payment_intents { on_behalf_of: acct_xyz, transfer_data: { destination: acct_xyz, amount: donation_cents } }</div>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum" style="background:linear-gradient(135deg,var(--stripe-bg),#ECFDF5);color:var(--stripe)">④</div>
+      <div class="ct-scon">
+        <h3>Stripe Routes Funds &amp; Runs Fraud Checks</h3>
+        <p>Radar scores every transaction in real-time. Destination charge sends product margin to Custom Ink's Stripe account. Donation transfer routes to org's connected account balance — where it sits until payout is triggered.</p>
+        <div class="ct-tech">Radar ML score → allow/block/3DS → funds split: $24 stays on platform, $10 transferred to acct_xyz</div>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum" style="background:linear-gradient(135deg,#ECFDF5,#EFF6FF);color:#00A67E">⑤</div>
+      <div class="ct-scon">
+        <h3>Campaign Closes — Custom Ink Triggers Payout</h3>
+        <p>After all orders are printed and shipped, Custom Ink's backend calls <code>stripe.payouts.create</code> on behalf of the connected account. Org receives funds via ACH in 1–2 days or instantly if enabled. Org sees payout status in their embedded dashboard.</p>
+        <div class="ct-tech">POST /v1/payouts { amount: balance_available } + stripeAccount: acct_xyz header → payout.paid webhook → notify org</div>
+      </div>
+    </div>
+    <div class="ct-step">
+      <div class="ct-snum" style="background:linear-gradient(135deg,#FEF3C7,#FCE7F3);color:#FF6B35">⑥</div>
+      <div class="ct-scon">
+        <h3>Year-End: Tax &amp; Reporting</h3>
+        <p>Stripe auto-generates 1099-K forms for orgs above the IRS threshold. Custom Ink's Sigma queries pull cross-campaign analytics: total donated, platform fee revenue, top orgs, and donor LTV across all campaigns. Orgs export donation reports for Form 990.</p>
+        <div class="ct-tech">Stripe Sigma: SELECT SUM(amount) FROM charges WHERE transfer_destination = 'acct_xyz' GROUP BY month</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ct-hl ct-hl-stripe">
+    <h4>Why Migrate from Hyperwallet → Stripe Connect?</h4>
+    <p>Hyperwallet (PayPal Advanced Payouts) is purpose-built for <em>outbound</em> mass payouts to gig workers — but requires a separate payment processor for donor-facing checkout. <strong>Stripe Connect collapses the entire stack</strong>: checkout, routing, fraud, payouts, and tax reporting all live in one API. This eliminates reconciliation between two systems, gives donors a better checkout experience (Apple Pay, Link), shows the org's name on bank statements, and gives Custom Ink a single data model for analytics.</p>
+  </div>
+  <div class="ct-2col">
+    <div class="ct-hl ct-hl-donor" style="margin-bottom:0">
+      <h4>What Donors Gain</h4>
+      <p>One-click Apple Pay / Google Pay checkout. Org name on their bank statement. Instant receipt with EIN. Link saves their card for future campaigns. Better fraud protection means fewer false declines.</p>
+    </div>
+    <div class="ct-hl ct-hl-org" style="margin-bottom:0">
+      <h4>What Orgs Gain</h4>
+      <p>15-minute onboarding with no paper forms. Real-time dashboard embedded in Custom Ink portal. Instant Payouts option. Automated tax documents. No need to manage a PayPal account.</p>
+    </div>
+  </div>
+  <div class="ct-hl ct-hl-platform" style="margin-top:24px">
+    <h4>What Custom Ink Gains</h4>
+    <p>Single platform for both checkout and payouts — one API, one data model, one support team. Programmatic payout triggers aligned to order fulfillment. Radar fraud protection across all campaigns. Sigma for cross-platform analytics. The ability to offer recurring monthly donations — a revenue and retention lever unavailable with Hyperwallet alone.</p>
+  </div>
+</div>
+</div><!-- /ct-flow -->
 
 <footer>Custom Ink × Stripe Connect — Platform Consolidation Vision · Internal use only</footer>
 
 <script>
+  function showCtTab(name) {
+    document.querySelectorAll('.ct-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.ct-btn').forEach(b => {
+      b.className = b.className.replace(/\s*ct-active-\w+/g, '');
+    });
+    document.getElementById('ct-' + name).classList.add('active');
+    document.getElementById('ctbtn-' + name).classList.add('ct-active-' + name);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Amount button interactivity in Donor tab
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('ct-damt')) {
+      const parent = e.target.closest('.ct-damts');
+      if (parent) {
+        parent.querySelectorAll('.ct-damt').forEach(b => b.classList.remove('sel'));
+        e.target.classList.add('sel');
+      }
+    }
+  });
+
   function setState(s) {
     document.documentElement.setAttribute('data-state', s);
   }
