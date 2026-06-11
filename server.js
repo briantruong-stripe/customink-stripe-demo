@@ -344,6 +344,64 @@ app.delete('/api/connect/account/:id', async (req, res) => {
 app.post('/api/connect/seed-mock-data', async (req, res) => {
   try {
     const { account_id } = req.body;
+
+    // Auto-complete onboarding if transfers capability isn't active yet
+    const acct = await stripe.accounts.retrieve(account_id);
+    if (acct.capabilities?.transfers !== 'active') {
+      const biz = acct.business_type || 'non_profit';
+      const isCompany = biz !== 'individual';
+      const isAppCollected = acct.controller?.requirement_collection === 'application';
+
+      const updateParams = {
+        business_profile: {
+          mcc: '5699',
+          url: 'https://demo.customink.com',
+          product_description: 'Custom apparel and merchandise',
+        },
+      };
+      if (isAppCollected) {
+        updateParams.tos_acceptance = { date: Math.floor(Date.now() / 1000), ip: '127.0.0.1' };
+      }
+      if (isCompany) {
+        updateParams.company = {
+          name: 'Demo Org (Test)', tax_id: '000000000',
+          address: { line1: '123 Main St', city: 'San Francisco', state: 'CA', postal_code: '94102', country: 'US' },
+          phone: '0000000000',
+        };
+      } else {
+        updateParams.individual = {
+          first_name: 'Jenny', last_name: 'Rosen',
+          dob: { day: 1, month: 1, year: 1901 }, ssn_last_4: '0000',
+          email: 'jenny@example.com', phone: '0000000000',
+          address: { line1: '123 Main St', city: 'San Francisco', state: 'CA', postal_code: '94102', country: 'US' },
+        };
+      }
+      await stripe.accounts.update(account_id, updateParams);
+
+      if (isCompany) {
+        const persons = await stripe.accounts.listPersons(account_id, { limit: 5 });
+        const hasRep = persons.data.some(p => p.relationship?.representative);
+        if (!hasRep) {
+          await stripe.accounts.createPerson(account_id, {
+            first_name: 'Jenny', last_name: 'Rosen',
+            dob: { day: 1, month: 1, year: 1901 }, ssn_last_4: '0000',
+            email: 'jenny@example.com', phone: '0000000000',
+            address: { line1: '123 Main St', city: 'San Francisco', state: 'CA', postal_code: '94102', country: 'US' },
+            relationship: { representative: true, title: 'Director', percent_ownership: 25 },
+          });
+        }
+      }
+      const extAccounts = await stripe.accounts.listExternalAccounts(account_id, { object: 'bank_account', limit: 1 });
+      if (extAccounts.data.length === 0) {
+        await stripe.accounts.createExternalAccount(account_id, {
+          external_account: {
+            object: 'bank_account', country: 'US', currency: 'usd',
+            routing_number: '110000000', account_number: '000123456789',
+          },
+        });
+      }
+    }
+
     const mockTransfers = [
       { amount: 24750, description: 'Campaign payout — Fall Spirit Tees (127 orders)', metadata: { campaign: 'fall-spirit-2024', orders: '127' } },
       { amount: 18320, description: 'Campaign payout — Winter Fundraiser (94 orders)', metadata: { campaign: 'winter-fundraiser-2024', orders: '94' } },
