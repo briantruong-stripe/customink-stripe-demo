@@ -283,6 +283,17 @@ app.get('/api/connect/transfers', async (req, res) => {
   }
 });
 
+// ── Connect: List transfers to a specific account ─────────────────
+app.get('/api/connect/transfers-for/:account_id', async (req, res) => {
+  try {
+    const transfers = await stripe.transfers.list({ limit: 20, destination: req.params.account_id });
+    res.json({ transfers: transfers.data });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Connect: List payouts for connected account ───────────────────
 app.get('/api/connect/payouts/:account_id', async (req, res) => {
   try {
