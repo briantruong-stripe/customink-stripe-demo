@@ -266,6 +266,22 @@ html[data-state="current"] .page-header h1 em { color: #FA3C00; }
 }
 .partial-input:focus { border-color: var(--stripe); }
 .partial-hint { font-size: 12px; color: var(--muted); }
+.item-select-row { display: none; flex-direction: column; gap: 8px; }
+.item-select-row.visible { display: flex; }
+.item-check-list { display: flex; flex-direction: column; gap: 6px; }
+.item-check-label {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer;
+  transition: border-color .18s, background .18s;
+}
+.item-check-label:hover { border-color: var(--stripe); background: var(--stripe-bg); }
+.item-check-label input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--stripe); cursor: pointer; flex-shrink: 0; }
+.item-check-label input[type=checkbox]:checked ~ .item-check-name { color: var(--stripe); }
+.item-check-label:has(input:checked) { border-color: var(--stripe); background: var(--stripe-bg); }
+.item-check-emoji { font-size: 18px; flex-shrink: 0; }
+.item-check-name { flex: 1; font-size: 13px; font-weight: 600; }
+.item-check-meta { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+.item-check-price { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
 .refund-reason-select {
   width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
   padding: 10px 14px; font-size: 13px; outline: none; transition: border-color .18s; background: #fff;
@@ -796,6 +812,30 @@ html[data-state="current"] .page-header h1 em { color: #FA3C00; }
               <div class="partial-hint">Max refundable: <strong>$90.00</strong></div>
             </div>
 
+            <div class="item-select-row" id="item-row">
+              <div class="rc-label">Select items to refund</div>
+              <div class="item-check-list">
+                <label class="item-check-label">
+                  <input type="checkbox" class="item-check" data-price="56.00" onchange="updateSummary()">
+                  <span class="item-check-emoji">👕</span>
+                  <span class="item-check-name">Classic Tee — Red / L<span class="item-check-meta">Qty: 2 · Custom design "Go Riverside!"</span></span>
+                  <span class="item-check-price">$56.00</span>
+                </label>
+                <label class="item-check-label">
+                  <input type="checkbox" class="item-check" data-price="24.00" onchange="updateSummary()">
+                  <span class="item-check-emoji">🧢</span>
+                  <span class="item-check-name">Snapback Hat — Black<span class="item-check-meta">Qty: 1</span></span>
+                  <span class="item-check-price">$24.00</span>
+                </label>
+                <label class="item-check-label">
+                  <input type="checkbox" class="item-check" data-price="10.00" onchange="updateSummary()">
+                  <span class="item-check-emoji">💚</span>
+                  <span class="item-check-name">Donation to Riverside PTO<span class="item-check-meta">Standalone donation</span></span>
+                  <span class="item-check-price">$10.00</span>
+                </label>
+              </div>
+            </div>
+
             <div>
               <div class="rc-label">Reason</div>
               <select class="refund-reason-select" id="refund-reason" onchange="updateSummary()">
@@ -908,7 +948,7 @@ html[data-state="current"] .page-header h1 em { color: #FA3C00; }
       <h2 class="sf">Manual Chargeback Queue (Today)</h2>
     </div>
 
-    <div class="cb-sim">
+    <div class="cb-sim sc">
       <div class="cb-sim-header">
         <div class="cb-sim-title">
           🛡️ Dispute Management
@@ -1245,20 +1285,32 @@ html[data-state="current"] .page-header h1 em { color: #FA3C00; }
     ['full','partial','item'].forEach(t => {
       document.getElementById('btn-' + t).classList.toggle('selected', t === type);
     });
-    const partialRow = document.getElementById('partial-row');
-    partialRow.classList.toggle('visible', type === 'partial');
+    document.getElementById('partial-row').classList.toggle('visible', type === 'partial');
+    document.getElementById('item-row').classList.toggle('visible', type === 'item');
     if (type === 'full') {
       document.getElementById('partial-amount').value = '90.00';
     } else if (type === 'item') {
+      // uncheck all items so amount starts at $0
+      document.querySelectorAll('.item-check').forEach(cb => cb.checked = false);
+    } else {
       document.getElementById('partial-amount').value = '56.00';
     }
     updateSummary();
   }
 
   function updateSummary() {
-    let amount = parseFloat(document.getElementById('partial-amount').value) || 0;
-    if (refundType === 'full') amount = 90.00;
-    amount = Math.min(amount, 90.00);
+    let amount;
+    if (refundType === 'full') {
+      amount = 90.00;
+    } else if (refundType === 'item') {
+      amount = 0;
+      document.querySelectorAll('.item-check:checked').forEach(cb => {
+        amount += parseFloat(cb.dataset.price);
+      });
+    } else {
+      amount = parseFloat(document.getElementById('partial-amount').value) || 0;
+      amount = Math.min(amount, 90.00);
+    }
 
     const remaining = (90.00 - amount).toFixed(2);
     const fee = (amount * 0.029 + 0.30).toFixed(2);

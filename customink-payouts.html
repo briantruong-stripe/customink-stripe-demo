@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CustomInk — Global Payouts · Connect</title>
+<script src="https://connect-js.stripe.com/v1/connect.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1215,18 +1216,8 @@ async function loadOrgDashboard() {
       stripeConnectInstance = null;
     }
 
-    // Load Connect JS if not already loaded
-    if (!window.StripeConnect) {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://connect-js.stripe.com/v1/connect.js';
-        script.onload = resolve;
-        script.onerror = () => reject(new Error('Failed to load Stripe Connect JS from connect-js.stripe.com — check network'));
-        document.head.appendChild(script);
-      });
-    }
     if (typeof StripeConnect === 'undefined') {
-      throw new Error('StripeConnect SDK unavailable after load');
+      throw new Error('Stripe Connect JS SDK not loaded — check browser console for script errors');
     }
 
     // Verify account session can be created before initializing Connect

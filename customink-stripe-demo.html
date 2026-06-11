@@ -2160,6 +2160,36 @@ html[data-state="future"] .success-close{background:var(--stripe);}
 })();
 
 /* ══════════════════════════════════════
+   REDIRECT RETURN HANDLER (Affirm / BNPL)
+   Stripe redirects back with ?payment_intent=&payment_intent_client_secret=&redirect_status=
+══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const redirectStatus = params.get('redirect_status');
+  const piSecret = params.get('payment_intent_client_secret');
+  const piId = params.get('payment_intent');
+  if (!redirectStatus || !piSecret) return;
+
+  // Clean URL immediately so refresh doesn't re-trigger
+  history.replaceState({}, '', window.location.pathname);
+
+  if (redirectStatus === 'succeeded') {
+    initStripeOnce();
+    // Open checkout overlay into success state
+    document.getElementById('checkoutOverlay').classList.add('open');
+    stripe.retrievePaymentIntent(piSecret).then(({ paymentIntent }) => {
+      showSuccessScreen({
+        id: paymentIntent?.id || piId,
+        amount: paymentIntent?.amount || 0,
+        source: 'Stripe',
+      });
+    }).catch(() => {
+      showSuccessScreen({ id: piId, amount: 0, source: 'Stripe' });
+    });
+  }
+});
+
+/* ══════════════════════════════════════
    STRIPE INIT
 ══════════════════════════════════════ */
 const STRIPE_PK = 'pk_test_51TdyxbQ9wb5pYzAEqN0CkU0hUkd8FX24KBPoAMeJCARPLy0kJLjwgvH3903dk5VnFzcLFiyYzC3kDCTyDP13HGno00CEBtozwn';
