@@ -2726,7 +2726,9 @@ async function handleStripeSubmit() {
 
   if (!stripeElements) { btn.disabled = false; btn.innerHTML = '⚡ Pay'; return; }
 
-  // Step 1: validate elements
+  const amount = getOrderTotal();
+
+  // Step 1: validate elements (catches empty fields, card errors, etc.)
   const { error: submitErr } = await stripeElements.submit();
   if (submitErr) {
     showStripeError(submitErr.message);
@@ -2735,38 +2737,41 @@ async function handleStripeSubmit() {
     return;
   }
 
+  // Step 2: confirm payment BEFORE switching screens.
+  // Link and 3DS may open a popup/modal — if we switch to the processing overlay
+  // first, that dialog gets hidden or blocked and the payment hangs forever.
+  let pi;
+  try {
+    if (isServerMode) {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements: stripeElements,
+        confirmParams: { return_url: window.location.href },
+        redirect: 'if_required',
+      });
+      if (error) throw new Error(error.message);
+      pi = paymentIntent;
+    } else {
+      // demo / no-server mode
+      await new Promise(r => setTimeout(r, 600));
+      pi = { id: 'pi_demo_' + randId(), amount, status: 'succeeded' };
+    }
+  } catch (err) {
+    showStripeError(err.message);
+    btn.disabled = false;
+    btn.innerHTML = `<span>⚡</span><span id="stripePayLabel">Pay — $${(amount/100).toFixed(2)}</span>`;
+    return;
+  }
+
+  // Step 3: payment confirmed — now show the processing animation as polish
   showScreen('screenProcessing');
-  const amount = getOrderTotal();
   const steps = [
     { label: 'Connecting to Stripe…', delay: 400 },
     { label: 'Running Radar fraud check…', delay: 900 },
     { label: 'Authorizing payment…', delay: 1600 },
-    { label: 'Confirming with network…', delay: 2400 },
+    { label: 'Confirming with network…', delay: 2200 },
   ];
-  animateSteps(steps, 'sf', async () => {
-    try {
-      let pi;
-      if (isServerMode) {
-        // confirm with server-created PaymentIntent (already in elements clientSecret)
-        const { error, paymentIntent } = await stripe.confirmPayment({
-          elements: stripeElements,
-          confirmParams: { return_url: window.location.href },
-          redirect: 'if_required',
-        });
-        if (error) throw new Error(error.message);
-        pi = paymentIntent;
-      } else {
-        // demo mode - simulate success
-        await new Promise(r => setTimeout(r, 500));
-        pi = { id: 'pi_demo_' + randId(), amount, status: 'succeeded' };
-      }
-      showSuccessScreen({ id: pi.id, amount: pi.amount || amount, source: 'Stripe' });
-    } catch (err) {
-      showScreen('screenStripeForm');
-      showStripeError(err.message);
-      btn.disabled = false;
-      btn.innerHTML = `<span>⚡</span><span id="stripePayLabel">Pay — $${(amount/100).toFixed(2)}</span>`;
-    }
+  animateSteps(steps, 'sf', () => {
+    showSuccessScreen({ id: pi.id, amount: pi.amount || amount, source: 'Stripe' });
   });
 }
 
