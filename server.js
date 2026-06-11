@@ -87,6 +87,90 @@ app.post('/api/connect/create-account', async (req, res) => {
   }
 });
 
+// ── Connect: Skip onboarding (test mode only) ────────────────────
+// Programmatically fulfills all KYC requirements with Stripe test data so
+// demos don't need to navigate the hosted onboarding UI.
+app.post('/api/connect/skip-onboarding', async (req, res) => {
+  try {
+    const { account_id } = req.body;
+
+    // Fetch account to know business_type
+    const account = await stripe.accounts.retrieve(account_id);
+    const biz = account.business_type || 'non_profit';
+    const isCompany = biz !== 'individual';
+
+    const updateParams = {
+      business_profile: {
+        mcc: '5699',                          // apparel / custom merchandise
+        url: 'https://demo.customink.com',
+        product_description: 'Custom apparel and merchandise',
+      },
+      tos_acceptance: {
+        date: Math.floor(Date.now() / 1000),
+        ip: '127.0.0.1',
+      },
+    };
+
+    if (isCompany) {
+      updateParams.company = {
+        name: 'Demo Org (Test)',
+        tax_id: '000000000',                  // Stripe test EIN — auto-verifies
+        address: { line1: '123 Main St', city: 'San Francisco', state: 'CA', postal_code: '94102', country: 'US' },
+        phone: '0000000000',
+      };
+    } else {
+      updateParams.individual = {
+        first_name: 'Jenny',
+        last_name:  'Rosen',
+        dob:    { day: 1, month: 1, year: 1901 }, // Stripe magic DOB — auto-verifies
+        ssn_last_4: '0000',                        // auto-verifies in test mode
+        email: 'jenny@example.com',
+        phone: '0000000000',
+        address: { line1: '123 Main St', city: 'San Francisco', state: 'CA', postal_code: '94102', country: 'US' },
+      };
+    }
+
+    await stripe.accounts.update(account_id, updateParams);
+
+    // If company, add a representative person
+    if (isCompany) {
+      const persons = await stripe.accounts.listPersons(account_id, { limit: 5 });
+      const hasRep = persons.data.some(p => p.relationship?.representative);
+      if (!hasRep) {
+        await stripe.accounts.createPerson(account_id, {
+          first_name: 'Jenny',
+          last_name:  'Rosen',
+          dob:    { day: 1, month: 1, year: 1901 },
+          ssn_last_4: '0000',
+          email: 'jenny@example.com',
+          phone: '0000000000',
+          address: { line1: '123 Main St', city: 'San Francisco', state: 'CA', postal_code: '94102', country: 'US' },
+          relationship: { representative: true, title: 'Director', percent_ownership: 25 },
+        });
+      }
+    }
+
+    // Add test bank account (US routing: 110000000, Stripe test account)
+    const extAccounts = await stripe.accounts.listExternalAccounts(account_id, { object: 'bank_account', limit: 1 });
+    if (extAccounts.data.length === 0) {
+      await stripe.accounts.createExternalAccount(account_id, {
+        external_account: {
+          object: 'bank_account', country: 'US', currency: 'usd',
+          routing_number: '110000000',
+          account_number: '000123456789',
+        },
+      });
+    }
+
+    // Re-fetch to return updated requirements state
+    const updated = await stripe.accounts.retrieve(account_id);
+    res.json({ account: updated });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Connect: Create account onboarding link ──────────────────────
 app.post('/api/connect/account-link', async (req, res) => {
   try {

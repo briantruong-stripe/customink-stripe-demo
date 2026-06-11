@@ -511,6 +511,19 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
             <div id="ob-result-note" style="margin-top:12px;padding:12px 14px;background:var(--amber-bg);border-radius:8px;font-size:12px;color:var(--amber)">
               ⚡ In production, redirect the org to the Stripe-hosted onboarding URL to complete KYC before payouts are enabled.
             </div>
+
+            <!-- Skip onboarding actions -->
+            <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <button class="form-btn" id="ob-link-btn2" style="background:var(--fund)" onclick="getOnboardingLink()">
+                Open Onboarding →
+              </button>
+              <button class="form-btn" id="ob-skip-btn" style="background:#00875A" onclick="skipOnboarding()">
+                <span id="ob-skip-text">⚡ Skip — Use Test Data</span>
+                <span id="ob-skip-spinner" style="display:none"><div class="spinner"></div></span>
+              </button>
+              <span style="font-size:11px;color:var(--muted)">Test mode only — fills KYC with Stripe test values</span>
+            </div>
+
             <div class="response-box visible" id="ob-acct-json" style="margin-top:12px"></div>
           </div>
         </div>
@@ -529,7 +542,7 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
           </div>
           <div class="card-body">
             <div style="background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#713f12;line-height:1.5">
-              <strong>⚠ Prerequisite:</strong> The destination account must have completed Stripe onboarding. Accounts showing <strong>✓</strong> in the dropdown are ready. For accounts showing <strong>⚠</strong>, use the <em>Onboard Org</em> tab and click <strong>"Open Onboarding"</strong> — in test mode, Stripe shows a <strong>"Use test data"</strong> button that completes it in ~30 seconds.
+              <strong>⚠ Prerequisite:</strong> The destination account must have completed Stripe onboarding. Accounts showing <strong>✓</strong> in the dropdown are ready. For accounts showing <strong>⚠</strong>, use the <em>Onboard Org</em> tab and click <strong>"Open Onboarding"</strong> — use <strong>"⚡ Skip — Use Test Data"</strong> to auto-complete KYC instantly.
             </div>
             <div class="form-grid">
               <div>
@@ -594,7 +607,7 @@ body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); backgrou
           </div>
           <div class="card-body">
             <div style="background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#713f12;line-height:1.5">
-              <strong>⚠ Prerequisite:</strong> The destination account must have completed Stripe onboarding. Accounts showing <strong>✓</strong> in the dropdown are ready. For accounts showing <strong>⚠</strong>, use the <em>Onboard Org</em> tab and click <strong>"Open Onboarding"</strong> — in test mode, Stripe shows a <strong>"Use test data"</strong> button that completes it in ~30 seconds.
+              <strong>⚠ Prerequisite:</strong> The destination account must have completed Stripe onboarding. Accounts showing <strong>✓</strong> in the dropdown are ready. For accounts showing <strong>⚠</strong>, use the <em>Onboard Org</em> tab and click <strong>"Open Onboarding"</strong> — use <strong>"⚡ Skip — Use Test Data"</strong> to auto-complete KYC instantly.
             </div>
             <div class="form-grid">
               <div>
@@ -1052,14 +1065,53 @@ async function createAccount() {
       resultNote.innerHTML = '⚡ Stripe collector + Express dashboard: redirect the org to the Stripe-hosted onboarding URL to complete KYC. Use "Use test data" in the hosted flow for instant test completion.';
     }
     loadAccounts();
-    // Auto-open onboarding so the account is immediately usable
-    getOnboardingLink(account.id);
   } catch(e) {
     resp.textContent = `✗ Error: ${e.message}`;
     resp.classList.add('visible','error');
     toast(`Error: ${e.message}`, 'error');
   } finally {
     txt.style.display = ''; spin.style.display = 'none'; btn.disabled = false;
+  }
+}
+
+// ── Skip onboarding (test mode) ───────────────────────────────────
+async function skipOnboarding() {
+  const id = createdAccountId;
+  if (!id) { toast('Create an account first', 'error'); return; }
+  const btn = document.getElementById('ob-skip-btn');
+  const txt = document.getElementById('ob-skip-text');
+  const spin = document.getElementById('ob-skip-spinner');
+  btn.disabled = true; txt.style.display = 'none'; spin.style.display = '';
+  try {
+    const r = await fetch('/api/connect/skip-onboarding', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ account_id: id }),
+    });
+    const { account, error } = await r.json();
+    if (error) throw new Error(error);
+
+    // Update status display
+    const transfersActive = account.capabilities?.transfers === 'active';
+    document.getElementById('created-status').innerHTML =
+      transfersActive
+        ? '<span style="color:var(--green);font-weight:700">✓ Active</span>'
+        : '<span style="color:var(--amber)">⏳ Pending (Stripe reviewing)</span>';
+
+    document.getElementById('ob-acct-json').textContent = JSON.stringify(account, null, 2);
+    document.getElementById('ob-result-note').innerHTML =
+      transfersActive
+        ? '✓ Onboarding complete — account is active and ready for transfers.'
+        : '⏳ Test data submitted. Stripe may take a moment to activate capabilities — reload in a few seconds.';
+    document.getElementById('ob-result-note').style.background = transfersActive ? 'var(--green-bg)' : 'var(--amber-bg)';
+    document.getElementById('ob-result-note').style.color = transfersActive ? 'var(--green)' : 'var(--amber)';
+
+    loadAccounts();
+    toast(`✓ Test KYC submitted for ${account.metadata?.org_name || id}`, 'success');
+  } catch(e) {
+    toast(`Error: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false; txt.style.display = ''; spin.style.display = 'none';
   }
 }
 
@@ -1076,7 +1128,7 @@ async function getOnboardingLink(accountId) {
     const { url, error } = await r.json();
     if (error) throw new Error(error);
     window.open(url, '_blank');
-    toast('Onboarding URL opened in new tab — click "Use test data" to complete instantly', 'success');
+    toast('Onboarding URL opened — or use "⚡ Skip" to complete without leaving this page', 'success');
   } catch(e) {
     toast(`Error: ${e.message}`, 'error');
   }
