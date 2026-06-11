@@ -49,6 +49,11 @@ app.post('/api/connect/create-account', async (req, res) => {
     } = req.body;
 
     const isAppCollected = collector === 'application';
+    const isExpressDash  = dashboard === 'express';
+
+    // Express dashboard requires application to control losses (Stripe rule).
+    // Application-collected accounts always control losses regardless of dashboard.
+    const lossesPayer = (isExpressDash || isAppCollected) ? 'application' : 'stripe';
 
     const accountParams = {
       country,
@@ -57,7 +62,7 @@ app.post('/api/connect/create-account', async (req, res) => {
         requirement_collection: collector,
         stripe_dashboard: { type: dashboard },
         fees: { payer: 'application' },                            // CI always pays Stripe fees
-        losses: { payments: isAppCollected ? 'application' : 'stripe' },
+        losses: { payments: lossesPayer },
       },
       capabilities: { transfers: { requested: true } },           // recipient — transfers only
       business_type: org_type,
@@ -69,8 +74,8 @@ app.post('/api/connect/create-account', async (req, res) => {
       },
     };
 
-    // Application-collected accounts require tos_acceptance with recipient service agreement
-    if (isAppCollected) {
+    // Recipient service agreement is cross-border only — not supported for US→US.
+    if (isAppCollected && country !== 'US') {
       accountParams.tos_acceptance = { service_agreement: 'recipient' };
     }
 
